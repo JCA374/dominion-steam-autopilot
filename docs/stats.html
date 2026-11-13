@@ -6,47 +6,60 @@
 <p class="lede">The autopilot (model <code>k1-steam</code>) plays the
 built-in computer opponents, from Very Easy up to Hard, on the game's random <b>base-set</b> kingdoms. After every game this
 page is rebuilt from <code>autopilot/stats/games.jsonl</code>: who won, by how much, and what the model had trouble with.
-Updated 2026-11-13 18:49.</p>
+Updated 2026-11-13 19:05.</p>
 <div class="cards">
-<div class="card"><div class="k">Games</div><div class="v">2</div><div class="s">2 finished</div></div>
-<div class="card"><div class="k">Won</div><div class="v">1</div><div class="s">50% of finished</div></div>
+<div class="card"><div class="k">Games</div><div class="v">3</div><div class="s">3 finished</div></div>
+<div class="card"><div class="k">Won</div><div class="v">2</div><div class="s">67% of finished</div></div>
 <div class="card"><div class="k">Hardest level so far</div><div class="v" style="font-size:1.2rem">Very Easy</div></div>
-<div class="card"><div class="k">Problems logged</div><div class="v">28</div><div class="s">empty_pile 9, attack_answered 8, selection_adjusted 5</div></div>
+<div class="card"><div class="k">Problems logged</div><div class="v">22</div><div class="s">empty_pile 9, hud_unreadable 6, selection_adjusted 5, no_button 1, buy_retry 1</div></div>
 </div>
-<h2>Findings so far</h2><div class="box"><ul><li>2 games so far (2 finished): 1 won, 1 lost.</li><li>Very Easy: 1 of 2 won (50%), about 38 turns per game, 14.0 problems per game.</li><li>Samples are small: a few games per level. Treat card win rates as hints, not measurements.</li></ul></div>
+<h2>Findings so far</h2><div class="box"><ul><li>3 games so far (3 finished): 2 won, 1 lost.</li><li>Very Easy: 2 of 3 won (67%), about 35 turns per game, 2.7 attacks answered and 7.3 problems per game.</li><li>Lowest win rate when present (at least 2 games): Chapel 50% with vs 100% without (n=2); Gardens 50% with vs 100% without (n=2); Laboratory 50% with vs 100% without (n=2); Merchant 50% with vs 100% without (n=2).</li><li>1 game(s) were hurt by an autopilot bug, not by the model (marked in the game list; the bug was fixed afterwards). The &#x27;without bug-hit games&#x27; column leaves them out.</li><li>Samples are small: a few games per level. Treat card win rates as hints, not measurements.</li></ul></div>
 <h2>By opponent level</h2>
 <div class="tablewrap"><table class="t"><tr><th>Level</th><th>Games</th><th>Won</th><th>Lost</th><th>Not finished</th>
-<th>Win rate</th><th>Avg turns</th><th>Avg minutes</th><th>Problems / game</th></tr>
-<tr><td>Very Easy</td><td class='num'>2</td><td class='num'>1</td><td class='num'>1</td><td class='num'>0</td><td class='num'>50%</td><td class='num'>38</td><td class='num'>30</td><td class='num'>14.0</td></tr>
+<th>Win rate</th><th>Win rate without bug-hit games</th><th>Avg turns</th><th>Avg minutes</th><th>Attacks answered / game</th><th>Problems / game</th></tr>
+<tr><td>Very Easy</td><td class='num'>3</td><td class='num'>2</td><td class='num'>1</td><td class='num'>0</td><td class='num'>67%</td><td class='num'>35</td><td class='num'>22</td><td class='num'>2.7</td><td class='num'>7.3</td></tr>
 </table></div>
 <p class="small muted">Win or loss comes from the score screen's placement laurels (always read correctly so far).
-Turns = the score panel's turn count. Problems exclude hand misreads that a second read fixed.</p>
+Turns = the score panel's turn count. Problems exclude hand misreads that a second read fixed and attacks answered normally
+(those are counted in their own column). What counts: unknown prompts, generic answers, selections that needed
+adjusting, unreadable counters, empty piles, missing buttons, games given up.</p>
 <h2>By kingdom card</h2>
 <p>Each base-set card that has appeared: win rate in finished games with it in the kingdom vs without it, and how many
 problems named it. Sorted by the gap (worst first). <b>unknown</b> = the model never learned the card and never buys it.</p>
 <div class="tablewrap"><table class="t"><tr><th>Card</th><th>Games with it</th><th>Win with</th><th>Win without</th>
 <th>Problems naming it</th><th>Model</th><th>Levels</th></tr>
-<tr><td>Chapel</td><td class='num'>1</td><td class='num'>0%</td><td class='num'>100%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1</td></tr>
-<tr><td>Gardens</td><td class='num'>1</td><td class='num'>0%</td><td class='num'>100%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
-<tr><td>Laboratory</td><td class='num'>1</td><td class='num'>0%</td><td class='num'>100%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1</td></tr>
-<tr><td>Merchant</td><td class='num'>1</td><td class='num'>0%</td><td class='num'>100%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1</td></tr>
-<tr><td>Moneylender</td><td class='num'>1</td><td class='num'>0%</td><td class='num'>100%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1</td></tr>
-<tr><td>Poacher</td><td class='num'>1</td><td class='num'>0%</td><td class='num'>100%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
 <tr><td>Remodel</td><td class='num'>1</td><td class='num'>0%</td><td class='num'>100%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
 <tr><td>Workshop</td><td class='num'>1</td><td class='num'>0%</td><td class='num'>100%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
-<tr><td>Bandit <span class=tag>attack</span></td><td class='num'>1</td><td class='num'>100%</td><td class='num'>0%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
-<tr><td>Cellar</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>0%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
-<tr><td>Council Room</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>0%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
-<tr><td>Festival</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>0%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1</td></tr>
-<tr><td>Harbinger</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>0%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
-<tr><td>Throne Room</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>0%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1</td></tr>
-<tr><td>Vassal</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>0%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
-<tr><td>Village</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>0%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1</td></tr>
-<tr><td>Artisan</td><td class='num'>2</td><td class='num'>50%</td><td class='num'>–</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 2</td></tr>
-<tr><td>Militia <span class=tag>attack</span></td><td class='num'>2</td><td class='num'>50%</td><td class='num'>–</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 2</td></tr>
+<tr><td>Chapel</td><td class='num'>2</td><td class='num'>50%</td><td class='num'>100%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 2</td></tr>
+<tr><td>Gardens</td><td class='num'>2</td><td class='num'>50%</td><td class='num'>100%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 2</td></tr>
+<tr><td>Laboratory</td><td class='num'>2</td><td class='num'>50%</td><td class='num'>100%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 2</td></tr>
+<tr><td>Merchant</td><td class='num'>2</td><td class='num'>50%</td><td class='num'>100%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 2</td></tr>
+<tr><td>Militia <span class=tag>attack</span></td><td class='num'>2</td><td class='num'>50%</td><td class='num'>100%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 2</td></tr>
+<tr><td>Moneylender</td><td class='num'>2</td><td class='num'>50%</td><td class='num'>100%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 2</td></tr>
+<tr><td>Poacher</td><td class='num'>2</td><td class='num'>50%</td><td class='num'>100%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 2</td></tr>
+<tr><td>Bandit <span class=tag>attack</span></td><td class='num'>1</td><td class='num'>100%</td><td class='num'>50%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Cellar</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>50%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Festival</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>50%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Harbinger</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>50%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Library</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>50%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Vassal</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>50%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Village</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>50%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Council Room</td><td class='num'>2</td><td class='num'>100%</td><td class='num'>0%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 2</td></tr>
+<tr><td>Throne Room</td><td class='num'>2</td><td class='num'>100%</td><td class='num'>0%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 2</td></tr>
+<tr><td>Artisan</td><td class='num'>3</td><td class='num'>67%</td><td class='num'>–</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 3</td></tr>
 </table></div><h2>Prompts it didn't understand</h2>
 <p class='muted'>None yet.</p>
 <h2>Every game</h2>
+<div class="ev"><div class="body"><div class="t">Game 3 · 2026-11-13 19:05 · 14.1 min</div>
+<h4>vs Very Easy AI: <span class="result win">win</span> <span class="small muted">points ≈ 74–4 (OCR; the screen below is the record)</span></h4>
+<p><b>Kingdom:</b> Chapel, Merchant, Gardens, Moneylender, Poacher, Throne Room, Council Room, Laboratory, Library, Artisan<br>
+<b>Model doesn't know:</b> Poacher, Library, Artisan, Gardens, Council Room<br>
+<b>Bought:</b> 8 Province, 7 Copper, 7 Duchy, 6 Silver, 5 Estate, 4 Gold</p>
+<ul><li>turn 20: hud_unreadable</li><li>turn 23: buy_retry</li></ul>
+
+
+</div>
+<img src="img/stats/score_3.jpg" alt="score screen of game 3"></div>
 <div class="ev"><div class="body"><div class="t">Game 2 · 2026-11-13 18:49 · 29.5 min</div>
 <h4>vs Very Easy AI: <span class="result ">loss</span> <span class="small muted">points ≈ 37–48 (OCR; the screen below is the record)</span></h4>
 <p><b>Kingdom:</b> Chapel, Merchant, Workshop, Gardens, Militia, Moneylender, Poacher, Remodel, Laboratory, Artisan<br>
@@ -54,7 +67,8 @@ problems named it. Sorted by the gap (worst first). <b>unknown</b> = the model n
 <b>Bought:</b> 9 Copper, 8 Silver, 5 Province, 5 Merchant, 3 Estate, 1 Moneylender, 1 Laboratory, 0 Gold, 0 Duchy</p>
 <ul><li>turn 1: expected button missing (Trash/Done/Confirm/OK)</li><li>turn 3: hud_unreadable</li><li>turn 6: empty pile noticed: Gold</li><li>turn 9: empty pile noticed: Silver</li><li>turn 17: empty pile noticed: Duchy</li><li>turn 18: empty pile noticed: Estate</li><li>turn 18: attack_answered</li><li>turn 19: attack_answered</li><li>turn 19: selection_adjusted</li><li>turn 20: hud_unreadable</li><li>turn 20: attack_answered</li><li>turn 21: hud_unreadable</li></ul>
 
-</div>
+
+<p><span class="tag crash">autopilot bug</span> autopilot bug: buy clicks that didn&#x27;t register were taken for empty piles, so Gold (turn 6) and Silver (turn 9) were never bought again; fixed afterwards</p></div>
 <img src="img/stats/score_2.jpg" alt="score screen of game 2"></div>
 <div class="ev"><div class="body"><div class="t">Game 1 · 2026-11-13 18:19 · None min</div>
 <h4>vs Very Easy AI: <span class="result win">win</span> <span class="small muted">points ≈ 55–14 (OCR; the screen below is the record)</span></h4>
@@ -63,7 +77,8 @@ problems named it. Sorted by the gap (worst first). <b>unknown</b> = the model n
 <b>Bought:</b> 8 Copper, 8 Silver, 7 Province, 4 Gold, 3 Estate, 0 Duchy</p>
 <ul><li>turn 16: empty pile noticed: Estate</li><li>turn 17: selection_adjusted</li><li>turn 17: empty pile noticed: Duchy</li><li>turn 17: empty pile noticed: Silver</li></ul>
 
-<p class="small muted">Note: points read from the saved score screen (OCR read 5-14); several restarts during this game while attack handling was fixed</p></div>
+<p class="small muted">Note: points read from the saved score screen (OCR read 5-14); several restarts during this game while attack handling was fixed</p>
+</div>
 <img src="img/stats/score_1.jpg" alt="score screen of game 1"></div>
 <p class="small muted">The point shields are hard for the OCR (digits get dropped or changed), so points are shown as
 approximate; win or loss comes from the placement laurels, and every game's score screen is shown.</p>
