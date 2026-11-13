@@ -1,8 +1,72 @@
 {
- "games": [],
- "levels": [],
+ "games": [
+  {
+   "game": 1,
+   "date": "2026-11-13 17:49",
+   "level": "Very Easy",
+   "opponent_tile": "Very Easy (game already running)",
+   "model": "k1-steam",
+   "seed": "-615091225",
+   "kingdom": [
+    "Cellar",
+    "Harbinger",
+    "Vassal",
+    "Village",
+    "Militia",
+    "Throne Room",
+    "Bandit",
+    "Council Room",
+    "Festival",
+    "Artisan"
+   ],
+   "unknown_to_model": [
+    "Cellar",
+    "Harbinger",
+    "Vassal",
+    "Bandit",
+    "Artisan",
+    "Militia",
+    "Council Room"
+   ],
+   "outcome": "abandoned",
+   "me": null,
+   "opponent": null,
+   "panel_turns": null,
+   "turns_counted": 5,
+   "minutes": 8.1,
+   "owned": {
+    "Copper": 7,
+    "Estate": 3,
+    "Silver": 4
+   },
+   "empty_piles": [],
+   "problems": [
+    {
+     "kind": "abandoned",
+     "turn": 5,
+     "why": "no progress"
+    }
+   ]
+  }
+ ],
+ "levels": [
+  {
+   "level": "Very Easy",
+   "games": 1,
+   "played": 0,
+   "wins": 0,
+   "losses": 0,
+   "other": 1,
+   "winrate": "\u2013",
+   "margin": "\u2013",
+   "turns": "\u2013",
+   "minutes": "8",
+   "problems": "1.0"
+  }
+ ],
  "cards": [],
  "findings": [
+  "1 game(s) couldn't be finished by the autopilot (see the game list).",
   "Samples are small: a few games per level. Treat card win rates as hints, not measurements."
  ]
 }
