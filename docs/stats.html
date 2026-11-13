@@ -6,18 +6,18 @@
 <p class="lede">The autopilot (model <code>k1-steam</code>) plays the
 built-in computer opponents, from Very Easy up to Hard, on the game's random <b>base-set</b> kingdoms. After every game this
 page is rebuilt from <code>autopilot/stats/games.jsonl</code>: who won, by how much, and what the model had trouble with.
-Updated 2026-11-13 17:49.</p>
+Updated 2026-11-13 18:19.</p>
 <div class="cards">
-<div class="card"><div class="k">Games</div><div class="v">1</div><div class="s">0 finished</div></div>
-<div class="card"><div class="k">Won</div><div class="v">0</div><div class="s">– of finished</div></div>
+<div class="card"><div class="k">Games</div><div class="v">1</div><div class="s">1 finished</div></div>
+<div class="card"><div class="k">Won</div><div class="v">1</div><div class="s">100% of finished</div></div>
 <div class="card"><div class="k">Hardest level so far</div><div class="v" style="font-size:1.2rem">Very Easy</div></div>
-<div class="card"><div class="k">Problems logged</div><div class="v">1</div><div class="s">abandoned 1</div></div>
+<div class="card"><div class="k">Problems logged</div><div class="v">4</div><div class="s">empty_pile 3, selection_adjusted 1</div></div>
 </div>
-<h2>Findings so far</h2><div class="box"><ul><li>1 game(s) couldn&#x27;t be finished by the autopilot (see the game list).</li><li>Samples are small: a few games per level. Treat card win rates as hints, not measurements.</li></ul></div>
+<h2>Findings so far</h2><div class="box"><ul><li>1 games so far (1 finished): 1 won, 0 lost.</li><li>Very Easy: 1 of 1 won (100%), average point margin -9.0 (n=1), 4.0 problems per game.</li><li>Samples are small: a few games per level. Treat card win rates as hints, not measurements.</li></ul></div>
 <h2>By opponent level</h2>
 <div class="tablewrap"><table class="t"><tr><th>Level</th><th>Games</th><th>Won</th><th>Lost</th><th>Not finished</th>
 <th>Win rate</th><th>Avg margin</th><th>Avg turns</th><th>Avg minutes</th><th>Problems / game</th></tr>
-<tr><td>Very Easy</td><td class='num'>1</td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>–</td><td class='num'>–</td><td class='num'>–</td><td class='num'>8</td><td class='num'>1.0</td></tr>
+<tr><td>Very Easy</td><td class='num'>1</td><td class='num'>1</td><td class='num'>0</td><td class='num'>0</td><td class='num'>100%</td><td class='num'>-9.0 (n=1)</td><td class='num'>31</td><td class='num'>4</td><td class='num'>4.0</td></tr>
 </table></div>
 <p class="small muted">Margin = my points minus the opponent's, only for games where both point shields were readable.
 Turns = the score panel's turn count. Problems exclude hand misreads that a second read fixed.</p>
@@ -26,17 +26,27 @@ Turns = the score panel's turn count. Problems exclude hand misreads that a seco
 problems named it. Sorted by the gap (worst first). <b>unknown</b> = the model never learned the card and never buys it.</p>
 <div class="tablewrap"><table class="t"><tr><th>Card</th><th>Games with it</th><th>Win with</th><th>Win without</th>
 <th>Problems naming it</th><th>Model</th><th>Levels</th></tr>
+<tr><td>Artisan</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>–</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Bandit <span class=tag>attack</span></td><td class='num'>1</td><td class='num'>100%</td><td class='num'>–</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Cellar</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>–</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Council Room</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>–</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Festival</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>–</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Harbinger</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>–</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Militia <span class=tag>attack</span></td><td class='num'>1</td><td class='num'>100%</td><td class='num'>–</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Throne Room</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>–</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Vassal</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>–</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1</td></tr>
+<tr><td>Village</td><td class='num'>1</td><td class='num'>100%</td><td class='num'>–</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1</td></tr>
 </table></div><h2>Prompts it didn't understand</h2>
 <p class='muted'>None yet.</p>
 <h2>Every game</h2>
-<div class="ev"><div class="body"><div class="t">Game 1 · 2026-11-13 17:49 · 8.1 min</div>
-<h4>vs Very Easy AI: <span class="result ">abandoned</span> ?–?</h4>
+<div class="ev"><div class="body"><div class="t">Game 1 · 2026-11-13 18:19 · 3.8 min</div>
+<h4>vs Very Easy AI: <span class="result win">win</span> 5–14</h4>
 <p><b>Kingdom:</b> Cellar, Harbinger, Vassal, Village, Militia, Throne Room, Bandit, Council Room, Festival, Artisan<br>
 <b>Model doesn't know:</b> Cellar, Harbinger, Vassal, Bandit, Artisan, Militia, Council Room<br>
-<b>Bought:</b> 7 Copper, 4 Silver, 3 Estate</p>
-<ul><li>turn 5: game abandoned (no progress)</li></ul>
+<b>Bought:</b> 8 Copper, 8 Silver, 7 Province, 4 Gold, 3 Estate, 0 Duchy</p>
+<ul><li>turn 16: empty pile noticed: Estate</li><li>turn 17: selection_adjusted</li><li>turn 17: empty pile noticed: Duchy</li><li>turn 17: empty pile noticed: Silver</li></ul>
 </div>
-</div>
+<img src="img/stats/score_1.jpg" alt="score screen of game 1"></div>
 <p class="small muted">The opponent's point shield is often hard for the OCR, so “?” can appear; win or
 loss always comes from the placement laurels, and the score screen of every game is shown.</p>
 </main><footer>Dominion Autopilot · statistics from games against the built-in computer opponents only.</footer></body></html>

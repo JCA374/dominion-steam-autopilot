@@ -2,7 +2,7 @@
  "games": [
   {
    "game": 1,
-   "date": "2026-11-13 17:49",
+   "date": "2026-11-13 18:19",
    "level": "Very Easy",
    "opponent_tile": "Very Easy (game already running)",
    "model": "k1-steam",
@@ -28,23 +28,49 @@
     "Militia",
     "Council Room"
    ],
-   "outcome": "abandoned",
-   "me": null,
-   "opponent": null,
-   "panel_turns": null,
-   "turns_counted": 5,
-   "minutes": 8.1,
+   "outcome": "win",
+   "me": 5,
+   "opponent": 14,
+   "panel_turns": [
+    31,
+    30
+   ],
+   "turns_counted": 20,
+   "minutes": 3.8,
    "owned": {
-    "Copper": 7,
+    "Copper": 8,
     "Estate": 3,
-    "Silver": 4
+    "Silver": 8,
+    "Gold": 4,
+    "Province": 7,
+    "Duchy": 0
    },
-   "empty_piles": [],
+   "empty_piles": [
+    "Duchy",
+    "Estate",
+    "Silver"
+   ],
    "problems": [
     {
-     "kind": "abandoned",
-     "turn": 5,
-     "why": "no progress"
+     "kind": "empty_pile",
+     "turn": 16,
+     "card": "Estate"
+    },
+    {
+     "kind": "selection_adjusted",
+     "turn": 17,
+     "card": "discard",
+     "fixed": true
+    },
+    {
+     "kind": "empty_pile",
+     "turn": 17,
+     "card": "Duchy"
+    },
+    {
+     "kind": "empty_pile",
+     "turn": 17,
+     "card": "Silver"
     }
    ]
   }
@@ -53,20 +79,132 @@
   {
    "level": "Very Easy",
    "games": 1,
-   "played": 0,
-   "wins": 0,
+   "played": 1,
+   "wins": 1,
    "losses": 0,
-   "other": 1,
-   "winrate": "\u2013",
-   "margin": "\u2013",
-   "turns": "\u2013",
-   "minutes": "8",
-   "problems": "1.0"
+   "other": 0,
+   "winrate": "100%",
+   "margin": "-9.0 (n=1)",
+   "turns": "31",
+   "minutes": "4",
+   "problems": "4.0"
   }
  ],
- "cards": [],
+ "cards": [
+  {
+   "card": "Artisan",
+   "n": 1,
+   "win_with": "100%",
+   "win_without": "\u2013",
+   "delta": null,
+   "problems": 0,
+   "known": false,
+   "attack": false,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Bandit",
+   "n": 1,
+   "win_with": "100%",
+   "win_without": "\u2013",
+   "delta": null,
+   "problems": 0,
+   "known": false,
+   "attack": true,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Cellar",
+   "n": 1,
+   "win_with": "100%",
+   "win_without": "\u2013",
+   "delta": null,
+   "problems": 0,
+   "known": false,
+   "attack": false,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Council Room",
+   "n": 1,
+   "win_with": "100%",
+   "win_without": "\u2013",
+   "delta": null,
+   "problems": 0,
+   "known": false,
+   "attack": false,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Festival",
+   "n": 1,
+   "win_with": "100%",
+   "win_without": "\u2013",
+   "delta": null,
+   "problems": 0,
+   "known": true,
+   "attack": false,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Harbinger",
+   "n": 1,
+   "win_with": "100%",
+   "win_without": "\u2013",
+   "delta": null,
+   "problems": 0,
+   "known": false,
+   "attack": false,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Militia",
+   "n": 1,
+   "win_with": "100%",
+   "win_without": "\u2013",
+   "delta": null,
+   "problems": 0,
+   "known": false,
+   "attack": true,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Throne Room",
+   "n": 1,
+   "win_with": "100%",
+   "win_without": "\u2013",
+   "delta": null,
+   "problems": 0,
+   "known": true,
+   "attack": false,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Vassal",
+   "n": 1,
+   "win_with": "100%",
+   "win_without": "\u2013",
+   "delta": null,
+   "problems": 0,
+   "known": false,
+   "attack": false,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Village",
+   "n": 1,
+   "win_with": "100%",
+   "win_without": "\u2013",
+   "delta": null,
+   "problems": 0,
+   "known": true,
+   "attack": false,
+   "levels": "Very Easy 1"
+  }
+ ],
  "findings": [
-  "1 game(s) couldn't be finished by the autopilot (see the game list).",
+  "1 games so far (1 finished): 1 won, 0 lost.",
+  "Very Easy: 1 of 1 won (100%), average point margin -9.0 (n=1), 4.0 problems per game.",
   "Samples are small: a few games per level. Treat card win rates as hints, not measurements."
  ]
 }
