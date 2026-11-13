@@ -8,7 +8,7 @@ The eyes start with a screenshot of the game window. Before it reads anything, t
 
 Then it reads the prompt line. That is the sentence just under the supply. It says things like play action cards, play treasure cards, or buy a card. The prompt decides which handler runs next. A prompt it doesn't recognise is saved as a picture, and the autopilot waits for you.
 
-If the prompt asks for actions, it reads the hand. Every card has its name on a banner at the top, and the text reader returns each name with its position. Those positions are where it will click later. The names are matched against the cards in this game. A small reading mistake, like State instead of Estate, still matches, as long as the two are at least eighty percent alike.
+If the prompt asks for actions, it reads the hand. Every card has its name on a banner at the top, and the text reader returns each name with its position. Those positions are where it will click later. The names are matched against the cards in this game. A small reading mistake, like State instead of Estate, still matches, as long as the two are eighty percent alike or more.
 
 Next it reads the counters. They are three small numbers left of the hand, for actions, coins and buys. In the action phase it waits until the actions counter shows at least one, because a zero means the turn is still starting.
 
