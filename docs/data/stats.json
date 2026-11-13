@@ -394,7 +394,7 @@
     "Militia"
    ],
    "outcome": "win",
-   "me": 742,
+   "me": null,
    "opponent": 36,
    "panel_turns": [
     28,
@@ -496,6 +496,153 @@
      "fixed": true
     }
    ]
+  },
+  {
+   "game": 5,
+   "date": "2026-11-13 19:56",
+   "level": "Easy",
+   "opponent_tile": "Easy AI",
+   "model": "k1-steam",
+   "seed": "499579936",
+   "kingdom": [
+    "Cellar",
+    "Harbinger",
+    "Merchant",
+    "Workshop",
+    "Bureaucrat",
+    "Militia",
+    "Smithy",
+    "Bandit",
+    "Market",
+    "Witch"
+   ],
+   "unknown_to_model": [
+    "Cellar",
+    "Harbinger",
+    "Workshop",
+    "Bureaucrat",
+    "Bandit",
+    "Militia",
+    "Witch"
+   ],
+   "outcome": "win",
+   "me": 62,
+   "opponent": 3,
+   "panel_turns": [
+    65,
+    65
+   ],
+   "turns_counted": 59,
+   "minutes": 32.5,
+   "owned": {
+    "Copper": 18,
+    "Estate": 11,
+    "Smithy": 1,
+    "Silver": 22,
+    "Gold": 3,
+    "Province": 6,
+    "Duchy": 8
+   },
+   "empty_piles": [
+    "Duchy",
+    "Estate"
+   ],
+   "problems": [
+    {
+     "kind": "buy_retry",
+     "turn": 12,
+     "card": "Silver"
+    },
+    {
+     "kind": "buy_retry",
+     "turn": 18,
+     "card": "Duchy"
+    },
+    {
+     "kind": "buy_retry",
+     "turn": 22,
+     "card": "Duchy"
+    },
+    {
+     "kind": "hud_unreadable",
+     "turn": 23,
+     "used": 7
+    },
+    {
+     "kind": "buy_retry",
+     "turn": 24,
+     "card": "Estate"
+    },
+    {
+     "kind": "buy_retry",
+     "turn": 25,
+     "card": "Estate"
+    },
+    {
+     "kind": "buy_retry",
+     "turn": 27,
+     "card": "Duchy"
+    },
+    {
+     "kind": "buy_retry",
+     "turn": 29,
+     "card": "Estate"
+    },
+    {
+     "kind": "buy_retry",
+     "turn": 31,
+     "card": "Duchy"
+    },
+    {
+     "kind": "empty_pile",
+     "turn": 31,
+     "card": "Duchy"
+    },
+    {
+     "kind": "buy_retry",
+     "turn": 35,
+     "card": "Estate"
+    },
+    {
+     "kind": "empty_pile",
+     "turn": 35,
+     "card": "Estate"
+    },
+    {
+     "kind": "buy_retry",
+     "turn": 35,
+     "card": "Copper"
+    },
+    {
+     "kind": "buy_retry",
+     "turn": 37,
+     "card": "Copper"
+    },
+    {
+     "kind": "buy_retry",
+     "turn": 40,
+     "card": "Copper"
+    },
+    {
+     "kind": "attack_answered",
+     "turn": 47,
+     "card": "Bureaucrat",
+     "prompt": "Bureaucrat: C",
+     "chosen": [
+      "Duchy"
+     ]
+    },
+    {
+     "kind": "buy_retry",
+     "turn": 56,
+     "card": "Silver"
+    },
+    {
+     "kind": "buy_retry",
+     "turn": 57,
+     "card": "Silver"
+    }
+   ]
   }
  ],
  "levels": [
@@ -517,35 +664,24 @@
   },
   {
    "level": "Easy",
-   "games": 1,
-   "played": 1,
-   "wins": 1,
+   "games": 2,
+   "played": 2,
+   "wins": 2,
    "losses": 0,
    "other": 0,
    "bugged": 0,
-   "clean_winrate": "100% (1/1)",
+   "clean_winrate": "100% (2/2)",
    "winrate": "100%",
-   "margin": "+706.0 (n=1)",
-   "turns": "28",
-   "minutes": "17",
-   "problems": "10.0",
-   "attacks": "3.0"
+   "margin": "+59.0 (n=1)",
+   "turns": "46",
+   "minutes": "25",
+   "problems": "13.5",
+   "attacks": "2.0"
   }
  ],
  "cards": [
   {
    "card": "Laboratory",
-   "n": 2,
-   "win_with": "50%",
-   "win_without": "100%",
-   "delta": -0.5,
-   "problems": 0,
-   "known": true,
-   "attack": false,
-   "levels": "Very Easy 2"
-  },
-  {
-   "card": "Merchant",
    "n": 2,
    "win_with": "50%",
    "win_without": "100%",
@@ -589,17 +725,6 @@
    "levels": "Very Easy 1, Easy 1"
   },
   {
-   "card": "Workshop",
-   "n": 2,
-   "win_with": "50%",
-   "win_without": "100%",
-   "delta": -0.5,
-   "problems": 0,
-   "known": false,
-   "attack": false,
-   "levels": "Very Easy 1, Easy 1"
-  },
-  {
    "card": "Artisan",
    "n": 3,
    "win_with": "67%",
@@ -633,33 +758,55 @@
    "levels": "Very Easy 2, Easy 1"
   },
   {
-   "card": "Militia",
+   "card": "Merchant",
+   "n": 3,
+   "win_with": "67%",
+   "win_without": "100%",
+   "delta": -0.33333333333333337,
+   "problems": 0,
+   "known": true,
+   "attack": false,
+   "levels": "Very Easy 2, Easy 1"
+  },
+  {
+   "card": "Workshop",
    "n": 3,
    "win_with": "67%",
    "win_without": "100%",
    "delta": -0.33333333333333337,
    "problems": 0,
    "known": false,
-   "attack": true,
-   "levels": "Very Easy 2, Easy 1"
+   "attack": false,
+   "levels": "Very Easy 1, Easy 2"
   },
   {
-   "card": "Cellar",
-   "n": 1,
-   "win_with": "100%",
-   "win_without": "67%",
-   "delta": 0.33333333333333337,
+   "card": "Militia",
+   "n": 4,
+   "win_with": "75%",
+   "win_without": "100%",
+   "delta": -0.25,
    "problems": 0,
    "known": false,
-   "attack": false,
-   "levels": "Very Easy 1"
+   "attack": true,
+   "levels": "Very Easy 2, Easy 2"
+  },
+  {
+   "card": "Bureaucrat",
+   "n": 1,
+   "win_with": "100%",
+   "win_without": "75%",
+   "delta": 0.25,
+   "problems": 0,
+   "known": false,
+   "attack": true,
+   "levels": "Easy 1"
   },
   {
    "card": "Festival",
    "n": 1,
    "win_with": "100%",
-   "win_without": "67%",
-   "delta": 0.33333333333333337,
+   "win_without": "75%",
+   "delta": 0.25,
    "problems": 0,
    "known": true,
    "attack": false,
@@ -669,30 +816,19 @@
    "card": "Library",
    "n": 1,
    "win_with": "100%",
-   "win_without": "67%",
-   "delta": 0.33333333333333337,
+   "win_without": "75%",
+   "delta": 0.25,
    "problems": 0,
    "known": false,
    "attack": false,
    "levels": "Very Easy 1"
   },
   {
-   "card": "Market",
-   "n": 1,
-   "win_with": "100%",
-   "win_without": "67%",
-   "delta": 0.33333333333333337,
-   "problems": 0,
-   "known": true,
-   "attack": false,
-   "levels": "Easy 1"
-  },
-  {
    "card": "Moat",
    "n": 1,
    "win_with": "100%",
-   "win_without": "67%",
-   "delta": 0.33333333333333337,
+   "win_without": "75%",
+   "delta": 0.25,
    "problems": 0,
    "known": false,
    "attack": false,
@@ -702,10 +838,21 @@
    "card": "Sentry",
    "n": 1,
    "win_with": "100%",
-   "win_without": "67%",
-   "delta": 0.33333333333333337,
+   "win_without": "75%",
+   "delta": 0.25,
    "problems": 0,
    "known": false,
+   "attack": false,
+   "levels": "Easy 1"
+  },
+  {
+   "card": "Smithy",
+   "n": 1,
+   "win_with": "100%",
+   "win_without": "75%",
+   "delta": 0.25,
+   "problems": 0,
+   "known": true,
    "attack": false,
    "levels": "Easy 1"
   },
@@ -713,8 +860,8 @@
    "card": "Vassal",
    "n": 1,
    "win_with": "100%",
-   "win_without": "67%",
-   "delta": 0.33333333333333337,
+   "win_without": "75%",
+   "delta": 0.25,
    "problems": 0,
    "known": false,
    "attack": false,
@@ -724,63 +871,96 @@
    "card": "Village",
    "n": 1,
    "win_with": "100%",
-   "win_without": "67%",
-   "delta": 0.33333333333333337,
+   "win_without": "75%",
+   "delta": 0.25,
    "problems": 0,
    "known": true,
    "attack": false,
    "levels": "Very Easy 1"
   },
   {
-   "card": "Bandit",
-   "n": 2,
+   "card": "Witch",
+   "n": 1,
    "win_with": "100%",
-   "win_without": "50%",
-   "delta": 0.5,
+   "win_without": "75%",
+   "delta": 0.25,
    "problems": 0,
    "known": false,
    "attack": true,
+   "levels": "Easy 1"
+  },
+  {
+   "card": "Cellar",
+   "n": 2,
+   "win_with": "100%",
+   "win_without": "67%",
+   "delta": 0.33333333333333337,
+   "problems": 0,
+   "known": false,
+   "attack": false,
    "levels": "Very Easy 1, Easy 1"
   },
   {
    "card": "Council Room",
    "n": 2,
    "win_with": "100%",
-   "win_without": "50%",
-   "delta": 0.5,
+   "win_without": "67%",
+   "delta": 0.33333333333333337,
    "problems": 0,
    "known": false,
    "attack": false,
    "levels": "Very Easy 2"
   },
   {
-   "card": "Harbinger",
+   "card": "Market",
    "n": 2,
    "win_with": "100%",
-   "win_without": "50%",
-   "delta": 0.5,
+   "win_without": "67%",
+   "delta": 0.33333333333333337,
    "problems": 0,
-   "known": false,
+   "known": true,
    "attack": false,
-   "levels": "Very Easy 1, Easy 1"
+   "levels": "Easy 2"
   },
   {
    "card": "Throne Room",
    "n": 2,
    "win_with": "100%",
-   "win_without": "50%",
-   "delta": 0.5,
+   "win_without": "67%",
+   "delta": 0.33333333333333337,
    "problems": 0,
    "known": true,
    "attack": false,
    "levels": "Very Easy 2"
+  },
+  {
+   "card": "Bandit",
+   "n": 3,
+   "win_with": "100%",
+   "win_without": "50%",
+   "delta": 0.5,
+   "problems": 0,
+   "known": false,
+   "attack": true,
+   "levels": "Very Easy 1, Easy 2"
+  },
+  {
+   "card": "Harbinger",
+   "n": 3,
+   "win_with": "100%",
+   "win_without": "50%",
+   "delta": 0.5,
+   "problems": 0,
+   "known": false,
+   "attack": false,
+   "levels": "Very Easy 1, Easy 2"
   }
  ],
  "findings": [
-  "4 games so far (4 finished): 3 won, 1 lost.",
+  "5 games so far (5 finished): 4 won, 1 lost.",
   "Very Easy: 2 of 3 won (67%), about 35 turns per game, 2.7 attacks answered and 7.3 problems per game.",
-  "Easy: 1 of 1 won (100%), about 28 turns per game, 3.0 attacks answered and 10.0 problems per game.",
-  "Lowest win rate when present (at least 2 games): Laboratory 50% with vs 100% without (n=2); Merchant 50% with vs 100% without (n=2); Moneylender 50% with vs 100% without (n=2); Poacher 50% with vs 100% without (n=2).",
+  "Easy: 2 of 2 won (100%), about 46 turns per game, 2.0 attacks answered and 13.5 problems per game.",
+  "Lowest win rate when present (at least 2 games): Laboratory 50% with vs 100% without (n=2); Moneylender 50% with vs 100% without (n=2); Poacher 50% with vs 100% without (n=2); Remodel 50% with vs 100% without (n=2).",
   "1 game(s) were hurt by an autopilot bug, not by the model (marked in the game list; the bug was fixed afterwards). The 'without bug-hit games' column leaves them out.",
   "Samples are small: a few games per level. Treat card win rates as hints, not measurements."
  ]
