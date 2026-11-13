@@ -104,6 +104,9 @@ class Pilot:
         self.unknown_count = 0
         self.zero_actions = 0
         self.blind_hand = 0
+        self.problems = []        # what went wrong this game: for the stats
+        self.result = None        # filled in on the score screen
+        self.last_progress = time.time()
         self.hud_misses = 0
         self.pending = None       # (card, (coins, buys) before the click) of the last buy click
         if REC:
@@ -112,6 +115,12 @@ class Pilot:
                       unknown=self.brain.unknown, turn=self.brain.turn)
 
     # -- persistence (so a restart mid-game keeps the deck count) ------------
+
+    def problem(self, kind, **data):
+        """Note something that went wrong (kept per game, for the stats)."""
+        self.problems.append({"kind": kind, "turn": self.brain.turn, **data})
+        if REC:
+            REC.event("problem", kind=kind, **data)
 
     def _load_state(self, turn_arg):
         if os.path.exists(self.state_file) and not turn_arg:
@@ -157,6 +166,7 @@ class Pilot:
                     self.click(b.x, b.y, f"button '{b.text}'")
                     return True
         log(f"  no button among {[b.text for b in buttons]} matches {labels}")
+        self.problem("no_button", want=list(labels), seen=[b.text for b in buttons])
         return False
 
     def pile_pos(self, img, card):
@@ -193,6 +203,7 @@ class Pilot:
             # The game only asks for actions when you hold one, so a card was probably misread.
             self.blind_hand += 1
             log(f"  hand {hand}: no action card read, but the game asks for one - reading again")
+            self.problem("misread_hand", hand=hand)
             return
         self.blind_hand = 0
         log(f"  hand {hand} actions {s.actions} -> {card or 'no action'}")
@@ -223,6 +234,7 @@ class Pilot:
             # Coins and buys didn't change, so the click bought nothing: that pile is empty.
             card = self.pending[0]
             log(f"  buying {card} did nothing - its pile must be empty; planning again")
+            self.problem("empty_pile", card=card)
             self.brain.unbought(card)
             self.brain.empty.add(card)
             self.plan = None
@@ -284,8 +296,30 @@ class Pilot:
             os.makedirs(UNKNOWN_DIR, exist_ok=True)
             path = os.path.join(UNKNOWN_DIR, f"{int(time.time())}.png")
             cv2.imwrite(path, img)
-            log(f"  don't know how to handle prompt '{prompt}' - saved {path}; "
-                "waiting for you to resolve it in the game")
+            self.problem("unknown_prompt", prompt=prompt, screenshot=os.path.basename(path))
+            if not getattr(self.args, "auto", False):
+                log(f"  don't know how to handle prompt '{prompt}' - saved {path}; "
+                    "waiting for you to resolve it in the game")
+                return
+            log(f"  don't know how to handle prompt '{prompt}' - saved {path}; trying generic answers")
+        if getattr(self.args, "auto", False) and self.unknown_count >= 4 and self.unknown_count % 2 == 0:
+            self.auto_resolve(img, prompt)
+
+    def auto_resolve(self, img, prompt):
+        """Campaign mode: answer an unknown prompt generically (a button, else the first hand card)."""
+        tries = self.unknown_count // 2 - 1
+        buttons = self.vision.buttons(img)
+        generic = ("Done", "OK", "Confirm", "Skip", "No", "Yes", "End", "Play")
+        for b in buttons:
+            if any(g.lower() in b.text.lower() for g in generic):
+                self.click(b.x, b.y, f"auto: button '{b.text}'")
+                self.problem("auto_resolve", prompt=prompt, how=f"button {b.text}")
+                return
+        hand = self.vision.hand(img, self.names)
+        if hand:
+            t = hand[tries % len(hand)]
+            self.click(t.x, t.y + int(55 * self.vision.sy), f"auto: card {t.text}")
+            self.problem("auto_resolve", prompt=prompt, how=f"card {t.text}")
 
     # -- main loop ------------------------------------------------------------
 
@@ -305,17 +339,39 @@ class Pilot:
         texts = self.vision.read(img, (60, 250, 870, 800))
         if not any("Rematch" in t.text for t in texts):
             return False
-        def vp(shield_x):  # the VP number sits on a shield in each player's panel
-            x0, y0 = self.vision.scale(shield_x - 30, 595)
-            x1, y1 = self.vision.scale(shield_x + 30, 645)
+        def num(x, y=618):
+            """A number on the score panel: recognition on a tight crop first, else detection."""
+            x0, y0 = self.vision.scale(x - 26, y - 22)
+            x1, y1 = self.vision.scale(x + 26, y + 22)
+            crop = cv2.resize(img[y0:y1, x0:x1], None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
+            res, _ = ocr_engine()(crop, use_det=False, use_cls=False)
+            d = re.sub(r"\D", "", res[0][0]) if res else ""
+            if d:
+                return int(d)
+            x0, y0 = self.vision.scale(x - 30, y - 23)
+            x1, y1 = self.vision.scale(x + 30, y + 27)
             res, _ = ocr_engine()(img[y0:y1, x0:x1])
-            return next((r[1] for r in res or [] if r[1].isdigit()), "?")
-        me, opp = vp(200), vp(586)
-        os.makedirs(RESULTS_DIR, exist_ok=True)   # keep the score screen: the opponent's shield is hard to read
+            for r in res or []:
+                d = re.sub(r"\D", "", r[1])
+                if d:
+                    return int(d)
+            return None
+        me, opp = num(200), num(586)
+        my_rank, opp_rank = num(266), num(651)       # the laurel: 1 = first place
+        my_n, opp_n = num(334), num(719)
+        if my_rank and opp_rank and my_rank != opp_rank:
+            outcome = "win" if my_rank < opp_rank else "loss"
+        elif me is not None and opp is not None:
+            outcome = "win" if me > opp else "loss" if me < opp else "tie"
+        else:
+            outcome = "tie" if my_rank == opp_rank and my_rank else "unknown"
+        os.makedirs(RESULTS_DIR, exist_ok=True)   # keep the score screen as the record
         cv2.imwrite(os.path.join(RESULTS_DIR, f"score_{self.seed}.png"), img)
-        log(f"game over - score: me {me}, opponent {opp} (turn {self.brain.turn})")
+        self.result = {"outcome": outcome, "me": me, "opponent": opp, "my_rank": my_rank,
+                       "opp_rank": opp_rank, "panel_turns": [my_n, opp_n], "turn": self.brain.turn}
+        log(f"game over - {outcome}: me {me}, opponent {opp} (turn {self.brain.turn})")
         if REC:
-            REC.event("game_over", me=me, opponent=opp, turn=self.brain.turn,
+            REC.event("game_over", me=me, opponent=opp, turn=self.brain.turn, outcome=outcome,
                       owned=dict(self.brain.owned), kingdom=self.kingdom)
         self._save_state()
         return True
@@ -332,16 +388,17 @@ class Pilot:
             log("game finished:", prompt)
             self._save_state()
             return "done"
-        kind = ("buy" if "buy" in p else
-                "treasure" if "treasure" in p else
-                "action" if "action" in p else
-                "trash" if "trash" in p else
-                "discard" if "discard" in p else None)
+        kind = ("buy" if p.startswith("buy a card") else
+                "treasure" if p.startswith("play treasure") else
+                "action" if p.startswith("play action") else
+                "trash" if "trash" in p and "up to" in p else
+                "discard" if "discard" in p and "down to" in p else None)
         if kind is None:
             if "waiting" not in p and "turn" not in p:
                 self.on_unknown(img, prompt)
             return
         self.unknown_count = 0
+        self.last_progress = time.time()
         log(f"prompt: {prompt}")
         self.new_turn_check(kind)
         if kind in ("trash", "discard"):
@@ -388,6 +445,7 @@ def main():
     ap.add_argument("--delay", type=float, default=0.8, help="seconds to wait after a click")
     ap.add_argument("--games", type=int, default=1, help="games to play, pressing Rematch in between")
     ap.add_argument("--record", metavar="DIR", help="save window frames and events for videos")
+    ap.add_argument("--auto", action="store_true", help="answer unknown prompts generically instead of waiting")
     args = ap.parse_args()
     if args.list_models:
         print_models()

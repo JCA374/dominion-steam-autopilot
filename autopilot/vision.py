@@ -143,7 +143,7 @@ class Vision:
         """Click positions for the kingdom piles, found by their name banners."""
         upper = {n.upper(): n for n in kingdom}
         piles = {}
-        for t in self.read(img, R_KINGDOM):
+        for t in self.read(img, R_KINGDOM, cls=False):
             name = match_name(t.text, upper)
             if name:
                 piles[name] = (t.x, t.y + int(40 * self.sy))  # click the art, below the banner
