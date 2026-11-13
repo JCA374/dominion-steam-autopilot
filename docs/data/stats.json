@@ -29,14 +29,14 @@
     "Council Room"
    ],
    "outcome": "win",
-   "me": 5,
+   "me": 55,
    "opponent": 14,
    "panel_turns": [
     31,
     30
    ],
    "turns_counted": 20,
-   "minutes": 3.8,
+   "minutes": null,
    "owned": {
     "Copper": 8,
     "Estate": 3,
@@ -72,31 +72,340 @@
      "turn": 17,
      "card": "Silver"
     }
+   ],
+   "note": "points read from the saved score screen (OCR read 5-14); several restarts during this game while attack handling was fixed"
+  },
+  {
+   "game": 2,
+   "date": "2026-11-13 18:49",
+   "level": "Very Easy",
+   "opponent_tile": "Very Easy",
+   "model": "k1-steam",
+   "seed": "875351272",
+   "kingdom": [
+    "Chapel",
+    "Merchant",
+    "Workshop",
+    "Gardens",
+    "Militia",
+    "Moneylender",
+    "Poacher",
+    "Remodel",
+    "Laboratory",
+    "Artisan"
+   ],
+   "unknown_to_model": [
+    "Workshop",
+    "Poacher",
+    "Remodel",
+    "Artisan",
+    "Gardens",
+    "Militia"
+   ],
+   "outcome": "loss",
+   "me": 37,
+   "opponent": 48,
+   "panel_turns": [
+    46,
+    46
+   ],
+   "turns_counted": 35,
+   "minutes": 29.5,
+   "owned": {
+    "Copper": 9,
+    "Estate": 3,
+    "Silver": 8,
+    "Gold": 0,
+    "Province": 5,
+    "Duchy": 0,
+    "Moneylender": 1,
+    "Laboratory": 1,
+    "Merchant": 5
+   },
+   "empty_piles": [
+    "Copper",
+    "Duchy",
+    "Estate",
+    "Gold",
+    "Laboratory",
+    "Silver"
+   ],
+   "problems": [
+    {
+     "kind": "no_button",
+     "turn": 1,
+     "want": [
+      "Trash",
+      "Done",
+      "Confirm",
+      "OK"
+     ],
+     "seen": [
+      "Play Treasures",
+      "End Buys"
+     ]
+    },
+    {
+     "kind": "hud_unreadable",
+     "turn": 3,
+     "used": 4
+    },
+    {
+     "kind": "empty_pile",
+     "turn": 6,
+     "card": "Gold"
+    },
+    {
+     "kind": "empty_pile",
+     "turn": 9,
+     "card": "Silver"
+    },
+    {
+     "kind": "empty_pile",
+     "turn": 17,
+     "card": "Duchy"
+    },
+    {
+     "kind": "empty_pile",
+     "turn": 18,
+     "card": "Estate"
+    },
+    {
+     "kind": "attack_answered",
+     "turn": 18,
+     "card": "Militia",
+     "prompt": "(blank)",
+     "chosen": [
+      "Copper",
+      "Copper"
+     ]
+    },
+    {
+     "kind": "attack_answered",
+     "turn": 19,
+     "card": "Militia",
+     "prompt": "(blank)",
+     "chosen": [
+      "Estate",
+      "Copper"
+     ]
+    },
+    {
+     "kind": "selection_adjusted",
+     "turn": 19,
+     "card": "Militia",
+     "fixed": true
+    },
+    {
+     "kind": "hud_unreadable",
+     "turn": 20,
+     "used": 4
+    },
+    {
+     "kind": "attack_answered",
+     "turn": 20,
+     "card": "Militia",
+     "prompt": "(blank)",
+     "chosen": [
+      "Estate",
+      "Copper"
+     ]
+    },
+    {
+     "kind": "hud_unreadable",
+     "turn": 21,
+     "used": 4
+    },
+    {
+     "kind": "empty_pile",
+     "turn": 21,
+     "card": "Copper"
+    },
+    {
+     "kind": "empty_pile",
+     "turn": 23,
+     "card": "Laboratory"
+    },
+    {
+     "kind": "attack_answered",
+     "turn": 23,
+     "card": "Militia",
+     "prompt": "(blank)",
+     "chosen": [
+      "Estate",
+      "Copper"
+     ]
+    },
+    {
+     "kind": "selection_adjusted",
+     "turn": 23,
+     "card": "Militia",
+     "fixed": true
+    },
+    {
+     "kind": "attack_answered",
+     "turn": 23,
+     "card": "Militia",
+     "prompt": "(blank)",
+     "chosen": [
+      "Estate",
+      "Copper"
+     ]
+    },
+    {
+     "kind": "attack_answered",
+     "turn": 25,
+     "card": "Militia",
+     "prompt": "AAilitia.DicaardOaorde",
+     "chosen": [
+      "Estate",
+      "Copper"
+     ]
+    },
+    {
+     "kind": "selection_adjusted",
+     "turn": 25,
+     "card": "Militia",
+     "fixed": true
+    },
+    {
+     "kind": "attack_answered",
+     "turn": 25,
+     "card": "Militia",
+     "prompt": "AAilitia.DicaardOaorde",
+     "chosen": [
+      "Estate",
+      "Copper"
+     ]
+    },
+    {
+     "kind": "selection_adjusted",
+     "turn": 27,
+     "card": "discard",
+     "fixed": true
+    },
+    {
+     "kind": "hud_unreadable",
+     "turn": 29,
+     "used": 4
+    },
+    {
+     "kind": "attack_answered",
+     "turn": 32,
+     "card": "Militia",
+     "prompt": "(blank)",
+     "chosen": [
+      "Estate",
+      "Estate"
+     ]
+    },
+    {
+     "kind": "hud_unreadable",
+     "turn": 35,
+     "used": 4
+    }
    ]
   }
  ],
  "levels": [
   {
    "level": "Very Easy",
-   "games": 1,
-   "played": 1,
+   "games": 2,
+   "played": 2,
    "wins": 1,
-   "losses": 0,
+   "losses": 1,
    "other": 0,
-   "winrate": "100%",
-   "margin": "-9.0 (n=1)",
-   "turns": "31",
-   "minutes": "4",
-   "problems": "4.0"
+   "winrate": "50%",
+   "margin": "+15.0 (n=2)",
+   "turns": "38",
+   "minutes": "30",
+   "problems": "14.0"
   }
  ],
  "cards": [
   {
-   "card": "Artisan",
+   "card": "Chapel",
    "n": 1,
-   "win_with": "100%",
-   "win_without": "\u2013",
-   "delta": null,
+   "win_with": "0%",
+   "win_without": "100%",
+   "delta": -1.0,
+   "problems": 0,
+   "known": true,
+   "attack": false,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Gardens",
+   "n": 1,
+   "win_with": "0%",
+   "win_without": "100%",
+   "delta": -1.0,
+   "problems": 0,
+   "known": false,
+   "attack": false,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Laboratory",
+   "n": 1,
+   "win_with": "0%",
+   "win_without": "100%",
+   "delta": -1.0,
+   "problems": 0,
+   "known": true,
+   "attack": false,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Merchant",
+   "n": 1,
+   "win_with": "0%",
+   "win_without": "100%",
+   "delta": -1.0,
+   "problems": 0,
+   "known": true,
+   "attack": false,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Moneylender",
+   "n": 1,
+   "win_with": "0%",
+   "win_without": "100%",
+   "delta": -1.0,
+   "problems": 0,
+   "known": true,
+   "attack": false,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Poacher",
+   "n": 1,
+   "win_with": "0%",
+   "win_without": "100%",
+   "delta": -1.0,
+   "problems": 0,
+   "known": false,
+   "attack": false,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Remodel",
+   "n": 1,
+   "win_with": "0%",
+   "win_without": "100%",
+   "delta": -1.0,
+   "problems": 0,
+   "known": false,
+   "attack": false,
+   "levels": "Very Easy 1"
+  },
+  {
+   "card": "Workshop",
+   "n": 1,
+   "win_with": "0%",
+   "win_without": "100%",
+   "delta": -1.0,
    "problems": 0,
    "known": false,
    "attack": false,
@@ -106,8 +415,8 @@
    "card": "Bandit",
    "n": 1,
    "win_with": "100%",
-   "win_without": "\u2013",
-   "delta": null,
+   "win_without": "0%",
+   "delta": 1.0,
    "problems": 0,
    "known": false,
    "attack": true,
@@ -117,8 +426,8 @@
    "card": "Cellar",
    "n": 1,
    "win_with": "100%",
-   "win_without": "\u2013",
-   "delta": null,
+   "win_without": "0%",
+   "delta": 1.0,
    "problems": 0,
    "known": false,
    "attack": false,
@@ -128,8 +437,8 @@
    "card": "Council Room",
    "n": 1,
    "win_with": "100%",
-   "win_without": "\u2013",
-   "delta": null,
+   "win_without": "0%",
+   "delta": 1.0,
    "problems": 0,
    "known": false,
    "attack": false,
@@ -139,8 +448,8 @@
    "card": "Festival",
    "n": 1,
    "win_with": "100%",
-   "win_without": "\u2013",
-   "delta": null,
+   "win_without": "0%",
+   "delta": 1.0,
    "problems": 0,
    "known": true,
    "attack": false,
@@ -150,30 +459,19 @@
    "card": "Harbinger",
    "n": 1,
    "win_with": "100%",
-   "win_without": "\u2013",
-   "delta": null,
+   "win_without": "0%",
+   "delta": 1.0,
    "problems": 0,
    "known": false,
    "attack": false,
    "levels": "Very Easy 1"
   },
   {
-   "card": "Militia",
-   "n": 1,
-   "win_with": "100%",
-   "win_without": "\u2013",
-   "delta": null,
-   "problems": 0,
-   "known": false,
-   "attack": true,
-   "levels": "Very Easy 1"
-  },
-  {
    "card": "Throne Room",
    "n": 1,
    "win_with": "100%",
-   "win_without": "\u2013",
-   "delta": null,
+   "win_without": "0%",
+   "delta": 1.0,
    "problems": 0,
    "known": true,
    "attack": false,
@@ -183,8 +481,8 @@
    "card": "Vassal",
    "n": 1,
    "win_with": "100%",
-   "win_without": "\u2013",
-   "delta": null,
+   "win_without": "0%",
+   "delta": 1.0,
    "problems": 0,
    "known": false,
    "attack": false,
@@ -194,17 +492,39 @@
    "card": "Village",
    "n": 1,
    "win_with": "100%",
-   "win_without": "\u2013",
-   "delta": null,
+   "win_without": "0%",
+   "delta": 1.0,
    "problems": 0,
    "known": true,
    "attack": false,
    "levels": "Very Easy 1"
+  },
+  {
+   "card": "Artisan",
+   "n": 2,
+   "win_with": "50%",
+   "win_without": "\u2013",
+   "delta": null,
+   "problems": 0,
+   "known": false,
+   "attack": false,
+   "levels": "Very Easy 2"
+  },
+  {
+   "card": "Militia",
+   "n": 2,
+   "win_with": "50%",
+   "win_without": "\u2013",
+   "delta": null,
+   "problems": 0,
+   "known": false,
+   "attack": true,
+   "levels": "Very Easy 2"
   }
  ],
  "findings": [
-  "1 games so far (1 finished): 1 won, 0 lost.",
-  "Very Easy: 1 of 1 won (100%), average point margin -9.0 (n=1), 4.0 problems per game.",
+  "2 games so far (2 finished): 1 won, 1 lost.",
+  "Very Easy: 1 of 2 won (50%), about 38 turns per game, 14.0 problems per game.",
   "Samples are small: a few games per level. Treat card win rates as hints, not measurements."
  ]
 }
