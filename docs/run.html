@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dominion Autopilot: How to run it</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<nav class="top"><a class="brand" href="index.html">🃏 Dominion Autopilot</a><a href="index.html">Home</a><a href="how.html">How it works</a><a class="on" href="run.html">How to run it</a><a href="videos.html">Videos</a><a href="podcast/index.html">Podcast</a><a href="lessons.html">Lessons</a></nav>
+<main>
+<h1>How to run it</h1>
+<p class="lede">About five minutes to set up, then one command per session. The film
+<a href="videos.html#run">How to run it</a> shows every step below on screen.</p>
+
+<div class="box">
+<h3>What you need</h3>
+<ul>
+<li><b>Linux desktop.</b> Built and tested on GNOME on Wayland. The game runs inside XWayland there, which is what
+makes screenshots and clicks possible. A plain X11 desktop should work the same way, but it hasn't been tested.</li>
+<li><b>Steam with Dominion</b> (app 1131620) running through Proton. Steam turns Proton on by itself for this game.
+Snap, native and Flatpak installs of Steam are all looked for.</li>
+<li><b>Python 3.10+</b> and <b>git</b>. No graphics card, no root rights, no system packages: everything installs into
+one folder.</li>
+<li><b>Only against the built-in computer opponents.</b> Never run a bot against people online.</li>
+</ul>
+</div>
+
+<h2>1. Install</h2>
+<pre><code>git clone --recurse-submodules https://github.com/JCA374/dominion-steam-autopilot
+cd dominion-steam-autopilot
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt</code></pre>
+<p>The submodule <code>dominion-v1/</code> is the genetic-algorithm project. It holds the evolved strategy
+(<code>best_model/strategy.json</code>) and the game engine whose buy code the autopilot calls. The five packages are
+<code>python-xlib</code> (screenshots and clicks), <code>numpy</code>, <code>opencv-python-headless</code>, <code>pillow</code>
+and <code>rapidocr-onnxruntime</code> (the text reader, which ships its own small models, so nothing else downloads later).</p>
+<p>Already cloned without <code>--recurse-submodules</code>? Run <code>git submodule update --init</code>.</p>
+
+<h2>2. Start a game</h2>
+<ol>
+<li>Start Dominion from Steam.</li>
+<li>From the game's own menu, start a game against the computer. Any computer opponent works.</li>
+<li>Leave the window at its normal size (927 × 1048 here) and <b>in plain view</b>. Clicks go to screen positions,
+so a window lying on top of the game would get them instead.</li>
+</ol>
+
+<h2>3. Run</h2>
+<pre><code>.venv/bin/python autopilot/pilot.py</code></pre>
+<p>Keep your hand off the mouse while it plays: it moves the real pointer. Stop it at any time with <b>Ctrl+C</b>. It
+stops by itself on the score screen.</p>
+
+<h3>What the log means</h3>
+<p>This is real output from a recorded game:</p>
+<pre><code id="logsample">game seed -907500586 vs Very Easy AI
+kingdom: Chapel, Moat, Harbinger, Merchant, Workshop, Gardens, Remodel, Smithy, Council Room, Witch
+cards the GA never learned (never bought): Harbinger, Workshop, Remodel
+prompt: Play Treasure cards.
+  click button 'Play Treasures' @ (849,776)
+prompt: Buy a card.
+  $3 1 buy(s), provinces 8 -> buy ['Silver']
+  click buy Silver @ (157,138)
+prompt: Play Treasure cards.
+=== turn 2 (early) provinces 8 deck 11
+  ...
+  hand ['Smithy', 'Copper', 'Copper', 'Copper', 'Silver'] actions 1 -> Smithy
+  click Smithy @ (213,959)</code></pre>
+<div class="tablewrap"><table class="t">
+<tr><th>Line</th><th>Meaning</th></tr>
+<tr><td><code>game seed … vs …</code></td><td>Read from the game's save file: the seed names this game's memory file; the opponent's name.</td></tr>
+<tr><td><code>kingdom:</code></td><td>The ten kingdom cards, also from the save file.</td></tr>
+<tr><td><code>never learned</code></td><td>Kingdom cards outside the 15 the strategy was evolved with. It never buys them.</td></tr>
+<tr><td><code>prompt:</code></td><td>The sentence under the supply that says what the game wants now.</td></tr>
+<tr><td><code>=== turn N (phase)</code></td><td>A new turn: the strategy's phase (early, mid, late), Provinces left, cards owned.</td></tr>
+<tr><td><code>hand […] actions N -&gt; X</code></td><td>What it read in your hand, the actions counter, and the card it chose to play.</td></tr>
+<tr><td><code>$C B buy(s) … -&gt; buy […]</code></td><td>Coins and buys read from the counters, and the purchases the strategy's own code chose.</td></tr>
+<tr><td><code>click … @ (x,y)</code></td><td>A click, in window pixels.</td></tr>
+</table></div>
+
+<h2>Options</h2>
+<div class="tablewrap"><table class="t">
+<tr><th>Option</th><th>What it does</th></tr>
+<tr><td><code>--games N</code></td><td>Play N games in a row. After each score screen it presses Rematch and waits for the new game's save file.</td></tr>
+<tr><td><code>--turn N</code></td><td>You start it in the middle of a game on turn N (and it has no memory file for this game yet).</td></tr>
+<tr><td><code>--dry</code></td><td>Read and decide, but never click. A safe first test: watch the log while you play yourself.</td></tr>
+<tr><td><code>--record DIR</code></td><td>Also save window frames (4 per second) and every read, decision and click to <code>DIR/</code>. The films on this site were built from such recordings.</td></tr>
+<tr><td><code>--model FILE</code></td><td>Play a different strategy file (default <code>dominion-v1/best_model/strategy.json</code>).</td></tr>
+<tr><td><code>--once</code></td><td>Handle one prompt and exit (debugging).</td></tr>
+<tr><td><code>--poll S</code>, <code>--delay S</code></td><td>Seconds between screen reads (0.5) and after each click (0.8).</td></tr>
+</table></div>
+
+<h2>When it gets stuck</h2>
+<ul>
+<li><b>A prompt it doesn't understand</b> (for example a choice from a card it doesn't know): it saves a screenshot to
+<code>autopilot/unknown/</code>, prints a line starting <code>don't know how to handle prompt</code> and waits. Answer the
+question yourself in the game; it carries on by itself.</li>
+<li><b>Stopped mid-game?</b> Its memory (turn, Provinces left, cards owned, empty piles) is saved after every turn in
+<code>autopilot/run_&lt;seed&gt;.json</code>. Start it again and it picks up where it was.</li>
+</ul>
+
+<h2>Troubleshooting</h2>
+<div class="tablewrap"><table class="t">
+<tr><th>Symptom</th><th>Likely cause and fix</th></tr>
+<tr><td><code>Dominion window not found</code></td><td>The game isn't running, or the window has another title. Start the game first.</td></tr>
+<tr><td>Finds the window, never clicks</td><td>The prompt line under the supply isn't visible or readable: is a menu or dialog open?</td></tr>
+<tr><td>Clicks the wrong places</td><td>The window was resized or moved half off screen. Put it back to its normal size.</td></tr>
+<tr><td>Clicks land in another program</td><td>Another window covers the game. Keep the game in plain view.</td></tr>
+<tr><td>Very slow</td><td>Something else is using the processor: the text reader is CPU-only. See the timings on <a href="how.html#speed">How it works</a>.</td></tr>
+<tr><td>Keeps "buying" without effect</td><td>An empty pile. Since the fix described in <a href="lessons.html">Lessons</a> it notices this after one click and plans again.</td></tr>
+</table></div>
+</main>
+<footer>Dominion Autopilot · an evolved strategy plays Steam Dominion through the screen. Not affiliated with the makers of Dominion.</footer>
+</body></html>

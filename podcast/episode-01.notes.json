@@ -1,0 +1,5 @@
+["The evolved strategy (dominion-v1) beats Big Money 73% and its hall of fame 54% in its own engine",
+ "Steam Dominion runs under Proton as an XWayland window: screenshots (~50 ms) and XTEST clicks work without a permission prompt",
+ "The kingdom comes from the game's own save file (gamelocal_*.xml)",
+ "Clicks only register after a hover; clicks during animations are lost",
+ "First full game: won 58-8 against Very Easy AI in 21 turns"]

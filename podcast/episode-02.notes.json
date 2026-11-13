@@ -1,0 +1,5 @@
+["One prompt per loop pass: screenshot until still, read the prompt line, run its handler",
+ "Hand names are fuzzy-matched (>= 80% similar) to this game's cards; counters give actions, coins, buys",
+ "Buys come from dominion-v1's own play_buy_phase on a stand-in state (buy targets + terminal density included)",
+ "Clicks: glide, rest 0.35 s, press and hold 0.15 s, via XTEST",
+ "Memory per game in autopilot/run_<seed>.json; rematch with --games N"]

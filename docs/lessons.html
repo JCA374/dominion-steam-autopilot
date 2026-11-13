@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dominion Autopilot: Lessons</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<nav class="top"><a class="brand" href="index.html">🃏 Dominion Autopilot</a><a href="index.html">Home</a><a href="how.html">How it works</a><a href="run.html">How to run it</a><a href="videos.html">Videos</a><a href="podcast/index.html">Podcast</a><a href="lessons.html" class="on">Lessons</a></nav>
+<main>
+<h1>Lessons</h1>
+<p class="lede">Everything that went wrong on the way, in the order it happened, and what fixed it. Each bug was found by
+watching a real game, not by guessing.</p>
+
+<div class="lesson"><h3>1. The game ignores instant clicks</h3>
+<p><b>Seen:</b> the first click (on <i>Play Treasures</i>) worked, the click on the Silver pile did nothing.
+<b>Cause:</b> the game only takes a click after the pointer has hovered on the target. A pointer that jumps there and
+presses within 80 ms isn't seen as hovering. <b>Fix:</b> glide the last few pixels, rest 0.35 s, press, hold 0.15 s.</p></div>
+
+<div class="lesson"><h3>2. Clicks during animations are lost</h3>
+<p><b>Seen:</b> Smithy needed two or three clicks at the start of some turns. The actions counter still showed 0, and the
+opponent's Vassal was still in the middle of the screen. <b>Cause:</b> the turn was still starting up. <b>Fix:</b> act
+only on a still screen (two screenshots 0.35 s apart that barely differ), and in the action phase only once the actions
+counter shows at least 1. After this, Smithy played on the first click.</p></div>
+
+<div class="lesson"><h3>3. Click the card body, not its name</h3>
+<p><b>Seen:</b> clicks aimed at the card-name banner sometimes missed. <b>Cause:</b> a hovered hand card lifts up, so
+the banner moves away from the pointer. <b>Fix:</b> click 55 px below the banner.</p></div>
+
+<div class="lesson"><h3>4. The tilted card is read upside down</h3>
+<p><b>Seen:</b> on two turns of the first recorded game the log said <code>hand ['Copper', 'Copper', 'Estate',
+'Estate'] -&gt; no action</code> with only $2 to spend, although the game was asking for actions. <b>Cause:</b> the
+leftmost hand card is tilted, and the OCR's orientation check sometimes decided it was upside down and turned it:
+SMITHY came out as <code>AHLIWS</code>, which is exactly what the reader gives for that banner turned 180°.
+<b>First fix, wrong:</b> re-read an unmatched word turned 180°. It passed a test where I had flipped the patch myself,
+but on the real frame it made things worse, and in the next game Smithy was skipped again on turn 6. Lesson inside the
+lesson: test a fix on the real failing frame, not on a fake of it. <b>Real fix:</b> the orientation check is off for
+the hand (cards are never upside down). A word that still matches nothing is read once more on its own, and if the game
+asks for actions but no action card was read, it reads again before ending the phase.</p></div>
+
+<div class="lesson"><h3>5. Empty piles stalled a game for 27 turns</h3>
+<p><b>Seen:</b> Provinces stayed at 2 from turn 25 to turn 52, and every turn "bought" a Duchy or an Estate. <b>Cause:</b>
+both piles were empty (a red X on the pile). The stand-in supply always had 10 of each card, so the strategy kept asking
+for them. Clicking an empty pile does nothing, and with one buy the turn ended without a purchase. In the simulator this
+can't happen: it knows the pile counts. <b>Fix:</b> after a buy click, if coins and buys didn't change, mark the pile
+empty and ask the strategy again. Restarted with the fix at turn 52, it noticed both empty piles in its first two buy
+phases, went back to buying treasure, and won 76 to 7 (turn 66 by its own count).</p></div>
+
+<div class="lesson"><h3>6. The evolved late game has a weak spot</h3>
+<p>That long game also showed something about the strategy itself. Its late buy list ranks Silver above Gold and keeps
+Copper above PASS, so a long late game fills the deck with green cards and weak treasure, and $8 hands get rare. In training this rarely mattered: the simulator ends every game at turn 40. It's a property of the
+model, not of the autopilot, and a reason to evolve with longer games or a three-pile ending.</p></div>
+
+<div class="lesson"><h3>7. Smaller ones</h3>
+<ul>
+<li><b>Each game has its own save file</b> (<code>gamelocal_0_-1.xml</code>, <code>-2</code>, …). Read the newest, not a
+fixed name, or a rematch plays with the previous kingdom.</li>
+<li><b><code>council_room</code></b> in the save file needs <code>_</code> → space before it matches "Council Room".</li>
+<li><b>The opponent's score shield</b> is hard to read for the OCR (single digit, coloured shield). The score screen is
+saved as a picture instead.</li>
+<li><b><code>pkill -f pilot.py</code> from a script kills the script too</b>, because its own command line contains
+those words. Kill the Python process by its exact command instead.</li>
+<li><b>Busy processor:</b> with all cores taken by another job, one OCR region took 6–9 s instead of a fraction of a
+second. The bot still plays correctly, just slowly.</li>
+</ul></div>
+</main>
+<footer>Dominion Autopilot · an evolved strategy plays Steam Dominion through the screen. Not affiliated with the makers of Dominion.</footer>
+</body></html>

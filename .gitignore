@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+autopilot/run_*.json
+autopilot/unknown/
+autopilot/*.log
+recordings/
+video/build/
+voice/*/audio/
+voice/*/.cache/
+podcast/publish_*.log
+voice/
+autopilot/results/
+video/render.log

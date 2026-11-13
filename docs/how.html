@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dominion Autopilot: How it works</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<nav class="top"><a class="brand" href="index.html">🃏 Dominion Autopilot</a><a href="index.html">Home</a><a class="on" href="how.html">How it works</a><a href="run.html">How to run it</a><a href="videos.html">Videos</a><a href="podcast/index.html">Podcast</a><a href="lessons.html">Lessons</a></nav>
+<main>
+<h1>How it works</h1>
+<p class="lede">An evolved strategy plays a game it was never built for, through the same screen and mouse a person uses.
+This page goes through every part in order. The film <a href="videos.html#works">How it works</a> shows the same
+steps on recorded footage.</p>
+
+<div class="box"><h3>Contents</h3><ol class="toc">
+<li><a href="#problem">The problem</a></li><li><a href="#loop">Three parts in a loop</a></li>
+<li><a href="#screenshot">Eyes 1: the screenshot</a></li><li><a href="#ocr">Eyes 2: reading text</a></li>
+<li><a href="#kingdom">The kingdom from the save file</a></li><li><a href="#strategy">Brain 1: the evolved strategy</a></li>
+<li><a href="#buy">Brain 2: buying with the strategy's own code</a></li><li><a href="#actions">Brain 3: playing actions</a></li>
+<li><a href="#unknown">Cards it never learned</a></li><li><a href="#click">Hands: the patient click</a></li>
+<li><a href="#timing">Timing: wait for a still screen</a></li><li><a href="#memory">Memory between turns</a></li>
+<li><a href="#end">Score screen and rematch</a></li><li><a href="#speed">Speed</a></li><li><a href="#files">The files</a></li>
+</ol></div>
+
+<h2 id="problem">The problem</h2>
+<p>The strategy comes from <a href="https://github.com/JCA374/dominion-v1">dominion-v1</a>: a genetic algorithm that
+evolved Dominion strategies over thousands of games in its own small engine (Python, with a C version for speed). Its
+output is one file, <code>best_model/strategy.json</code>. Against its hall of fame it wins about 54% of games, and 73%
+against plain Big Money (50 seat-swapped games each).</p>
+<p>The Steam game is a different program: a closed Windows game (by Temple Gates) that runs on Linux through Proton. It has no
+bot interface, no mods, and no file that shows your hand. So the autopilot does what a person does: look, decide, click.</p>
+
+<h2 id="loop">Three parts in a loop</h2>
+<div class="flow">
+<div class="step eyes"><b>Eyes</b>Screenshot of the game window, then text reading (OCR) in a few fixed regions.
+<br><code>grab.py</code>, <code>vision.py</code></div>
+<div class="step brain"><b>Brain</b>The evolved strategy turns what was read into a decision.<br><code>brain.py</code></div>
+<div class="step hands"><b>Hands</b>Mouse moves and clicks, sent through XTEST.<br><code>click.py</code></div>
+</div>
+<p>The loop in <code>pilot.py</code> handles one prompt per pass. The prompt is the sentence under the supply that says
+what the game wants: <i>Play Action cards.</i>, <i>Play Treasure cards.</i> or <i>Buy a card.</i> Each kind has its own
+handler. A prompt it doesn't know is saved as a screenshot, and the autopilot waits.</p>
+
+<h2 id="screenshot">Eyes 1: the screenshot</h2>
+<p>On a Wayland desktop, one program normally can't look at another one's window. But Proton runs the game as an X11 window
+inside <b>XWayland</b>, and inside that layer the old X11 calls still work. <code>grab.py</code> walks the X11 window tree,
+finds the window titled <code>Dominion</code> (927 × 1048 pixels here), and copies its pixels with <code>XGetImage</code>.
+No permission dialog appears. One screenshot takes about 50 ms (measured, 20 grabs).</p>
+
+<h2 id="ocr">Eyes 2: reading text</h2>
+<figure class="shot"><img src="img/ocr.jpg" alt="Game window with blue boxes around the regions the autopilot reads">
+<figcaption>A real moment from a recording. Blue boxes are the regions it read just now, with what it read on top.</figcaption></figure>
+<p>The text reader is <a href="https://github.com/RapidAI/RapidOCR">RapidOCR</a> (ONNX models, CPU only). It never reads
+the whole screen, only these regions (coordinates for a 927 × 1048 window, scaled if the window is bigger or smaller):</p>
+<div class="tablewrap"><table class="t">
+<tr><th>Region</th><th>Box (x0, y0, x1, y1)</th><th>What comes out</th></tr>
+<tr><td>Prompt line</td><td>150, 292, 780, 326</td><td><i>Play Action cards.</i> etc.</td></tr>
+<tr><td>Hand</td><td>100, 820, 780, 1000</td><td>Card-name banners, e.g. COPPER, SMITHY, with their positions (= where to click)</td></tr>
+<tr><td>Counters</td><td>0, 735, 200, 782</td><td>Three digits, left to right: actions, coins, buys</td></tr>
+<tr><td>Buttons</td><td>760, 700, 927, 900</td><td>"Play Treasures", "End Actions", "End Buys" (two-line labels are joined)</td></tr>
+<tr><td>Kingdom names</td><td>190, 40, 870, 200</td><td>The 10 kingdom piles and where they are, once per game</td></tr>
+<tr><td>Province count</td><td>100, 84, 128, 104</td><td>Provinces left (the strategy's phase depends on it)</td></tr>
+</table></div>
+<p><b>Fixing small reading mistakes.</b> Every name is matched to this game's card list: exact match first, else the
+most similar name if it is at least 80% similar. ESTATE sometimes comes out as <i>STATE</i>, COUNCIL ROOM as
+<i>COUNCILROOM</i>. The base piles (Province, Gold, …) sit at fixed positions and aren't read.</p>
+<figure class="shot"><img src="img/flip.jpg" alt="The tilted Smithy card at the left of the hand, read upside down">
+<figcaption>A bug the recording found. The tilted card at the far left was sometimes read upside down: SMITHY came out as
+<code>AHLIWS</code>, so the autopilot ended its action phase without playing Smithy (three times in two games). The
+reader has an orientation check that turns text it thinks is upside down, and it guessed wrong on that card. Hand cards
+are never upside down, so the check is off for the hand. A word that still matches no card is read once more on its own
+(as it is, then turned 180°), and if the game asks for actions but no action card was read, it reads again before
+giving up.</figcaption></figure>
+
+<h2 id="kingdom">The kingdom from the save file</h2>
+<p>The ten kingdom cards aren't recognised from the screen at all. Dominion saves each local game as
+<code>TempleGates/Dominion/gamelocal_*.xml</code> inside the Proton prefix
+(<code>steamapps/compatdata/1131620/pfx/drive_c/users/steamuser/AppData/Roaming/</code>). The newest file is the
+current game. It is plain XML:</p>
+<pre><code>&lt;players&gt;&lt;playerType&gt;AI&lt;/playerType&gt;&lt;playerName&gt;Very Easy AI&lt;/playerName&gt;&lt;/players&gt;
+&lt;config&gt;
+  &lt;seed&gt;-907500586&lt;/seed&gt;
+  &lt;setupData&gt;-e base&lt;/setupData&gt;
+  &lt;kingdomData&gt;chapel, moat, harbinger, merchant, workshop, gardens, remodel, smithy, council_room, witch&lt;/kingdomData&gt;
+&lt;/config&gt;</code></pre>
+<p>The seed names the game's memory file. The piles are still found on screen by their names, because their positions
+change from game to game.</p>
+
+<h2 id="strategy">Brain 1: the evolved strategy</h2>
+<p><code>strategy.json</code> is a small genome of ordered lists and numbers. The game is split into three phases:</p>
+<div class="tablewrap"><table class="t" id="phases">
+<tr><th>Phase</th><th>When (this model)</th><th>Buy list, in order (stops at PASS)</th></tr>
+<tr><td>Early</td><td>turns 1–2</td><td>Smithy, Duchy, Silver, Merchant, <b>PASS</b></td></tr>
+<tr><td>Middle</td><td>until 2 Provinces are left, or turn 16</td><td>Province, Gold, Silver, Village, Festival, Market, <b>PASS</b></td></tr>
+<tr><td>Late</td><td>to the end</td><td>Province, Duchy, Moneylender, Estate, Laboratory, Smithy, Silver, Gold, Mine, Copper, … (no PASS until the very end)</td></tr>
+</table></div>
+<p>It also holds the action order (non-terminals <i>Merchant &gt; Market &gt; Village &gt; Festival &gt; Laboratory</i>,
+then terminals <i>Throne Room &gt; Smithy &gt; Moneylender &gt; Chapel &gt; Mine</i>), Chapel trash lists per phase, the
+Throne Room target order, buy targets (maximum copies, e.g. at most 1 Village), and a terminal-slack number.</p>
+
+<h2 id="buy">Brain 2: buying with the strategy's own code</h2>
+<p>The autopilot doesn't re-implement the buy rules. On the first <i>Buy a card.</i> prompt of a turn it:</p>
+<ol>
+<li>reads coins and buys from the counters, and the Province count;</li>
+<li>builds a stand-in <code>GameState</code>: those coins and buys, a supply (10 of each card, the real Province count, 0
+for piles seen empty), and a deck of every card it owns;</li>
+<li>calls <code>core.engine.play_buy_phase(state, strategy)</code> from dominion-v1, the same function used in training;</li>
+<li>takes whatever that function put in the discard pile as the plan, and clicks the piles one by one.</li>
+</ol>
+<p>So the buys on Steam are exactly the buys the strategy makes in its simulator, with its two hidden rules: <b>buy
+targets</b> (stop at N copies) and <b>terminal density</b> (refuse a terminal action card when the deck has no spare
+actions for it, given the slack).</p>
+<p><b>Empty piles</b> (found by a recording, see <a href="lessons.html">Lessons</a>): if a buy click leaves coins and
+buys unchanged, the click bought nothing, so that pile is empty. It is set to 0 in the stand-in supply and the strategy
+is asked again.</p>
+
+<h2 id="actions">Brain 3: playing actions</h2>
+<p>When the prompt asks for actions, it reads the hand and the actions counter, and plays the first card of the
+non-terminal list that is in hand, else the first terminal. A Moneylender without a Copper in hand, and a Throne Room
+without another action, are skipped. After every play it takes a new screenshot, because the hand has changed. With no
+card worth playing it presses <i>End Actions</i>. Treasures are always played with the <i>Play Treasures</i> button.</p>
+<p>Prompts for trashing (Chapel) and for discarding down to a number (e.g. against Militia) have handlers that use the
+strategy's Chapel lists and the GA engine's own Militia discard order. They are written but haven't come up in a
+recorded game yet.</p>
+
+<h2 id="unknown">Cards it never learned</h2>
+<p>The strategy was evolved with 15 base-set kingdom cards: Village, Smithy, Market, Laboratory, Festival, Chapel, Throne
+Room, Council Room, Moneylender, Gardens, Mine, Merchant, Militia, Witch, Moat. Steam deals kingdoms from hundreds of
+cards. Any other card is left out of the stand-in supply, so the strategy can't buy it, and the autopilot never needs
+to know how to play it. In the recorded games Harbinger, Vassal, Workshop, Remodel, Artisan and Bureaucrat were ignored this way.
+Some kingdom cards it does know (Witch, Moat, Council Room) don't appear in this model's buy lists, so it never buys
+those either.</p>
+
+<h2 id="click">Hands: the patient click</h2>
+<p><code>click.py</code> sends pointer events with the XTEST extension, which XWayland passes on to the game. The first
+version clicked instantly, and the game ignored clicks on cards. It only accepts a click after the pointer has
+<b>hovered</b> on the target for a moment. So each click glides the last few pixels (3 steps), rests 0.35 s, presses,
+holds 0.15 s and releases. Hand cards are clicked 55 px below their name banner, on the card body, because a hovered
+card lifts up.</p>
+
+<h2 id="timing">Timing: wait for a still screen</h2>
+<p>At the start of a turn the game animates: the hand slides in, and the opponent's last card is still shown in the middle.
+Clicks during that are lost. Two rules fixed it:</p>
+<ul><li>before reading, take screenshots 0.35 s apart until two in a row differ by less than 0.5 grey levels on average
+(up to ten tries);</li>
+<li>in the action phase, wait (up to three tries) until the actions counter shows at least 1.</li></ul>
+
+<h2 id="memory">Memory between turns</h2>
+<p>A new turn is counted when an action or treasure prompt follows a buy prompt. After every turn the autopilot writes
+<code>autopilot/run_&lt;seed&gt;.json</code>: turn, Provinces left, cards owned (starting with 7 Copper and 3 Estate,
+plus buys, minus trashing), and piles seen empty. Restarting it in the same game reloads that file. Cards gained from
+attacks (a Witch's Curse) aren't seen, so the owned count can be a little off. It only feeds the buy-target and
+terminal-density rules.</p>
+
+<h2 id="end">Score screen and rematch</h2>
+<p>When the game ends, the prompt line is empty and a Score dialog appears. The autopilot looks for its <i>Rematch</i>
+button, reads the victory points from the two shields, logs the result, and saves the screenshot to
+<code>autopilot/results/</code>. (The opponent's shield is often unreadable for the OCR. The saved screenshot always shows the
+real score.) With <code>--games N</code> it presses Rematch, waits for the new game's save file, reads the new kingdom,
+and starts again.</p>
+
+<h2 id="speed">Speed</h2>
+<div id="speedbox"><p>Measured on this machine (8 CPU cores), from the timings the recorder logs for every read:</p>
+<div class="tablewrap"><table class="t">
+<tr><th>Step</th><th>Time</th><th>Conditions</th></tr>
+<tr><td>Screenshot of the window</td><td class="num">≈ 50 ms</td><td>20 grabs, while recording</td></tr>
+<tr><td>OCR, prompt line</td><td class="num">2.7 s</td><td rowspan="5">median over game 3 (286 reads), with the narration for these films rendering on the same machine</td></tr>
+<tr><td>OCR, hand</td><td class="num">3.4 s</td></tr>
+<tr><td>OCR, counters</td><td class="num">3.5 s</td></tr>
+<tr><td>OCR, buttons</td><td class="num">1.0 s</td></tr>
+<tr><td>OCR, Province count</td><td class="num">0.5 s</td></tr>
+<tr><td>OCR, one region</td><td class="num">6–9 s</td><td>all 8 cores busy with another job (first game)</td></tr>
+<tr><td>A whole turn (both players)</td><td class="num">≈ 25 s</td><td>game 3: 39 turns in 16.6 minutes</td></tr>
+</table></div>
+<p>The text reader is the slow part, and it is CPU-only. No idle-machine timing was recorded yet.</p></div>
+
+<h2 id="files">The files</h2>
+<div class="tablewrap"><table class="t">
+<tr><th>File</th><th>Job</th></tr>
+<tr><td><code>autopilot/pilot.py</code></td><td>The loop, prompt handlers, memory, rematch, command-line options</td></tr>
+<tr><td><code>autopilot/vision.py</code></td><td>Regions, OCR, name matching, the upside-down re-read</td></tr>
+<tr><td><code>autopilot/brain.py</code></td><td>Decisions from <code>strategy.json</code>; buying through dominion-v1's <code>play_buy_phase</code></td></tr>
+<tr><td><code>autopilot/grab.py</code>, <code>click.py</code></td><td>Screenshot and click on the XWayland window</td></tr>
+<tr><td><code>autopilot/recorder.py</code></td><td><code>--record</code>: frames (4/s) and an event log, on a second X connection</td></tr>
+<tr><td><code>video/</code></td><td>Film scripts and builders (every frame from a recording)</td></tr>
+<tr><td><code>dominion-v1/</code></td><td>Submodule: the genetic algorithm, its engine and the evolved strategy</td></tr>
+</table></div>
+</main>
+<footer>Dominion Autopilot · an evolved strategy plays Steam Dominion through the screen. Not affiliated with the makers of Dominion.</footer>
+</body></html>

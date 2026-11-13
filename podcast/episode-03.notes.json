@@ -1,0 +1,5 @@
+["Bug: the tilted leftmost card was read upside down (SMITHY -> AHLIWS); fixed by turning off the OCR orientation check for the hand",
+ "First fix was wrong: it passed a faked test, failed on the real frame",
+ "Bug: empty Duchy/Estate piles stalled game 2 for 27 turns; fixed by checking coins/buys after each buy click",
+ "Results vs Very Easy AI: 58-8, 76-7, 55-35",
+ "The strategy's late game (Silver over Gold, buys Copper) is weak in long games: trained with a 40-turn cap"]

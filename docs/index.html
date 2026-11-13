@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dominion Autopilot</title>
+<meta name="description" content="An evolved Dominion strategy plays the Steam version of Dominion on its own, through screenshots, OCR and mouse clicks.">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<nav class="top"><a class="brand" href="index.html">🃏 Dominion Autopilot</a><a class="on" href="index.html">Home</a><a href="how.html">How it works</a><a href="run.html">How to run it</a><a href="videos.html">Videos</a><a href="podcast/index.html">Podcast</a><a href="lessons.html">Lessons</a></nav>
+<main>
+<h1>An evolved strategy plays Steam Dominion</h1>
+<p class="lede">A genetic algorithm (<a href="https://github.com/JCA374/dominion-v1">dominion-v1</a>) evolved a Dominion
+strategy in its own simulator. Steam Dominion has no way for a bot to plug in. So this autopilot plays it the way a person does:
+it takes a <b>screenshot</b> of the game window, <b>reads</b> it with OCR, asks the evolved <b>strategy</b> what to do, and
+<b>clicks</b>. It plays whole games on its own, against the built-in computer opponents only.</p>
+
+<div class="cards">
+<div class="card"><div class="k">Games played</div><div class="v">3</div><div class="s">all vs Very Easy AI</div></div>
+<div class="card"><div class="k">Won</div><div class="v">3</div><div class="s">58–8 · 76–7 · 55–35</div></div>
+<div class="card"><div class="k">Cards it knows</div><div class="v">15</div><div class="s">the base-set cards it was evolved with</div></div>
+<div class="card"><div class="k">Bugs found by recordings</div><div class="v">2</div><div class="s">upside-down Smithy · empty piles</div></div>
+</div>
+
+<h2>Start here</h2>
+<div class="flow">
+<div class="step eyes"><b><a href="videos.html#run">▶ How to run it</a></b>A 5-minute film: install, start a game, one command.</div>
+<div class="step brain"><b><a href="videos.html#works">▶ How it works</a></b>A 9-minute film: every part, from the screenshot to the click.</div>
+<div class="step hands"><b><a href="videos.html#game">▶ Watch a full game</a></b>Game 3 from the first turn to the score screen, sped up.</div>
+<div class="step"><b><a href="podcast/index.html">🎧 Podcast</a></b>Three episodes: the story, the machine, and what the games taught.</div>
+</div>
+
+<h2>The three games</h2>
+<div class="tablewrap"><table class="t">
+<tr><th>#</th><th>Kingdom</th><th>Result</th><th>Turns*</th><th>What happened</th></tr>
+<tr><td>1</td><td>Chapel, Harbinger, Vassal, Workshop, Gardens, Moneylender, Remodel, Smithy, Market, Artisan</td>
+<td class="result win">won 58–8</td><td class="num">21</td><td>The first full game. Silver, Smithy, three Golds, then Provinces. Not recorded.</td></tr>
+<tr><td>2</td><td>Chapel, Moat, Harbinger, Merchant, Workshop, Gardens, Remodel, Smithy, Council Room, Witch</td>
+<td class="result win">won 76–7</td><td class="num">66</td><td>Recorded. Smithy misread twice (upside down). Then the Duchy and Estate piles ran out and
+it kept clicking them: stuck at 2 Provinces from turn 25 to 52. Stopped, fixed, restarted: it noticed the empty piles at once and finished the game.</td></tr>
+<tr><td>3</td><td>Vassal, Workshop, Bureaucrat, Gardens, Smithy, Throne Room, Festival, Laboratory, Mine, Witch</td>
+<td class="result win">won 55–35</td><td class="num">39</td><td>Recorded (the <a href="videos.html#game">full-game film</a>). One more misread on turn 6 led to the real fix. The empty Estate pile was
+caught after one click. Ended on three empty piles.</td></tr>
+</table></div>
+<p class="small muted">* Turns by the autopilot's own count. The opponent's score was read from the saved score screens below.</p>
+<div class="two">
+<figure class="shot"><img src="img/score_-907500586.jpg" alt="Score screen of game 2: 76 to 7"><figcaption>Game 2: 76–7</figcaption></figure>
+<figure class="shot"><img src="img/score_324825159.jpg" alt="Score screen of game 3: 55 to 35"><figcaption>Game 3: 55–35</figcaption></figure>
+</div>
+
+<h2>How it works, in one picture</h2>
+<figure class="shot"><img src="img/ocr.jpg" alt="Game window with blue boxes around the regions the autopilot reads" style="max-width:520px;margin:0 auto">
+<figcaption>A real moment from a recording: the blue boxes are what it just read (prompt line, hand, counters, buttons).
+The kingdom comes from the game's own save file. The buys come from the strategy's own training code.
+<a href="how.html">Every part in detail →</a></figcaption></figure>
+
+<h2>Quick start</h2>
+<pre><code>git clone --recurse-submodules https://github.com/JCA374/dominion-steam-autopilot
+cd dominion-steam-autopilot
+python3 -m venv .venv &amp;&amp; .venv/bin/pip install -r requirements.txt
+# start Dominion from Steam, begin a game against the computer, then:
+.venv/bin/python autopilot/pilot.py</code></pre>
+<p>Linux with Steam (Proton) needed. Keep the window at its normal size and in view, and your hands off the mouse.
+<a href="run.html">All the details →</a></p>
+
+<h2>Honest limits</h2>
+<ul>
+<li>The strategy knows 15 base-set cards. Any other kingdom card is never bought.</li>
+<li>Prompts it doesn't understand (choices from unknown cards) make it save a screenshot and wait for you.</li>
+<li>Tested on one machine and one window size (927 × 1048), against the easiest opponent.</li>
+<li>The evolved late game is weak in long games (Silver over Gold, buys Copper). See <a href="lessons.html">Lessons</a>.</li>
+<li>Only against the built-in computer opponents. Never run it against people online.</li>
+</ul>
+</main>
+<footer>Dominion Autopilot · an evolved strategy plays Steam Dominion through the screen. Not affiliated with the makers of Dominion. Source: <a href="https://github.com/JCA374/dominion-steam-autopilot">github.com/JCA374/dominion-steam-autopilot</a></footer>
+</body></html>

@@ -1,0 +1,21 @@
+/* Additions for the Dominion Autopilot pages (on top of style.css). */
+figure.shot { margin: 16px 0; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+figure.shot img, figure.shot video { width: 100%; display: block; border-radius: 8px; background: #000; }
+figure.shot figcaption { color: var(--muted); font-size: .88rem; margin-top: 8px; }
+.film { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 18px 0; }
+.film video { width: 100%; aspect-ratio: 16 / 9; display: block; border-radius: 8px; background: #000; }
+.film h2 { margin: 4px 0 6px; }
+.film .chapters { columns: 2; font-size: .9rem; color: var(--muted); margin: 8px 0 0; padding-left: 18px; }
+@media (max-width: 640px) { .film .chapters { columns: 1; } }
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+.flow .step { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.flow .step b { display: block; font-size: 1.05rem; margin-bottom: 4px; }
+.flow .step.eyes { border-top: 4px solid var(--accent); }
+.flow .step.brain { border-top: 4px solid var(--good); }
+.flow .step.hands { border-top: 4px solid var(--warn); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+@media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+ol.steps li, ul li { margin: 4px 0; }
+.result.win { color: var(--good); font-weight: 650; }
+.toc { columns: 2; font-size: .95rem; }
+@media (max-width: 640px) { .toc { columns: 1; } }

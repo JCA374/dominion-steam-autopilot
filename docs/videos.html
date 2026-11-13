@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dominion Autopilot: Videos</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<nav class="top"><a class="brand" href="index.html">🃏 Dominion Autopilot</a><a href="index.html">Home</a><a href="how.html">How it works</a><a href="run.html">How to run it</a><a class="on" href="videos.html">Videos</a><a href="podcast/index.html">Podcast</a><a href="lessons.html">Lessons</a></nav>
+<main>
+<h1>Videos</h1>
+<p class="lede">Narrated instruction films. The game footage comes from real recordings of the autopilot
+(<code>--record</code>): the blue boxes are what it read at that moment, the gold rings are its clicks, and the log on
+the right is its own log. Speed-ups are marked on screen. Narration: Kokoro TTS, checked word by word with Whisper.</p>
+
+<div class="film" id="run">
+<h2>How to run it</h2>
+<p class="muted">Install, start a game, run one command; the options, what to do when it gets stuck, troubleshooting.</p>
+<video controls preload="metadata" src="video/how-to-run.mp4"></video>
+<ol class="chapters"><li>What you'll get</li><li>What you need</li><li>Install</li><li>Start a game</li><li>Run it and read the log</li>
+<li>While it plays</li><li>The score screen</li><li>Options</li><li>When it gets stuck</li><li>Troubleshooting</li><li>Summary</li></ol>
+</div>
+
+<div class="film" id="works">
+<h2>How it works, in detail</h2>
+<p class="muted">From the screenshot to the click: XWayland, OCR regions, name matching, the save file, the evolved
+strategy, buying through the training engine's own code, clicks, timing, memory, and the two bugs the recordings exposed.</p>
+<video controls preload="metadata" src="video/how-it-works.mp4"></video>
+<ol class="chapters"><li>Intro</li><li>The problem</li><li>Three parts in a loop</li><li>Screenshots</li><li>Reading text (OCR)</li>
+<li>Fixing reading mistakes (and the upside-down Smithy)</li><li>The kingdom from the save file</li><li>The evolved strategy</li>
+<li>Buying with the strategy's own code</li><li>Cards it never learned</li><li>Playing actions</li><li>The patient click</li>
+<li>Waiting for a still screen</li><li>Bug: empty piles</li><li>One whole turn</li><li>Memory</li><li>The score screen</li><li>Limits</li></ol>
+</div>
+
+<div class="film" id="game">
+<h2>Watch a full game</h2>
+<p class="muted">A whole recorded game from the first turn to the score screen, sped up, with a short commentary.</p>
+<video controls preload="metadata" src="video/full-game.mp4"></video>
+</div>
+</main>
+<footer>Dominion Autopilot · an evolved strategy plays Steam Dominion through the screen. Not affiliated with the makers of Dominion.</footer>
+</body></html>
