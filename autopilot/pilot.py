@@ -5,6 +5,8 @@
     .venv/bin/python autopilot/pilot.py --dry      # read + decide, never click
     .venv/bin/python autopilot/pilot.py --games 3  # play, press Rematch, play again (3 games)
     .venv/bin/python autopilot/pilot.py --record recordings/game1   # also save frames + events
+    .venv/bin/python autopilot/pilot.py --list-models   # released dominion-v1 models
+    .venv/bin/python autopilot/pilot.py --model k4-20260614         # play another model
 
 Each loop: screenshot -> OCR the prompt line -> act on it. Anything it does not
 understand is saved to autopilot/unknown/ and it waits for you to handle it.
@@ -27,7 +29,7 @@ from Xlib import display
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from brain import ALL_CARDS, BASE, Brain, CardType  # noqa: E402
+from brain import BASE, Brain, cards, print_models  # noqa: E402
 from click import click  # noqa: E402
 from grab import find_window, grab  # noqa: E402
 from recorder import Recorder  # noqa: E402
@@ -87,9 +89,14 @@ class Pilot:
         log("kingdom:", ", ".join(self.kingdom))
         self.state_file = os.path.join(HERE, f"run_{self.seed}.json")
         self.brain = Brain(self.kingdom, self.args.model, turn=turn or 1)
+        log(f"model {self.brain.policy.name} ({self.brain.policy.kind}), "
+            f"trained on {', '.join(self.brain.policy.kingdom)}")
         self._load_state(turn)
         if self.brain.unknown:
             log("cards the GA never learned (never bought):", ", ".join(self.brain.unknown))
+        if self.brain.untrained:
+            log("cards not in this model's training kingdom (never bought):",
+                ", ".join(self.brain.untrained))
         self.names = set(BASE) | set(self.kingdom)
         self.piles = {}
         self.plan = None          # remaining buys this turn
@@ -101,6 +108,7 @@ class Pilot:
         self.pending = None       # (card, (coins, buys) before the click) of the last buy click
         if REC:
             REC.event("game_start", seed=self.seed, kingdom=self.kingdom, opponents=opps,
+                      model=self.brain.policy.name,
                       unknown=self.brain.unknown, turn=self.brain.turn)
 
     # -- persistence (so a restart mid-game keeps the deck count) ------------
@@ -180,7 +188,7 @@ class Pilot:
                 return
         self.zero_actions = 0
         card = self.brain.choose_action(hand, s.actions or 1)
-        has_action = any(c in ALL_CARDS and ALL_CARDS[c].card_type == CardType.ACTION for c in hand)
+        has_action = any(cards.is_action(c) for c in hand)
         if card is None and not has_action and len(hand) < 5 and self.blind_hand < 2:
             # The game only asks for actions when you hold one, so a card was probably misread.
             self.blind_hand += 1
@@ -371,7 +379,9 @@ class Pilot:
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--turn", type=int, help="current turn number when joining a game in progress")
-    ap.add_argument("--model", help="strategy.json to play (default dominion-v1/best_model)")
+    ap.add_argument("--model", help="released model name (see --list-models) or a path "
+                                    "(default: dominion-v1/models/DEFAULT)")
+    ap.add_argument("--list-models", action="store_true", help="list released models and exit")
     ap.add_argument("--dry", action="store_true", help="read and decide, but never click")
     ap.add_argument("--once", action="store_true", help="handle one prompt and exit")
     ap.add_argument("--poll", type=float, default=0.5, help="seconds between screen reads")
@@ -379,6 +389,9 @@ def main():
     ap.add_argument("--games", type=int, default=1, help="games to play, pressing Rematch in between")
     ap.add_argument("--record", metavar="DIR", help="save window frames and events for videos")
     args = ap.parse_args()
+    if args.list_models:
+        print_models()
+        return
     global REC
     if args.record:
         REC = Recorder(args.record)
