@@ -36,7 +36,12 @@ def esc(s):
 def load():
     if not os.path.exists(GAMES):
         return []
-    return [json.loads(l) for l in open(GAMES) if l.strip()]
+    games = [json.loads(l) for l in open(GAMES) if l.strip()]
+    for g in games:                     # an OCR misread of a point shield (e.g. 742): not plausible
+        for k in ("me", "opponent"):
+            if g.get(k) is not None and g[k] > 150:
+                g[k] = None
+    return games
 
 
 def played(g):
@@ -110,7 +115,10 @@ def build(games):
         turns = [g["panel_turns"][0] for g in p if g.get("panel_turns") and g["panel_turns"][0]]
         probs = sum(len([x for x in g.get("problems", []) if x["kind"] not in HANDLED]) for g in gs)
         attacks = sum(len([x for x in g.get("problems", []) if x["kind"] == "attack_answered"]) for g in gs)
+        clean = [g for g in p if not g.get("bug")]
+        cw = sum(g["outcome"] == "win" for g in clean)
         level_rows.append(dict(level=lv, games=len(gs), played=len(p), wins=w, losses=l, other=ab,
+                               bugged=len(p) - len(clean), clean_winrate=f"{pct(cw, len(clean))} ({cw}/{len(clean)})",
                                winrate=pct(w, len(p)),
                                margin=f"{sum(margins) / len(margins):+.1f} (n={len(margins)})" if margins else "–",
                                turns=f"{sum(turns) / len(turns):.0f}" if turns else "–",
@@ -172,6 +180,10 @@ def build(games):
     ab = [g for g in games if g.get("outcome") in ("abandoned", "setup_failed")]
     if ab:
         findings.append(f"{len(ab)} game(s) couldn't be finished by the autopilot (see the game list).")
+    bugged = [g for g in games if g.get("bug")]
+    if bugged:
+        findings.append(f"{len(bugged)} game(s) were hurt by an autopilot bug, not by the model (marked in the game "
+                        f"list; the bug was fixed afterwards). The 'without bug-hit games' column leaves them out.")
     findings.append("Samples are small: a few games per level. Treat card win rates as hints, not measurements.")
     return dict(level_rows=level_rows, card_rows=card_rows, prob_counter=prob_counter,
                 prompt_counter=prompt_counter, findings=findings)
@@ -202,7 +214,7 @@ Updated {esc(games[-1]['date']) if games else '–'}.</p>
 <h2>Findings so far</h2><div class="box"><ul>{''.join(f'<li>{esc(f)}</li>' for f in s['findings'])}</ul></div>
 <h2>By opponent level</h2>
 <div class="tablewrap"><table class="t"><tr><th>Level</th><th>Games</th><th>Won</th><th>Lost</th><th>Not finished</th>
-<th>Win rate</th><th>Avg turns</th><th>Avg minutes</th><th>Attacks answered / game</th><th>Problems / game</th></tr>"""]
+<th>Win rate</th><th>Win rate without bug-hit games</th><th>Avg turns</th><th>Avg minutes</th><th>Attacks answered / game</th><th>Problems / game</th></tr>"""]
     for r in s["level_rows"]:
         out.append(f"<tr><td>{esc(r['level'])}</td><td class='num'>{r['games']}</td><td class='num'>{r['wins']}</td>"
                    f"<td class='num'>{r['losses']}</td><td class='num'>{r['other']}</td><td class='num'>{r['winrate']}</td>"
@@ -245,7 +257,8 @@ problems named it. Sorted by the gap (worst first). <b>unknown</b> = the model n
 <b>Bought:</b> {esc(', '.join(f'{v} {k}' for k, v in sorted((g.get('owned') or {}).items(), key=lambda kv: -kv[1])))}</p>
 {'<ul>' + ''.join(f'<li>turn {p.get("turn")}: {esc(problem_label(p))}</li>' for p in probs[:12]) + '</ul>' if probs else '<p class="muted">No problems.</p>'}
 {f'<p class="small muted">{esc(g.get("error", ""))}</p>' if g.get('error') else ''}
-{f'<p class="small muted">Note: {esc(g["note"])}</p>' if g.get('note') else ''}</div>
+{f'<p class="small muted">Note: {esc(g["note"])}</p>' if g.get('note') else ''}
+{f'<p><span class="tag crash">autopilot bug</span> {esc(g["bug"])}</p>' if g.get('bug') else ''}</div>
 {f'<img src="{img}" alt="score screen of game {g["game"]}">' if img else ''}</div>""")
     out.append("""<p class="small muted">The point shields are hard for the OCR (digits get dropped or changed), so points are shown as
 approximate; win or loss comes from the placement laurels, and every game's score screen is shown.</p>

@@ -186,6 +186,17 @@ class Pilot:
         self.problem("no_button", want=list(labels), seen=[b.text for b in buttons])
         return False
 
+    def pile_shows_x(self, img, card) -> bool:
+        """An empty supply pile is covered by a big orange-red X."""
+        pos = self.pile_pos(img, card)
+        if not pos:
+            return False
+        r = int((22 if card in BASE else 30) * self.vision.sy)
+        x, y = pos
+        c = img[max(0, y - r):y + r, max(0, x - r):x + r].astype(int)
+        red = (c[..., 2] > 190) & (c[..., 1] < 130) & (c[..., 0] < 90)
+        return red.mean() > 0.08
+
     def pile_pos(self, img, card):
         if card in BASE:
             return self.vision.base_pile(card)
@@ -258,21 +269,26 @@ class Pilot:
             coins, buys = coins or 0, buys or 1
         self.hud_misses = 0
         if self.pending and (coins, buys) == self.pending[1]:
-            # Coins and buys didn't change, so the click bought nothing. Either the click didn't
-            # register (it happens) or the pile is empty: click once more before deciding.
+            # Coins and buys didn't change, so the click bought nothing: either the click didn't
+            # register (it happens) or the pile is empty. An empty pile shows a big red X.
             card, before, tries = self.pending
             self.brain.unbought(card)
-            if tries < 2:
+            if self.pile_shows_x(img, card):
+                log(f"  the {card} pile shows the empty X; planning again")
+                self.problem("empty_pile", card=card)
+                self.brain.empty.add(card)
+                self.plan = None
+            elif tries < 3:
                 log(f"  buying {card} did nothing - clicking it once more")
                 self.problem("buy_retry", card=card)
                 self.click(*self.pile_pos(img, card), f"buy {card} (again)")
                 self.brain.bought(card)
                 self.pending = (card, before, tries + 1)
                 return
-            log(f"  buying {card} did nothing twice - its pile must be empty; planning again")
-            self.problem("empty_pile", card=card)
-            self.brain.empty.add(card)
-            self.plan = None
+            else:
+                log(f"  buying {card} failed three times (pile not empty) - ending buys this turn")
+                self.problem("buy_failed", card=card)
+                self.plan = []
         self.pending = None
         if self.plan is None:
             p = self.vision.provinces_left(img)
@@ -284,6 +300,13 @@ class Pilot:
                 REC.event("decide_buy", coins=coins, buys=buys, provinces=self.brain.provinces,
                           plan=list(self.plan), turn=self.brain.turn, phase=self.brain.phase(),
                           owned=dict(self.brain.owned), empty=sorted(self.brain.empty))
+        if self.plan and self.pile_shows_x(img, self.plan[0]):
+            card = self.plan[0]
+            log(f"  the {card} pile shows the empty X; planning again")
+            self.problem("empty_pile", card=card)
+            self.brain.empty.add(card)
+            self.plan = self.brain.choose_buys(coins, buys)
+            log(f"  -> buy {self.plan or 'nothing'}")
         if self.plan:
             card = self.plan.pop(0)
             pos = self.pile_pos(img, card)
@@ -494,7 +517,8 @@ class Pilot:
             x1, y1 = self.vision.scale(x + 30, y + 27)
             res, _ = ocr_engine()(img[y0:y1, x0:x1])
             reads.append(next((re.sub(r"\D", "", r[1]) for r in res or [] if re.sub(r"\D", "", r[1])), ""))
-            best = max(reads, key=len)
+            reads = [r for r in reads if r and int(r) <= 150]       # no game reaches 150 points
+            best = max(reads, key=len) if reads else ""
             return int(best) if best else None
         me, opp = num(200), num(586)
         my_rank, opp_rank = num(266), num(651)       # the laurel: 1 = first place
