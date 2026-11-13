@@ -943,7 +943,16 @@
      "turn": 12,
      "used": 13
     }
-   ]
+   ],
+   "note": "turn 1: counters unreadable and the fallback coin count was wrong ($7 instead of at most $5), so the opening buy (Duchy) failed - one card lost; the fallback was fixed during this game (minor, not counted as a bug-hit game)"
+  },
+  {
+   "game": 10,
+   "date": "2026-11-13 21:14",
+   "level": "Hard",
+   "outcome": "setup_failed",
+   "error": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')",
+   "problems": []
   }
  ],
  "levels": [
@@ -997,18 +1006,18 @@
   },
   {
    "level": "Hard",
-   "games": 2,
+   "games": 3,
    "played": 2,
    "wins": 0,
    "losses": 2,
-   "other": 0,
+   "other": 1,
    "bugged": 0,
    "clean_winrate": "0% (0/2)",
    "winrate": "0%",
    "margin": "-5.0 (n=2)",
    "turns": "20",
    "minutes": "12",
-   "problems": "4.5",
+   "problems": "3.0",
    "attacks": "0.0"
   }
  ],
@@ -1301,12 +1310,13 @@
   }
  ],
  "findings": [
-  "9 games so far (9 finished): 5 won, 4 lost.",
+  "10 games so far (9 finished): 5 won, 4 lost.",
   "Very Easy: 2 of 3 won (67%), about 35 turns per game, 2.7 attacks answered and 7.3 problems per game.",
   "Easy: 2 of 2 won (100%), about 46 turns per game, 2.0 attacks answered and 13.5 problems per game.",
   "Medium: 1 of 2 won (50%), about 21 turns per game, 0.0 attacks answered and 4.5 problems per game.",
-  "Hard: 0 of 2 won (0%), about 20 turns per game, 0.0 attacks answered and 4.5 problems per game.",
+  "Hard: 0 of 2 won (0%), about 20 turns per game, 0.0 attacks answered and 3.0 problems per game.",
   "Lowest win rate when present (at least 2 games): Remodel 20% with vs 100% without (n=5); Village 25% with vs 80% without (n=4); Festival 40% with vs 75% without (n=5); Poacher 40% with vs 75% without (n=5).",
+  "1 game(s) couldn't be finished by the autopilot (see the game list).",
   "2 game(s) were hurt by an autopilot bug, not by the model (marked in the game list; the bug was fixed afterwards). The 'without bug-hit games' column leaves them out.",
   "Samples are small: a few games per level. Treat card win rates as hints, not measurements."
  ]

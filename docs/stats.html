@@ -6,21 +6,21 @@
 <p class="lede">The autopilot (model <code>k1-steam</code>) plays the
 built-in computer opponents, from Very Easy up to Hard, on the game's random <b>base-set</b> kingdoms. After every game this
 page is rebuilt from <code>autopilot/stats/games.jsonl</code>: who won, by how much, and what the model had trouble with.
-Updated 2026-11-13 21:03.</p>
+Updated 2026-11-13 21:14.</p>
 <div class="cards">
-<div class="card"><div class="k">Games</div><div class="v">9</div><div class="s">9 finished</div></div>
+<div class="card"><div class="k">Games</div><div class="v">10</div><div class="s">9 finished</div></div>
 <div class="card"><div class="k">Won</div><div class="v">5</div><div class="s">56% of finished</div></div>
 <div class="card"><div class="k">Hardest level so far</div><div class="v" style="font-size:1.2rem">Hard</div></div>
 <div class="card"><div class="k">Problems logged</div><div class="v">67</div><div class="s">buy_retry 26, hud_unreadable 16, empty_pile 12, selection_adjusted 8, no_button 4, coins_disagree 1</div></div>
 </div>
-<h2>Findings so far</h2><div class="box"><ul><li>9 games so far (9 finished): 5 won, 4 lost.</li><li>Very Easy: 2 of 3 won (67%), about 35 turns per game, 2.7 attacks answered and 7.3 problems per game.</li><li>Easy: 2 of 2 won (100%), about 46 turns per game, 2.0 attacks answered and 13.5 problems per game.</li><li>Medium: 1 of 2 won (50%), about 21 turns per game, 0.0 attacks answered and 4.5 problems per game.</li><li>Hard: 0 of 2 won (0%), about 20 turns per game, 0.0 attacks answered and 4.5 problems per game.</li><li>Lowest win rate when present (at least 2 games): Remodel 20% with vs 100% without (n=5); Village 25% with vs 80% without (n=4); Festival 40% with vs 75% without (n=5); Poacher 40% with vs 75% without (n=5).</li><li>2 game(s) were hurt by an autopilot bug, not by the model (marked in the game list; the bug was fixed afterwards). The &#x27;without bug-hit games&#x27; column leaves them out.</li><li>Samples are small: a few games per level. Treat card win rates as hints, not measurements.</li></ul></div>
+<h2>Findings so far</h2><div class="box"><ul><li>10 games so far (9 finished): 5 won, 4 lost.</li><li>Very Easy: 2 of 3 won (67%), about 35 turns per game, 2.7 attacks answered and 7.3 problems per game.</li><li>Easy: 2 of 2 won (100%), about 46 turns per game, 2.0 attacks answered and 13.5 problems per game.</li><li>Medium: 1 of 2 won (50%), about 21 turns per game, 0.0 attacks answered and 4.5 problems per game.</li><li>Hard: 0 of 2 won (0%), about 20 turns per game, 0.0 attacks answered and 3.0 problems per game.</li><li>Lowest win rate when present (at least 2 games): Remodel 20% with vs 100% without (n=5); Village 25% with vs 80% without (n=4); Festival 40% with vs 75% without (n=5); Poacher 40% with vs 75% without (n=5).</li><li>1 game(s) couldn&#x27;t be finished by the autopilot (see the game list).</li><li>2 game(s) were hurt by an autopilot bug, not by the model (marked in the game list; the bug was fixed afterwards). The &#x27;without bug-hit games&#x27; column leaves them out.</li><li>Samples are small: a few games per level. Treat card win rates as hints, not measurements.</li></ul></div>
 <h2>By opponent level</h2>
 <div class="tablewrap"><table class="t"><tr><th>Level</th><th>Games</th><th>Won</th><th>Lost</th><th>Not finished</th>
 <th>Win rate</th><th>Win rate without bug-hit games</th><th>Avg turns</th><th>Avg minutes</th><th>Attacks answered / game</th><th>Problems / game</th></tr>
 <tr><td>Very Easy</td><td class='num'>3</td><td class='num'>2</td><td class='num'>1</td><td class='num'>0</td><td class='num'>67%</td><td class='num'>35</td><td class='num'>22</td><td class='num'>2.7</td><td class='num'>7.3</td></tr>
 <tr><td>Easy</td><td class='num'>2</td><td class='num'>2</td><td class='num'>0</td><td class='num'>0</td><td class='num'>100%</td><td class='num'>46</td><td class='num'>25</td><td class='num'>2.0</td><td class='num'>13.5</td></tr>
 <tr><td>Medium</td><td class='num'>2</td><td class='num'>1</td><td class='num'>1</td><td class='num'>0</td><td class='num'>50%</td><td class='num'>21</td><td class='num'>12</td><td class='num'>0.0</td><td class='num'>4.5</td></tr>
-<tr><td>Hard</td><td class='num'>2</td><td class='num'>0</td><td class='num'>2</td><td class='num'>0</td><td class='num'>0%</td><td class='num'>20</td><td class='num'>12</td><td class='num'>0.0</td><td class='num'>4.5</td></tr>
+<tr><td>Hard</td><td class='num'>3</td><td class='num'>0</td><td class='num'>2</td><td class='num'>1</td><td class='num'>0%</td><td class='num'>20</td><td class='num'>12</td><td class='num'>0.0</td><td class='num'>3.0</td></tr>
 </table></div>
 <p class="small muted">Win or loss comes from the score screen's placement laurels (always read correctly so far).
 Turns = the score panel's turn count. Problems exclude hand misreads that a second read fixed and attacks answered normally
@@ -60,6 +60,16 @@ problems named it. Sorted by the gap (worst first). <b>unknown</b> = the model n
 </table></div><h2>Prompts it didn't understand</h2>
 <p class='muted'>None yet.</p>
 <h2>Every game</h2>
+<div class="ev"><div class="body"><div class="t">Game 10 · 2026-11-13 21:14 · – min</div>
+<h4>vs Hard AI: <span class="result ">setup_failed</span> <span class="small muted">points ≈ ?–? (OCR; the screen below is the record)</span></h4>
+<p><b>Kingdom:</b> <br>
+<b>Model doesn't know:</b> none<br>
+<b>Bought:</b> </p>
+<p class="muted">No problems.</p>
+<p class="small muted">JSONDecodeError(&#x27;Expecting value: line 1 column 1 (char 0)&#x27;)</p>
+
+</div>
+</div>
 <div class="ev"><div class="body"><div class="t">Game 9 · 2026-11-13 21:03 · 7.5 min</div>
 <h4>vs Hard AI: <span class="result ">loss</span> <span class="small muted">points ≈ 24–32 (OCR; the screen below is the record)</span></h4>
 <p><b>Kingdom:</b> Chapel, Merchant, Village, Workshop, Gardens, Moneylender, Remodel, Festival, Market, Sentry<br>
@@ -67,7 +77,7 @@ problems named it. Sorted by the gap (worst first). <b>unknown</b> = the model n
 <b>Bought:</b> 7 Copper, 7 Silver, 5 Gold, 3 Estate, 3 Province, 1 Duchy</p>
 <ul><li>turn 7: hud_unreadable</li><li>turn 10: buy_retry</li><li>turn 12: hud_unreadable</li></ul>
 
-
+<p class="small muted">Note: turn 1: counters unreadable and the fallback coin count was wrong ($7 instead of at most $5), so the opening buy (Duchy) failed - one card lost; the fallback was fixed during this game (minor, not counted as a bug-hit game)</p>
 </div>
 <img src="img/stats/score_9.jpg" alt="score screen of game 9"></div>
 <div class="ev"><div class="body"><div class="t">Game 8 · 2026-11-13 20:52 · 15.7 min</div>
