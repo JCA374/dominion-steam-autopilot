@@ -48,6 +48,7 @@ class Text:
     x: int   # centre, window coordinates
     y: int
     conf: float
+    count: int = 1   # hand cards: a large hand shows duplicates as one card with a count badge
 
 
 @dataclass
@@ -96,12 +97,27 @@ class Vision:
         cards = []
         # Hand cards are never upside down, but the orientation check sometimes thinks the tilted
         # leftmost card is (SMITHY read as "AHLIWS"), so it is off for the hand.
-        for t in self.read(img, R_HAND, cls=False):
+        texts = self.read(img, R_HAND, cls=False)
+        unmatched = []
+        for t in texts:
             name = match_name(t.text, upper)
-            if not name and len(re.sub(r"[^A-Za-z]", "", t.text)) >= 4:
-                name = self._reread_flipped(img, t, upper)
             if name:
                 cards.append(Text(name, t.x, t.y, t.conf))
+            elif len(re.sub(r"[^A-Za-z]", "", t.text)) >= 4:
+                unmatched.append(t)
+        near = int(60 * self.sx)
+        for t in unmatched:          # a second read can find a banner already read nearby: skip those
+            if any(abs(t.x - c.x) < near for c in cards):
+                continue
+            name = self._reread_flipped(img, t, upper)
+            if name:
+                cards.append(Text(name, t.x, t.y, t.conf))
+        # Stack badges: a small number just left of a card's name (the coin value sits below it).
+        for c in cards:
+            for t in texts:
+                if t.text.isdigit() and -75 * self.sx <= t.x - c.x <= -35 * self.sx \
+                        and abs(t.y - c.y) <= 25 * self.sy and 1 < int(t.text) < 10:
+                    c.count = int(t.text)
         return sorted(cards, key=lambda t: t.x)
 
     def _reread_flipped(self, img, t, upper):

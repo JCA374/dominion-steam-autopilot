@@ -33,7 +33,7 @@ from brain import BASE, Brain, cards, print_models  # noqa: E402
 from click import click  # noqa: E402
 from grab import find_window, grab  # noqa: E402
 from recorder import Recorder  # noqa: E402
-from vision import Vision, ocr_engine  # noqa: E402
+from vision import Vision, match_name, ocr_engine  # noqa: E402
 
 # Dominion's local saves inside the Proton prefix (app id 1131620). Snap Steam and the
 # usual Steam installs keep steamapps in different places; use the first that exists.
@@ -108,6 +108,8 @@ class Pilot:
         self.result = None        # filled in on the score screen
         self.last_progress = time.time()
         self.hud_misses = 0
+        self.blank = 0            # consecutive passes with no prompt line
+        self.expected = None      # (coins, buys) counted from the hand in the treasure phase
         self.pending = None       # (card, (coins, buys) before the click) of the last buy click
         if REC:
             REC.event("game_start", seed=self.seed, kingdom=self.kingdom, opponents=opps,
@@ -157,6 +159,21 @@ class Pilot:
             click(self.d, self.win, x, y)
         time.sleep(self.args.delay)
 
+    def key(self, name):
+        """Send one key press to the game window (XTEST)."""
+        from Xlib import X, XK
+        from Xlib.ext import xtest
+        if self.args.dry:
+            return
+        code = self.d.keysym_to_keycode(XK.string_to_keysym(name))
+        self.win.set_input_focus(X.RevertToParent, X.CurrentTime)
+        xtest.fake_input(self.d, X.KeyPress, code)
+        self.d.sync()
+        time.sleep(0.1)
+        xtest.fake_input(self.d, X.KeyRelease, code)
+        self.d.sync()
+        time.sleep(1.0)
+
     def press(self, img, *labels) -> bool:
         """Click the first button whose label contains one of `labels`."""
         buttons = self.vision.buttons(img)
@@ -181,6 +198,7 @@ class Pilot:
             self.brain.turn += 1
             self.plan = None
             self.pending = None
+            self.expected = None
             self._save_state()
             log(f"=== turn {self.brain.turn} ({self.brain.phase()}) "
                 f"provinces {self.brain.provinces} deck {sum(self.brain.owned.values())}")
@@ -190,7 +208,7 @@ class Pilot:
 
     def on_action(self, img):
         s = self.vision.screen(img, self.names)
-        hand = [t.text for t in s.hand]
+        hand = [t.text for t in s.hand for _ in range(t.count)]
         if s.actions == 0:
             self.zero_actions += 1
             if self.zero_actions < 4:          # turn still starting up; look again
@@ -219,6 +237,11 @@ class Pilot:
             self.press(img, "End Actions", "Treasures", "Done", "End")
 
     def on_treasure(self, img):
+        # Count the coins now: on the buy prompt the counters are sometimes hidden under the
+        # treasures just played, and then this is the fallback.
+        s = self.vision.screen(img, self.names)
+        value = {"Copper": 1, "Silver": 2, "Gold": 3}
+        self.expected = ((s.coins or 0) + sum(value.get(t.text, 0) for t in s.hand), s.buys or 1)
         self.press(img, "Play Treasures", "Treasures")
 
     def on_buy(self, img):
@@ -228,14 +251,26 @@ class Pilot:
             if self.hud_misses < 3:
                 log("  couldn't read coins and buys - reading again")
                 return
+            if coins is None and self.expected:
+                coins, buys = self.expected[0], buys or self.expected[1]
+                log(f"  counters unreadable - using the coins counted from the hand: ${coins}")
+                self.problem("hud_unreadable", used=coins)
             coins, buys = coins or 0, buys or 1
         self.hud_misses = 0
         if self.pending and (coins, buys) == self.pending[1]:
-            # Coins and buys didn't change, so the click bought nothing: that pile is empty.
-            card = self.pending[0]
-            log(f"  buying {card} did nothing - its pile must be empty; planning again")
-            self.problem("empty_pile", card=card)
+            # Coins and buys didn't change, so the click bought nothing. Either the click didn't
+            # register (it happens) or the pile is empty: click once more before deciding.
+            card, before, tries = self.pending
             self.brain.unbought(card)
+            if tries < 2:
+                log(f"  buying {card} did nothing - clicking it once more")
+                self.problem("buy_retry", card=card)
+                self.click(*self.pile_pos(img, card), f"buy {card} (again)")
+                self.brain.bought(card)
+                self.pending = (card, before, tries + 1)
+                return
+            log(f"  buying {card} did nothing twice - its pile must be empty; planning again")
+            self.problem("empty_pile", card=card)
             self.brain.empty.add(card)
             self.plan = None
         self.pending = None
@@ -258,14 +293,14 @@ class Pilot:
             else:
                 self.click(*pos, f"buy {card}")
                 self.brain.bought(card)
-                self.pending = (card, (coins, buys))
+                self.pending = (card, (coins, buys), 1)
                 return
         self.press(img, "End Buys", "End Turn", "End")
         self._save_state()
 
     def on_trash(self, img, prompt):
         s = self.vision.screen(img, self.names)
-        hand = [t.text for t in s.hand]
+        hand = [t.text for t in s.hand for _ in range(t.count)]
         trash = self.brain.chapel_trash(hand)
         log(f"  trash prompt '{prompt}' hand {hand} -> trash {trash}")
         used = set()
@@ -278,17 +313,123 @@ class Pilot:
 
     def on_discard(self, img, prompt):
         s = self.vision.screen(img, self.names)
-        hand = [t.text for t in s.hand]
+        hand = [t.text for t in s.hand for _ in range(t.count)]
         m = re.search(r"(\d+)", prompt)
-        keep = int(m.group(1)) if m else 3
+        n = int(m.group(1)) if m else None
+        keep = n if (n is not None and "down to" in prompt.lower()) else (
+            len(hand) - n if n is not None else 3)
         out = self.brain.discard_down_to(hand, keep)
         log(f"  discard prompt '{prompt}' hand {hand} -> discard {out}")
-        used = set()
         for card in out:
-            t = next(t for i, t in enumerate(s.hand) if t.text == card and i not in used
-                     and not used.add(i))
-            self.click(t.x, t.y + int(55 * self.vision.sy), f"discard {card}")
-        self.press(self.shot(), "Discard", "Done", "Confirm", "OK")
+            t = self.card_slot(s.hand, card, out)
+            if t:
+                self.click(t.x, t.y + int(55 * self.vision.sy), f"discard {card}")
+        if not self.press_ok_if_any("discard", prefer=out):
+            self.press(self.shot(), "Discard", "Done", "Confirm", "OK")
+
+    def center_card(self, img):
+        """The name on the big card shown in the middle (an attack being resolved), if any."""
+        names = []
+        for t in self.vision.read(img, (0, 315, 927, 370), cls=False):   # a row of played cards
+            name = match_name(t.text, {n.upper(): n for n in self.names})
+            if name:
+                names.append(name)
+        for attack in ("Militia", "Bureaucrat", "Bandit", "Witch"):     # the attack being resolved
+            if attack in names:
+                return attack
+        return names[-1] if names else None
+
+    def my_phase_buttons(self, img, labels=None) -> bool:
+        """True when my own turn's buttons are showing (then a big card is just the last one played)."""
+        labels = labels if labels is not None else " | ".join(b.text.lower() for b in self.vision.buttons(img))
+        return any(w in labels for w in ("end actions", "play treasures", "end buys"))
+
+    def on_attack(self, img, prompt) -> bool:
+        """An opponent's attack that needs an answer, when its prompt is hidden under the played cards.
+        One card per pass: the screen is read again before the next, so repeated attacks (a Throne
+        Room on a Militia) and one-card prompts work the same way."""
+        card = self.center_card(img)
+        if card not in ("Militia", "Bureaucrat"):
+            return False
+        s = self.vision.screen(img, self.names)
+        hand = [t.text for t in s.hand for _ in range(t.count)]
+        if card == "Militia":
+            if len(hand) <= 3:
+                return self.press_ok_if_any(card)
+            out = self.brain.discard_down_to(hand, 3)       # all at once: a click only selects
+        else:
+            victory = [c for c in ("Estate", "Duchy", "Gardens", "Province") if c in hand]
+            if not victory:
+                return self.press_ok_if_any(card)
+            out = victory[:1]
+        log(f"  {card} attack (prompt hidden: '{prompt}') hand {hand} -> {out}")
+        self.problem("attack_answered", card=card, prompt=prompt, chosen=out)
+        for c in out:
+            t = self.card_slot(s.hand, c, out)
+            if t:
+                self.click(t.x, t.y + int(55 * self.vision.sy), f"{card}: {c}")
+        self.press_ok_if_any(card, prefer=out)
+        self.unknown_count = 0
+        self.last_progress = time.time()
+        return True
+
+    def card_slot(self, hand_texts, card, chosen):
+        """Where to click to select one more `card`: a stacked card is clicked once per copy;
+        separate copies are clicked left to right."""
+        self._slot_used = getattr(self, "_slot_used", {})
+        if self._slot_used.get("_for") is not chosen:
+            self._slot_used = {"_for": chosen}
+        k = self._slot_used.get(card, 0)
+        self._slot_used[card] = k + 1
+        slots = [t for t in hand_texts if t.text == card]
+        if not slots:
+            return None
+        if len(slots) == 1:
+            return slots[0]
+        return slots[min(k, len(slots) - 1)]
+
+    def ok_button(self, img):
+        for b in self.vision.buttons(img):
+            if b.text.lower() in ("ok", "done", "confirm"):
+                return b
+        return None
+
+    def ok_active(self, img, b) -> bool:
+        """An enabled OK button is green; a disabled one is grey."""
+        x0, y0 = b.x - int(45 * self.vision.sx), b.y - int(10 * self.vision.sy)
+        x1, y1 = b.x + int(45 * self.vision.sx), b.y + int(10 * self.vision.sy)
+        bgr = img[y0:y1, x0:x1].reshape(-1, 3).mean(0)
+        return bgr[1] - bgr[0] > 25
+
+    def press_ok_if_any(self, card, prefer=()) -> bool:
+        """Press OK once the selection is valid (green). If it isn't - a stacked hand whose counts
+        were misread, or a selection left over - click the stacks one at a time, in discard
+        order, until OK turns green."""
+        img = self.shot()
+        b = self.ok_button(img)
+        if b is None:
+            return False
+        if not self.ok_active(img, b):
+            s = self.vision.screen(img, self.names)
+            order = [c for c in dict.fromkeys(prefer)] + [t.text for t in s.hand if t.text not in prefer]
+            fixed = False
+            for c in order:
+                t = next((t for t in s.hand if t.text == c), None)
+                if t is None:
+                    continue
+                for _ in range(t.count + 1):
+                    self.click(t.x, t.y + int(55 * self.vision.sy), f"{card}: adjust {c}")
+                    img = self.shot()
+                    if self.ok_active(img, b):
+                        fixed = True
+                        break
+                if fixed:
+                    break
+            self.problem("selection_adjusted", card=card, fixed=fixed)
+            if not fixed:
+                return False
+        self.click(b.x, b.y, f"{card}: button '{b.text}'")
+        return True
 
     def on_unknown(self, img, prompt):
         self.unknown_count += 1
@@ -296,7 +437,8 @@ class Pilot:
             os.makedirs(UNKNOWN_DIR, exist_ok=True)
             path = os.path.join(UNKNOWN_DIR, f"{int(time.time())}.png")
             cv2.imwrite(path, img)
-            self.problem("unknown_prompt", prompt=prompt, screenshot=os.path.basename(path))
+            self.problem("unknown_prompt", prompt=prompt, card=self.center_card(img),
+                         screenshot=os.path.basename(path))
             if not getattr(self.args, "auto", False):
                 log(f"  don't know how to handle prompt '{prompt}' - saved {path}; "
                     "waiting for you to resolve it in the game")
@@ -340,22 +482,20 @@ class Pilot:
         if not any("Rematch" in t.text for t in texts):
             return False
         def num(x, y=618):
-            """A number on the score panel: recognition on a tight crop first, else detection."""
+            """A number on the score panel. Recognition on a tight crop and detection on a wider one
+            each drop digits now and then: keep the longer reading (recognition wins a tie)."""
+            reads = []
             x0, y0 = self.vision.scale(x - 26, y - 22)
             x1, y1 = self.vision.scale(x + 26, y + 22)
             crop = cv2.resize(img[y0:y1, x0:x1], None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
             res, _ = ocr_engine()(crop, use_det=False, use_cls=False)
-            d = re.sub(r"\D", "", res[0][0]) if res else ""
-            if d:
-                return int(d)
+            reads.append(re.sub(r"\D", "", res[0][0]) if res else "")
             x0, y0 = self.vision.scale(x - 30, y - 23)
             x1, y1 = self.vision.scale(x + 30, y + 27)
             res, _ = ocr_engine()(img[y0:y1, x0:x1])
-            for r in res or []:
-                d = re.sub(r"\D", "", r[1])
-                if d:
-                    return int(d)
-            return None
+            reads.append(next((re.sub(r"\D", "", r[1]) for r in res or [] if re.sub(r"\D", "", r[1])), ""))
+            best = max(reads, key=len)
+            return int(best) if best else None
         me, opp = num(200), num(586)
         my_rank, opp_rank = num(266), num(651)       # the laurel: 1 = first place
         my_n, opp_n = num(334), num(719)
@@ -383,7 +523,20 @@ class Pilot:
         if not prompt:
             if self.score_screen(img):
                 return "done"
+            if not self.my_phase_buttons(img) and self.on_attack(img, "(blank)"):
+                self.blank = 0
+                return
+            self.blank += 1
+            if self.blank % 3 == 0:
+                # Usually a card viewer (a big card with arrows, opened by a long press) covers the
+                # board; Escape closes it.
+                os.makedirs(UNKNOWN_DIR, exist_ok=True)
+                cv2.imwrite(os.path.join(UNKNOWN_DIR, f"blank_{int(time.time())}.png"), img)
+                log("  no prompt line for a while - pressing Escape to close any overlay")
+                self.problem("overlay_closed")
+                self.key("Escape")
             return
+        self.blank = 0
         if "game over" in p or " wins" in p or "you won" in p or "you lost" in p:
             log("game finished:", prompt)
             self._save_state()
@@ -392,7 +545,22 @@ class Pilot:
                 "treasure" if p.startswith("play treasure") else
                 "action" if p.startswith("play action") else
                 "trash" if "trash" in p and "up to" in p else
-                "discard" if "discard" in p and "down to" in p else None)
+                "discard" if "discard" in p and re.search(r"\d", p) else None)
+        if kind is None and "waiting" not in p and "turn" not in p:
+            # The last card played stays big in the middle and can hide the prompt line.
+            # Then the buttons tell the phase: an OK button means a choice is wanted.
+            labels = " | ".join(b.text.lower() for b in self.vision.buttons(img))
+            if not self.my_phase_buttons(img, labels):
+                if self.on_attack(img, prompt):
+                    return
+            elif "end actions" in labels:
+                kind = "action"
+            elif "play treasures" in labels:
+                kind = "treasure"
+            elif "end buys" in labels:
+                kind = "buy"
+            if kind:
+                prompt = f"({kind} phase, prompt hidden)"
         if kind is None:
             if "waiting" not in p and "turn" not in p:
                 self.on_unknown(img, prompt)

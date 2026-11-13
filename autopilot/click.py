@@ -8,7 +8,7 @@ from Xlib import X
 from Xlib.ext import xtest
 
 
-def click(d, win, x, y, hover=0.35, hold=0.15):
+def click(d, win, x, y, hover=0.5, hold=0.15):
     """Click at window-relative (x, y)."""
     pos = win.translate_coords(d.screen().root, 0, 0)
     ax, ay = -pos.x + x, -pos.y + y

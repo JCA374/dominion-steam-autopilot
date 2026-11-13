@@ -25,6 +25,8 @@ BASE_KINGDOM = ["Artisan", "Bandit", "Bureaucrat", "Cellar", "Chapel", "Council 
                 "Moneylender", "Poacher", "Remodel", "Sentry", "Smithy", "Throne Room", "Vassal", "Village",
                 "Witch", "Workshop"]
 ATTACKS = {"Bandit", "Bureaucrat", "Militia", "Witch"}
+# Logged events that are normal handling, not problems.
+HANDLED = {"misread_hand", "attack_answered"}
 
 
 def esc(s):
@@ -106,13 +108,15 @@ def build(games):
         ab = sum(g["outcome"] in ("abandoned", "setup_failed", "unknown") for g in gs)
         margins = [g["me"] - g["opponent"] for g in p if g.get("me") is not None and g.get("opponent") is not None]
         turns = [g["panel_turns"][0] for g in p if g.get("panel_turns") and g["panel_turns"][0]]
-        probs = sum(len([x for x in g.get("problems", []) if x["kind"] != "misread_hand"]) for g in gs)
+        probs = sum(len([x for x in g.get("problems", []) if x["kind"] not in HANDLED]) for g in gs)
+        attacks = sum(len([x for x in g.get("problems", []) if x["kind"] == "attack_answered"]) for g in gs)
         level_rows.append(dict(level=lv, games=len(gs), played=len(p), wins=w, losses=l, other=ab,
                                winrate=pct(w, len(p)),
                                margin=f"{sum(margins) / len(margins):+.1f} (n={len(margins)})" if margins else "–",
                                turns=f"{sum(turns) / len(turns):.0f}" if turns else "–",
-                               minutes=f"{sum(g.get('minutes', 0) for g in gs) / len(gs):.0f}",
-                               problems=f"{probs / len(gs):.1f}"))
+                               minutes=(lambda m: f"{sum(m) / len(m):.0f}" if m else "–")(
+                                   [g["minutes"] for g in gs if g.get("minutes")]),
+                               problems=f"{probs / len(gs):.1f}", attacks=f"{attacks / len(gs):.1f}"))
 
     # ---- per card
     card_rows = []
@@ -155,7 +159,8 @@ def build(games):
     for r in level_rows:
         if r["played"]:
             findings.append(f"{r['level']}: {r['wins']} of {r['played']} won ({r['winrate']}), "
-                            f"average point margin {r['margin']}, {r['problems']} problems per game.")
+                            f"about {r['turns']} turns per game, {r['attacks']} attacks answered and "
+                            f"{r['problems']} problems per game.")
     worst = [r for r in card_rows if r["delta"] is not None and r["n"] >= 2 and r["delta"] < 0]
     if worst:
         findings.append("Lowest win rate when present (at least 2 games): " + "; ".join(
@@ -192,20 +197,22 @@ Updated {esc(games[-1]['date']) if games else '–'}.</p>
 <div class="card"><div class="k">Games</div><div class="v">{len(games)}</div><div class="s">{len(done)} finished</div></div>
 <div class="card"><div class="k">Won</div><div class="v">{wins}</div><div class="s">{pct(wins, len(done))} of finished</div></div>
 <div class="card"><div class="k">Hardest level so far</div><div class="v" style="font-size:1.2rem">{esc(hardest)}</div></div>
-<div class="card"><div class="k">Problems logged</div><div class="v">{sum(s['prob_counter'].values())}</div><div class="s">{esc(', '.join(f'{k} {v}' for k, v in s['prob_counter'].most_common(3)))}</div></div>
+<div class="card"><div class="k">Problems logged</div><div class="v">{sum(v for k, v in s['prob_counter'].items() if k not in HANDLED)}</div><div class="s">{esc(', '.join(f'{k} {v}' for k, v in s['prob_counter'].most_common() if k not in HANDLED))}</div></div>
 </div>
 <h2>Findings so far</h2><div class="box"><ul>{''.join(f'<li>{esc(f)}</li>' for f in s['findings'])}</ul></div>
 <h2>By opponent level</h2>
 <div class="tablewrap"><table class="t"><tr><th>Level</th><th>Games</th><th>Won</th><th>Lost</th><th>Not finished</th>
-<th>Win rate</th><th>Avg margin</th><th>Avg turns</th><th>Avg minutes</th><th>Problems / game</th></tr>"""]
+<th>Win rate</th><th>Avg turns</th><th>Avg minutes</th><th>Attacks answered / game</th><th>Problems / game</th></tr>"""]
     for r in s["level_rows"]:
         out.append(f"<tr><td>{esc(r['level'])}</td><td class='num'>{r['games']}</td><td class='num'>{r['wins']}</td>"
                    f"<td class='num'>{r['losses']}</td><td class='num'>{r['other']}</td><td class='num'>{r['winrate']}</td>"
-                   f"<td class='num'>{esc(r['margin'])}</td><td class='num'>{r['turns']}</td><td class='num'>{r['minutes']}</td>"
-                   f"<td class='num'>{r['problems']}</td></tr>")
+                   f"<td class='num'>{r['turns']}</td><td class='num'>{r['minutes']}</td>"
+                   f"<td class='num'>{r['attacks']}</td><td class='num'>{r['problems']}</td></tr>")
     out.append("""</table></div>
-<p class="small muted">Margin = my points minus the opponent's, only for games where both point shields were readable.
-Turns = the score panel's turn count. Problems exclude hand misreads that a second read fixed.</p>
+<p class="small muted">Win or loss comes from the score screen's placement laurels (always read correctly so far).
+Turns = the score panel's turn count. Problems exclude hand misreads that a second read fixed and attacks answered normally
+(those are counted in their own column). What counts: unknown prompts, generic answers, selections that needed
+adjusting, unreadable counters, empty piles, missing buttons, games given up.</p>
 <h2>By kingdom card</h2>
 <p>Each base-set card that has appeared: win rate in finished games with it in the kingdom vs without it, and how many
 problems named it. Sorted by the gap (worst first). <b>unknown</b> = the model never learned the card and never buys it.</p>
@@ -232,15 +239,16 @@ problems named it. Sorted by the gap (worst first). <b>unknown</b> = the model n
         res = g.get("outcome", "?")
         pts = f"{g.get('me') if g.get('me') is not None else '?'}–{g.get('opponent') if g.get('opponent') is not None else '?'}"
         out.append(f"""<div class="ev"><div class="body"><div class="t">Game {g['game']} · {esc(g['date'])} · {g.get('minutes', '–')} min</div>
-<h4>vs {esc(g['level'])} AI: <span class="result {'win' if res == 'win' else ''}">{esc(res)}</span> {pts}</h4>
+<h4>vs {esc(g['level'])} AI: <span class="result {'win' if res == 'win' else ''}">{esc(res)}</span> <span class="small muted">points ≈ {pts} (OCR; the screen below is the record)</span></h4>
 <p><b>Kingdom:</b> {esc(', '.join(g.get('kingdom', [])))}<br>
 <b>Model doesn't know:</b> {esc(', '.join(g.get('unknown_to_model', [])) or 'none')}<br>
 <b>Bought:</b> {esc(', '.join(f'{v} {k}' for k, v in sorted((g.get('owned') or {}).items(), key=lambda kv: -kv[1])))}</p>
 {'<ul>' + ''.join(f'<li>turn {p.get("turn")}: {esc(problem_label(p))}</li>' for p in probs[:12]) + '</ul>' if probs else '<p class="muted">No problems.</p>'}
-{f'<p class="small muted">{esc(g.get("error", ""))}</p>' if g.get('error') else ''}</div>
+{f'<p class="small muted">{esc(g.get("error", ""))}</p>' if g.get('error') else ''}
+{f'<p class="small muted">Note: {esc(g["note"])}</p>' if g.get('note') else ''}</div>
 {f'<img src="{img}" alt="score screen of game {g["game"]}">' if img else ''}</div>""")
-    out.append("""<p class="small muted">The opponent's point shield is often hard for the OCR, so “?” can appear; win or
-loss always comes from the placement laurels, and the score screen of every game is shown.</p>
+    out.append("""<p class="small muted">The point shields are hard for the OCR (digits get dropped or changed), so points are shown as
+approximate; win or loss comes from the placement laurels, and every game's score screen is shown.</p>
 </main><footer>Dominion Autopilot · statistics from games against the built-in computer opponents only.</footer></body></html>""")
     return "\n".join(out)
 

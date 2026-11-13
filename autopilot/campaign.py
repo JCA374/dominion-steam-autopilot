@@ -119,9 +119,9 @@ class Menus:
         raise RuntimeError("no new game started after Play")
 
 
-def play_one(level, model, game_no):
+def play_one(level, model, game_no, setup=True):
     menus = Menus()
-    tile = menus.start(level)
+    tile = menus.start(level) if setup else level + " (game already running)"
     args = types.SimpleNamespace(turn=None, model=model, dry=False, once=False, poll=0.5, delay=0.8,
                                  games=1, record=None, auto=True)
     pl = P.Pilot(args)
@@ -181,14 +181,18 @@ def main():
     ap.add_argument("--per", type=int, default=3, help="games per level")
     ap.add_argument("--model", help="released model (default: dominion-v1/models/DEFAULT)")
     ap.add_argument("--no-publish", action="store_true")
+    ap.add_argument("--continue-current", action="store_true",
+                    help="the first game is already running (against the first level): play it, don't set one up")
     a = ap.parse_args()
-    done = sum(1 for _ in open(STATS)) if os.path.exists(STATS) else 0
+    records = [json.loads(l) for l in open(STATS)] if os.path.exists(STATS) else []
+    done = len(records)
     n = done
     for level in [l.strip() for l in a.levels.split(",")]:
-        for _ in range(a.per):
+        already = sum(1 for r in records if r.get("level") == level)
+        for _ in range(max(0, a.per - already)):          # resume: only the games still missing
             n += 1
             try:
-                rec = play_one(level, a.model, n)
+                rec = play_one(level, a.model, n, setup=not (a.continue_current and n == done + 1))
                 msg = f"game {n} vs {level} AI: {rec['outcome']}"
             except Exception as e:
                 log(f"game {n} vs {level} could not be played: {e!r}")
