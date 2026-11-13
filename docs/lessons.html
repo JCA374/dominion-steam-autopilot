@@ -53,7 +53,22 @@ phases, went back to buying treasure, and won 76 to 7 (turn 66 by its own count)
 Copper above PASS, so a long late game fills the deck with green cards and weak treasure, and $8 hands get rare. In training this rarely mattered: the simulator ends every game at turn 40. It's a property of the
 model, not of the autopilot, and a reason to evolve with longer games or a three-pile ending.</p></div>
 
-<div class="lesson"><h3>7. Smaller ones</h3>
+<div class="lesson"><h3>7. Lessons from the stats campaign (harder opponents)</h3>
+<ul>
+<li><b>Attacks hide their prompt.</b> The opponent's played cards cover the prompt line, so Militia's "Discard 2
+cards" can't be read. Read the attack card's name instead, and tell your own turn from your buttons (End Actions, Play
+Treasures, End Buys), or the last card played will be taken for a new attack.</li>
+<li><b>Big hands are drawn as stacks</b> with a count badge, and a click selects one more copy, wrapping to zero. Press
+OK only when it is green (enabled), and otherwise adjust the selection.</li>
+<li><b>A click that changes nothing isn't proof of an empty pile.</b> Twice a missed click was taken for "empty", and the
+model never bought Gold or Silver again (games 2 and 6). Now a pile is only empty when it shows its red X.</li>
+<li><b>Never chain two campaign runs in one shell with <code>;</code>.</b> Killing the first starts the second, and two
+autopilots then drive the same game.</li>
+<li><b>A full disk crashed the game</b> (its save writer asserted). Afterwards the window had a title bar and a different
+size. The autopilot now crops the frame and scales its regions, and its memory file is written atomically.</li>
+</ul></div>
+
+<div class="lesson"><h3>8. Smaller ones</h3>
 <ul>
 <li><b>Each game has its own save file</b> (<code>gamelocal_0_-1.xml</code>, <code>-2</code>, …). Read the newest, not a
 fixed name, or a rematch plays with the previous kingdom.</li>

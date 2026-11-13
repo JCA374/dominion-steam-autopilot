@@ -10,8 +10,10 @@ from Xlib.ext import xtest
 
 def click(d, win, x, y, hover=0.5, hold=0.15):
     """Click at window-relative (x, y)."""
+    from grab import content_offset
+    left, top, _, _ = content_offset(d, win)      # (x, y) are game-area coordinates
     pos = win.translate_coords(d.screen().root, 0, 0)
-    ax, ay = -pos.x + x, -pos.y + y
+    ax, ay = -pos.x + left + x, -pos.y + top + y
     for dx in (6, 3, 0):
         xtest.fake_input(d, X.MotionNotify, x=ax + dx, y=ay + dx)
         d.sync()

@@ -110,6 +110,7 @@ class Pilot:
         self.hud_misses = 0
         self.blank = 0            # consecutive passes with no prompt line
         self.expected = None      # (coins, buys) counted from the hand in the treasure phase
+        self.action_coins = self.action_buys = self.merchants = 0   # from my own action plays this turn
         self.pending = None       # (card, (coins, buys) before the click) of the last buy click
         if REC:
             REC.event("game_start", seed=self.seed, kingdom=self.kingdom, opponents=opps,
@@ -126,7 +127,11 @@ class Pilot:
 
     def _load_state(self, turn_arg):
         if os.path.exists(self.state_file) and not turn_arg:
-            s = json.load(open(self.state_file))
+            try:
+                s = json.load(open(self.state_file))
+            except (OSError, ValueError):
+                log("  the game memory file is unreadable - starting from turn 1")
+                return
             self.brain.turn, self.brain.provinces = s["turn"], s["provinces"]
             self.brain.owned.clear()
             self.brain.owned.update(s["owned"])
@@ -134,9 +139,15 @@ class Pilot:
             log(f"resumed: turn {self.brain.turn}, deck {dict(self.brain.owned)}")
 
     def _save_state(self):
-        json.dump({"turn": self.brain.turn, "provinces": self.brain.provinces,
-                   "owned": dict(self.brain.owned),
-                   "empty": sorted(self.brain.empty)}, open(self.state_file, "w"))
+        # Write to a temporary file and rename: a full disk or a kill can't leave a broken file.
+        tmp = self.state_file + ".tmp"
+        try:
+            with open(tmp, "w") as f:
+                json.dump({"turn": self.brain.turn, "provinces": self.brain.provinces,
+                           "owned": dict(self.brain.owned), "empty": sorted(self.brain.empty)}, f)
+            os.replace(tmp, self.state_file)
+        except OSError as e:
+            log(f"  couldn't save the game memory: {e}")
 
     # -- helpers --------------------------------------------------------------
 
@@ -210,6 +221,7 @@ class Pilot:
             self.plan = None
             self.pending = None
             self.expected = None
+            self.action_coins = self.action_buys = self.merchants = 0
             self._save_state()
             log(f"=== turn {self.brain.turn} ({self.brain.phase()}) "
                 f"provinces {self.brain.provinces} deck {sum(self.brain.owned.values())}")
@@ -240,6 +252,9 @@ class Pilot:
             REC.event("decide_action", hand=hand, actions=s.actions, coins=s.coins, buys=s.buys,
                       choice=card, turn=self.brain.turn, phase=self.brain.phase())
         if card:
+            self.action_coins += {"Festival": 2, "Market": 1}.get(card, 0)
+            self.action_buys += {"Festival": 1, "Market": 1, "Council Room": 1}.get(card, 0)
+            self.merchants += card == "Merchant"
             t = next(t for t in s.hand if t.text == card)
             self.click(t.x, t.y + int(55 * self.vision.sy), card)
             if card == "Moneylender" and "Copper" in hand:
@@ -252,7 +267,11 @@ class Pilot:
         # treasures just played, and then this is the fallback.
         s = self.vision.screen(img, self.names)
         value = {"Copper": 1, "Silver": 2, "Gold": 3}
-        self.expected = ((s.coins or 0) + sum(value.get(t.text, 0) for t in s.hand), s.buys or 1)
+        hand = [t.text for t in s.hand for _ in range(t.count)]
+        coins = sum(value.get(c, 0) for c in hand) + self.action_coins
+        if "Silver" in hand:
+            coins += self.merchants                       # Merchant: +$1 on the first Silver
+        self.expected = (coins, 1 + self.action_buys)
         self.press(img, "Play Treasures", "Treasures")
 
     def on_buy(self, img):
@@ -268,6 +287,12 @@ class Pilot:
                 self.problem("hud_unreadable", used=coins)
             coins, buys = coins or 0, buys or 1
         self.hud_misses = 0
+        if self.plan is None and self.expected and coins is not None and coins > self.expected[0] + 2:
+            # The counter can be misread (a 3 read as 13); the treasures counted from the hand
+            # (plus a little for bonuses like Merchant) are the safer number.
+            log(f"  counter says ${coins} but the hand counted ${self.expected[0]} - using ${self.expected[0]}")
+            self.problem("coins_disagree", read=coins, counted=self.expected[0])
+            coins = self.expected[0]
         if self.pending and (coins, buys) == self.pending[1]:
             # Coins and buys didn't change, so the click bought nothing: either the click didn't
             # register (it happens) or the pile is empty. An empty pile shows a big red X.
@@ -287,12 +312,15 @@ class Pilot:
                 return
             else:
                 log(f"  buying {card} failed three times (pile not empty) - ending buys this turn")
-                self.problem("buy_failed", card=card)
+                os.makedirs(UNKNOWN_DIR, exist_ok=True)
+                shot = f"buyfail_{int(time.time())}.png"
+                cv2.imwrite(os.path.join(UNKNOWN_DIR, shot), img)
+                self.problem("buy_failed", card=card, coins_read=coins, screenshot=shot)
                 self.plan = []
         self.pending = None
         if self.plan is None:
             p = self.vision.provinces_left(img)
-            if p is not None:
+            if p is not None and 0 < p <= 8:          # 8 in a two-player game; more is a misread
                 self.brain.provinces = p
             self.plan = self.brain.choose_buys(coins, buys)
             log(f"  ${coins} {buys} buy(s), provinces {self.brain.provinces} -> buy {self.plan or 'nothing'}")
@@ -565,12 +593,13 @@ class Pilot:
             log("game finished:", prompt)
             self._save_state()
             return "done"
-        kind = ("buy" if p.startswith("buy a card") else
-                "treasure" if p.startswith("play treasure") else
-                "action" if p.startswith("play action") else
+        q = p.replace(" ", "")      # OCR drops spaces, and stray pile digits can come before the text
+        kind = ("buy" if "buyacard" in q else
+                "treasure" if "playtreasure" in q else
+                "action" if "playaction" in q else
                 "trash" if "trash" in p and "up to" in p else
                 "discard" if "discard" in p and re.search(r"\d", p) else None)
-        if kind is None and "waiting" not in p and "turn" not in p:
+        if kind is None and "wait" not in p and "turn" not in p:
             # The last card played stays big in the middle and can hide the prompt line.
             # Then the buttons tell the phase: an OK button means a choice is wanted.
             labels = " | ".join(b.text.lower() for b in self.vision.buttons(img))
@@ -586,7 +615,7 @@ class Pilot:
             if kind:
                 prompt = f"({kind} phase, prompt hidden)"
         if kind is None:
-            if "waiting" not in p and "turn" not in p:
+            if "wait" not in p and "turn" not in p:
                 self.on_unknown(img, prompt)
             return
         self.unknown_count = 0

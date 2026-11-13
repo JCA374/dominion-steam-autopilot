@@ -13,8 +13,81 @@ Updated 2026-11-13 21:53.</p>
 <div class="card"><div class="k">Hardest level so far</div><div class="v" style="font-size:1.2rem">Hard</div></div>
 <div class="card"><div class="k">Problems logged</div><div class="v">70</div><div class="s">buy_retry 26, hud_unreadable 17, empty_pile 13, selection_adjusted 8, no_button 4, coins_disagree 1, abandoned 1</div></div>
 </div>
+<h2>What the campaign shows</h2>
+<div class="box">
+<p class="small muted">Written after the first full campaign (12 games, 11 finished, model <code>k1-steam</code>, random base-set
+kingdoms). The tables below are recomputed after every game; this summary was written from them, and the numbers in it
+come from the same file.</p>
 
-<h2>Findings so far (computed)</h2><div class="box"><ul><li>12 games so far (11 finished): 5 won, 6 lost.</li><li>Very Easy: 2 of 3 won (67%), about 35 turns per game, 2.7 attacks answered and 7.3 problems per game.</li><li>Easy: 2 of 2 won (100%), about 46 turns per game, 2.0 attacks answered and 13.5 problems per game.</li><li>Medium: 1 of 3 won (33%), about 21 turns per game, 3.0 attacks answered and 3.3 problems per game.</li><li>Hard: 0 of 3 won (0%), about 20 turns per game, 0.0 attacks answered and 2.8 problems per game.</li><li>Lowest win rate when present (at least 2 games): Remodel 20% with vs 67% without (n=5); Bureaucrat 25% with vs 57% without (n=4); Mine 25% with vs 57% without (n=4); Village 25% with vs 57% without (n=4).</li><li>1 game(s) couldn&#x27;t be finished by the autopilot (see the game list).</li><li>2 game(s) were hurt by an autopilot bug, not by the model (marked in the game list; the bug was fixed afterwards). The &#x27;without bug-hit games&#x27; column leaves them out.</li><li>Samples are small: a few games per level. Treat card win rates as hints, not measurements.</li></ul></div>
+<h3>1. Difficulty: wins stop at Medium</h3>
+<ul>
+<li><b>Very Easy and Easy: 4 of 4</b> clean games won. The one Very Easy loss (game 2) was caused by an autopilot bug,
+not the model (see below).</li>
+<li><b>Medium: 1 of 2</b> clean games won (63–50, then a 39–43 loss). The other Medium loss (game 6, 30–31) was also hit
+by the same autopilot bug.</li>
+<li><b>Hard: 0 of 3</b>, all clean losses, by about 2, 8 and 18 points. A fourth Hard game was lost to a crash of the
+game itself (the computer's disk filled up), not counted.</li>
+<li><b>The stronger opponents end the game early.</b> Against Hard, games took 17–23 turns. Against Very Easy and Easy
+they took 28–65. The model's deck is built for a slow money game, and Medium and Hard finish the Provinces
+before it catches up.</li>
+</ul>
+
+<h3>2. The model plays almost pure Big Money</h3>
+<ul>
+<li>On average <b>6 of the 10 kingdom cards</b> in a game were cards this model never learned or isn't allowed to
+buy. <code>k1-steam</code> was evolved on one fixed 10-card kingdom, so Witch, Militia, Moat, Council Room, Bandit,
+Bureaucrat, Gardens and the second-edition cards are invisible to it.</li>
+<li>Even among the cards it knows, it bought action cards in only <b>5 of 11</b> games: one Smithy in three games,
+five Merchants in one game, and a Village, Festival, Moneylender and Laboratory once each. Everything else was treasure and
+Victory cards.</li>
+<li>So kingdoms with strong engines or attacks favour the opponent. The model can't take part in them.</li>
+</ul>
+
+<h3>3. Cards</h3>
+<ul>
+<li>Adjusted for opponent level, <b>all four attack cards come out below average</b>: Bureaucrat −17 points,
+Bandit, Militia and Witch −12 each. <b>But that's mostly one game</b> (game 12, a Medium loss with all four in the
+kingdom). With 3–7 games per card these are hints, not measurements.</li>
+<li><b>Witch</b> was in 4 games and only one was won (against Easy). The model never buys Witch or Moat, so it takes
+the Curses without an answer.</li>
+<li><b>Militia</b> attacks were answered 21 times across the campaign (discarding by the model's own Militia order).
+Militia games went 3 won, 2 lost, and one of those losses was the bug game.</li>
+<li>Kingdoms with <b>Smithy</b> did best (+17 points over level average). Smithy is the one action card the early
+buy list wants first.</li>
+</ul>
+
+<h3>4. A known weak spot: long late games</h3>
+<ul>
+<li>When a game drags on (46 and 65 turns against the easiest opponents), the late buy list fills the deck with
+Estates and Copper and prefers Silver to Gold. $8 hands become rare, and only the weak opponent saved those games.
+The model was trained with a 40-turn cap, so it never faced this.</li>
+</ul>
+
+<h3>5. Autopilot problems found and fixed during the campaign</h3>
+<p>These are problems of the screen-reading autopilot, not the model. Each one was found in a real game, fixed, and is
+counted in the <i>Problems</i> columns:</p>
+<ul>
+<li><b>Attack prompts hidden under the played cards</b>: Militia's "Discard 2 cards" is covered by the big card, so the
+autopilot reads the attack card's name instead, and tells your own turn from the buttons.</li>
+<li><b>Stacked hands</b>: with 6+ cards (after an opponent's Council Room), duplicates are shown as one card with a
+count badge, and a click selects one copy. The autopilot reads the badges, presses OK only when it is green (enabled),
+and otherwise adjusts the selection (8 times).</li>
+<li><b>Clicks that don't register</b> (26 retries) and <b>covered counters</b> (17 times, then the coins are counted from
+the hand). Twice early on, a missed click was taken for an empty pile, so Gold or Silver was never bought again. That
+cost games 2 and 6 and led to the rule that a pile is only empty when it shows its red X.</li>
+<li><b>A crash of the game</b> when the disk ran full (outside the autopilot). The game had to be restarted, and the
+autopilot learned to work with the window's title bar.</li>
+</ul>
+
+<h3>What would help most</h3>
+<ul>
+<li>A model that knows the whole base set, with a stronger late game. For example the dominion-v1 model that covers Witch,
+Militia, Moat and Moneylender (<code>k4-20260614</code>) could play the same campaign for a direct comparison.</li>
+<li>More games per level: a few per level are enough to see the trend, not to rank cards.</li>
+</ul>
+</div>
+
+<h2>Findings so far (computed)</h2><div class="box"><ul><li>12 games so far (11 finished): 5 won, 6 lost.</li><li>Very Easy: 2 of 3 won (67%), about 35 turns per game, 2.7 attacks answered and 7.3 problems per game.</li><li>Easy: 2 of 2 won (100%), about 46 turns per game, 2.0 attacks answered and 13.5 problems per game.</li><li>Medium: 1 of 3 won (33%), about 21 turns per game, 3.0 attacks answered and 3.3 problems per game.</li><li>Hard: 0 of 3 won (0%), about 20 turns per game, 0.0 attacks answered and 2.8 problems per game.</li><li>Below the level average when present (at least 2 games): Bureaucrat -17 pts (n=4); Bandit -12 pts (n=4); Chapel -12 pts (n=5); Militia -12 pts (n=5).</li><li>1 game(s) couldn&#x27;t be finished by the autopilot (see the game list).</li><li>2 game(s) were hurt by an autopilot bug, not by the model (marked in the game list; the bug was fixed afterwards). The &#x27;without bug-hit games&#x27; column leaves them out.</li><li>Samples are small: a few games per level. Treat card win rates as hints, not measurements.</li></ul></div>
 <h2>By opponent level</h2>
 <div class="tablewrap"><table class="t"><tr><th>Level</th><th>Games</th><th>Won</th><th>Lost</th><th>Not finished</th>
 <th>Win rate</th><th>Win rate without bug-hit games</th><th>Avg turns</th><th>Avg minutes</th><th>Attacks answered / game</th><th>Problems / game</th></tr>
@@ -29,35 +102,37 @@ Turns = the score panel's turn count. Problems exclude hand misreads that a seco
 adjusting, unreadable counters, empty piles, missing buttons, games given up.</p>
 <h2>By kingdom card</h2>
 <p>Each base-set card that has appeared: win rate in finished games with it in the kingdom vs without it, and how many
-problems named it. Sorted by the gap (worst first). <b>unknown</b> = the model never learned the card and never buys it.</p>
-<div class="tablewrap"><table class="t"><tr><th>Card</th><th>Games with it</th><th>Win with</th><th>Win without</th>
+problems named it. <b>vs level average</b>: how much more or less often it won than the usual win rate at
+the same opponent levels (games hit by autopilot bugs left out), so a card that only turned up against Hard isn't
+blamed for Hard being hard. Sorted by that (worst first). <b>unknown</b> = the model never learned the card and never buys it.</p>
+<div class="tablewrap"><table class="t"><tr><th>Card</th><th>Games with it</th><th>Win with</th><th>Win without</th><th>vs level average</th>
 <th>Problems naming it</th><th>Model</th><th>Levels</th></tr>
-<tr><td>Remodel</td><td class='num'>5</td><td class='num'>20%</td><td class='num'>67%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1, Easy 1, Medium 1, Hard 2</td></tr>
-<tr><td>Bureaucrat <span class=tag>attack</span></td><td class='num'>4</td><td class='num'>25%</td><td class='num'>57%</td><td class='num'>0</td><td>unknown</td><td class='small'>Easy 1, Medium 2, Hard 1</td></tr>
-<tr><td>Mine</td><td class='num'>4</td><td class='num'>25%</td><td class='num'>57%</td><td class='num'>0</td><td>knows</td><td class='small'>Medium 3, Hard 1</td></tr>
-<tr><td>Village</td><td class='num'>4</td><td class='num'>25%</td><td class='num'>57%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1, Medium 1, Hard 2</td></tr>
-<tr><td>Witch <span class=tag>attack</span></td><td class='num'>4</td><td class='num'>25%</td><td class='num'>57%</td><td class='num'>0</td><td>unknown</td><td class='small'>Easy 1, Hard 2, Medium 1</td></tr>
-<tr><td>Council Room</td><td class='num'>6</td><td class='num'>33%</td><td class='num'>60%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 2, Medium 2, Hard 2</td></tr>
-<tr><td>Poacher</td><td class='num'>6</td><td class='num'>33%</td><td class='num'>60%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 2, Medium 2, Hard 2</td></tr>
-<tr><td>Moat</td><td class='num'>3</td><td class='num'>33%</td><td class='num'>50%</td><td class='num'>0</td><td>unknown</td><td class='small'>Easy 1, Medium 1, Hard 1</td></tr>
-<tr><td>Chapel</td><td class='num'>5</td><td class='num'>40%</td><td class='num'>50%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 2, Easy 1, Hard 1, Medium 1</td></tr>
-<tr><td>Festival</td><td class='num'>5</td><td class='num'>40%</td><td class='num'>50%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1, Medium 2, Hard 2</td></tr>
-<tr><td>Moneylender</td><td class='num'>5</td><td class='num'>40%</td><td class='num'>50%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 2, Medium 1, Hard 2</td></tr>
-<tr><td>Workshop</td><td class='num'>5</td><td class='num'>40%</td><td class='num'>50%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1, Easy 2, Hard 1, Medium 1</td></tr>
-<tr><td>Gardens</td><td class='num'>7</td><td class='num'>43%</td><td class='num'>50%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 2, Easy 1, Medium 2, Hard 2</td></tr>
-<tr><td>Market</td><td class='num'>7</td><td class='num'>43%</td><td class='num'>50%</td><td class='num'>0</td><td>knows</td><td class='small'>Easy 2, Medium 2, Hard 3</td></tr>
-<tr><td>Laboratory</td><td class='num'>2</td><td class='num'>50%</td><td class='num'>44%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 2</td></tr>
-<tr><td>Sentry</td><td class='num'>2</td><td class='num'>50%</td><td class='num'>44%</td><td class='num'>0</td><td>unknown</td><td class='small'>Easy 1, Hard 1</td></tr>
-<tr><td>Merchant</td><td class='num'>6</td><td class='num'>50%</td><td class='num'>40%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 2, Easy 1, Medium 1, Hard 2</td></tr>
-<tr><td>Militia <span class=tag>attack</span></td><td class='num'>5</td><td class='num'>60%</td><td class='num'>33%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 2, Easy 2, Medium 1</td></tr>
-<tr><td>Artisan</td><td class='num'>3</td><td class='num'>67%</td><td class='num'>38%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 3</td></tr>
-<tr><td>Cellar</td><td class='num'>3</td><td class='num'>67%</td><td class='num'>38%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1, Easy 1, Hard 1</td></tr>
-<tr><td>Library</td><td class='num'>3</td><td class='num'>67%</td><td class='num'>38%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1, Medium 2</td></tr>
-<tr><td>Smithy</td><td class='num'>3</td><td class='num'>67%</td><td class='num'>38%</td><td class='num'>0</td><td>knows</td><td class='small'>Easy 1, Medium 1, Hard 1</td></tr>
-<tr><td>Vassal</td><td class='num'>3</td><td class='num'>67%</td><td class='num'>38%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1, Medium 2</td></tr>
-<tr><td>Bandit <span class=tag>attack</span></td><td class='num'>4</td><td class='num'>75%</td><td class='num'>29%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1, Easy 2, Medium 1</td></tr>
-<tr><td>Harbinger</td><td class='num'>4</td><td class='num'>75%</td><td class='num'>29%</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1, Easy 2, Hard 1</td></tr>
-<tr><td>Throne Room</td><td class='num'>2</td><td class='num'>100%</td><td class='num'>33%</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 2</td></tr>
+<tr><td>Bureaucrat <span class=tag>attack</span></td><td class='num'>4</td><td class='num'>25%</td><td class='num'>57%</td><td class='num'>-17 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Easy 1, Medium 2, Hard 1</td></tr>
+<tr><td>Bandit <span class=tag>attack</span></td><td class='num'>4</td><td class='num'>75%</td><td class='num'>29%</td><td class='num'>-12 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1, Easy 2, Medium 1</td></tr>
+<tr><td>Chapel</td><td class='num'>5</td><td class='num'>40%</td><td class='num'>50%</td><td class='num'>-12 pts</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 2, Easy 1, Hard 1, Medium 1</td></tr>
+<tr><td>Militia <span class=tag>attack</span></td><td class='num'>5</td><td class='num'>60%</td><td class='num'>33%</td><td class='num'>-12 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 2, Easy 2, Medium 1</td></tr>
+<tr><td>Witch <span class=tag>attack</span></td><td class='num'>4</td><td class='num'>25%</td><td class='num'>57%</td><td class='num'>-12 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Easy 1, Hard 2, Medium 1</td></tr>
+<tr><td>Workshop</td><td class='num'>5</td><td class='num'>40%</td><td class='num'>50%</td><td class='num'>-12 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1, Easy 2, Hard 1, Medium 1</td></tr>
+<tr><td>Council Room</td><td class='num'>6</td><td class='num'>33%</td><td class='num'>60%</td><td class='num'>-10 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 2, Medium 2, Hard 2</td></tr>
+<tr><td>Artisan</td><td class='num'>3</td><td class='num'>67%</td><td class='num'>38%</td><td class='num'>+0 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 3</td></tr>
+<tr><td>Cellar</td><td class='num'>3</td><td class='num'>67%</td><td class='num'>38%</td><td class='num'>+0 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1, Easy 1, Hard 1</td></tr>
+<tr><td>Harbinger</td><td class='num'>4</td><td class='num'>75%</td><td class='num'>29%</td><td class='num'>+0 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1, Easy 2, Hard 1</td></tr>
+<tr><td>Laboratory</td><td class='num'>2</td><td class='num'>50%</td><td class='num'>44%</td><td class='num'>+0 pts</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 2</td></tr>
+<tr><td>Market</td><td class='num'>7</td><td class='num'>43%</td><td class='num'>50%</td><td class='num'>+0 pts</td><td class='num'>0</td><td>knows</td><td class='small'>Easy 2, Medium 2, Hard 3</td></tr>
+<tr><td>Mine</td><td class='num'>4</td><td class='num'>25%</td><td class='num'>57%</td><td class='num'>+0 pts</td><td class='num'>0</td><td>knows</td><td class='small'>Medium 3, Hard 1</td></tr>
+<tr><td>Moat</td><td class='num'>3</td><td class='num'>33%</td><td class='num'>50%</td><td class='num'>+0 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Easy 1, Medium 1, Hard 1</td></tr>
+<tr><td>Remodel</td><td class='num'>5</td><td class='num'>20%</td><td class='num'>67%</td><td class='num'>+0 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1, Easy 1, Medium 1, Hard 2</td></tr>
+<tr><td>Sentry</td><td class='num'>2</td><td class='num'>50%</td><td class='num'>44%</td><td class='num'>+0 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Easy 1, Hard 1</td></tr>
+<tr><td>Throne Room</td><td class='num'>2</td><td class='num'>100%</td><td class='num'>33%</td><td class='num'>+0 pts</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 2</td></tr>
+<tr><td>Vassal</td><td class='num'>3</td><td class='num'>67%</td><td class='num'>38%</td><td class='num'>+0 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1, Medium 2</td></tr>
+<tr><td>Village</td><td class='num'>4</td><td class='num'>25%</td><td class='num'>57%</td><td class='num'>+0 pts</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1, Medium 1, Hard 2</td></tr>
+<tr><td>Gardens</td><td class='num'>7</td><td class='num'>43%</td><td class='num'>50%</td><td class='num'>+10 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 2, Easy 1, Medium 2, Hard 2</td></tr>
+<tr><td>Merchant</td><td class='num'>6</td><td class='num'>50%</td><td class='num'>40%</td><td class='num'>+10 pts</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 2, Easy 1, Medium 1, Hard 2</td></tr>
+<tr><td>Festival</td><td class='num'>5</td><td class='num'>40%</td><td class='num'>50%</td><td class='num'>+12 pts</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 1, Medium 2, Hard 2</td></tr>
+<tr><td>Moneylender</td><td class='num'>5</td><td class='num'>40%</td><td class='num'>50%</td><td class='num'>+12 pts</td><td class='num'>0</td><td>knows</td><td class='small'>Very Easy 2, Medium 1, Hard 2</td></tr>
+<tr><td>Poacher</td><td class='num'>6</td><td class='num'>33%</td><td class='num'>60%</td><td class='num'>+12 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 2, Medium 2, Hard 2</td></tr>
+<tr><td>Smithy</td><td class='num'>3</td><td class='num'>67%</td><td class='num'>38%</td><td class='num'>+17 pts</td><td class='num'>0</td><td>knows</td><td class='small'>Easy 1, Medium 1, Hard 1</td></tr>
+<tr><td>Library</td><td class='num'>3</td><td class='num'>67%</td><td class='num'>38%</td><td class='num'>+25 pts</td><td class='num'>0</td><td>unknown</td><td class='small'>Very Easy 1, Medium 2</td></tr>
 </table></div><h2>Prompts it didn't understand</h2>
 <p class='muted'>None yet.</p>
 <h2>Every game</h2>

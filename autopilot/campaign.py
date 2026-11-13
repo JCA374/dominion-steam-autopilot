@@ -59,7 +59,11 @@ class Menus:
             out.append((txt.strip(), int(sum(p[0] for p in box) / 4), int(sum(p[1] for p in box) / 4)))
         return out
 
-    def click(self, x, y, long=False, wait=2.5):
+    def click(self, x, y, long=False, wait=2.5, ref=False):
+        """ref=True: (x, y) are reference-layout coordinates (927 x 1048), scaled to the window."""
+        if ref:
+            h, w = self.shot().shape[:2]
+            x, y = int(x * w / 927), int(y * h / 1048)
         if long:
             click(self.d, self.win, x, y, hover=1.0, hold=0.3)
         else:
@@ -67,8 +71,9 @@ class Menus:
         time.sleep(wait)
 
     def find(self, texts, *words):
+        norm = lambda s: s.lower().replace(" ", "")              # OCR often drops spaces ("NewGame")
         for t, x, y in texts:
-            if any(w.lower() == t.lower() or (len(w) > 4 and w.lower() in t.lower()) for w in words):
+            if any(norm(w) == norm(t) or (len(w) > 4 and norm(w) in norm(t)) for w in words):
                 return x, y
         return None
 
@@ -76,8 +81,8 @@ class Menus:
         """From the score screen, the finished board, a game in progress or the main menu."""
         for attempt in range(8):
             tx = self.texts()
-            words = {t.lower() for t, _, _ in tx}
-            if "new game" in words and ("players" in words or "kingdom" in words):
+            words = {t.lower().replace(" ", "") for t, _, _ in tx}
+            if "newgame" in words and ("players" in words or "kingdom" in words):
                 return True                                         # the dialog itself
             if (pos := self.find(tx, "Rematch")) and self.find(tx, "Done"):
                 self.click(*self.find(tx, "Done"))                 # score screen -> board
@@ -91,7 +96,7 @@ class Menus:
                     if t.lower() in ("yes", "resign", "quit", "leave", "ok", "confirm"):
                         self.click(x, y, long=True)
                 continue
-            self.click(36, 1010, long=True)                        # open the in-game menu
+            self.click(36, 1010, long=True, ref=True)                        # open the in-game menu
         return False
 
     def start(self, level):
@@ -100,16 +105,17 @@ class Menus:
         tx = self.texts()
         if (pos := self.find(tx, "Players")):
             self.click(*pos, long=True, wait=1.5)
-        self.click(464, 440, long=True)                            # the opponent tile -> Add Player
+        self.click(464, 440, long=True, ref=True)                            # the opponent tile -> Add Player
         tx = self.texts()
         pos = self.find(tx, level) if level != "Easy" else next(
             ((x, y) for t, x, y in tx if t.lower() == "easy"), None)
-        self.click(*(pos or LEVEL_BUTTON[level]), long=True)
-        tile = " ".join(t for t, x, y in self.texts() if 380 < x < 550 and 480 < y < 530)
+        self.click(*pos, long=True) if pos else self.click(*LEVEL_BUTTON[level], long=True, ref=True)
+        h = self.shot().shape[0] / 1048
+        tile = " ".join(t for t, x, y in self.texts() if 380 < x < 550 and 480 * h < y < 530 * h)
         log(f"opponent tile now reads '{tile}'")
         old = P.newest_save()
         old_m = os.path.getmtime(old) if old else 0
-        self.click(463, 764, long=True, wait=1.0)                  # Play
+        self.click(463, 764, long=True, wait=1.0, ref=True)                  # Play
         for _ in range(90):
             time.sleep(1)
             new = P.newest_save()
@@ -188,7 +194,7 @@ def main():
     done = len(records)
     n = done
     for level in [l.strip() for l in a.levels.split(",")]:
-        already = sum(1 for r in records if r.get("level") == level)
+        already = sum(1 for r in records if r.get("level") == level and r.get("outcome") in ("win", "loss", "tie"))
         for _ in range(max(0, a.per - already)):          # resume: only the games still missing
             n += 1
             try:

@@ -134,8 +134,17 @@ def build(games):
             if p["kind"] in ("unknown_prompt", "auto_resolve", "abandoned"):
                 for c in cards_in_text(p.get("prompt", "")):
                     prob_by_card[c] += 1
+    # Level-adjusted: each game's result minus the usual win rate at its level (bug-hit games left out),
+    # so a card that only appeared against Hard isn't blamed for Hard being hard.
+    clean_done = [g for g in done if not g.get("bug")]
+    base = {}
+    for lv in set(g["level"] for g in clean_done):
+        gl = [g for g in clean_done if g["level"] == lv]
+        base[lv] = sum(g["outcome"] == "win" for g in gl) / len(gl)
     for c in BASE_KINGDOM:
         with_c = [g for g in done if c in g.get("kingdom", [])]
+        adj_g = [g for g in clean_done if c in g.get("kingdom", [])]
+        adjusted = (sum((g["outcome"] == "win") - base[g["level"]] for g in adj_g) / len(adj_g)) if adj_g else None
         without = [g for g in done if c not in g.get("kingdom", [])]
         if not with_c and not prob_by_card[c]:
             continue
@@ -144,10 +153,11 @@ def build(games):
         known = not any(c in g.get("unknown_to_model", []) for g in games if c in g.get("kingdom", []))
         lv = Counter(g["level"] for g in with_c)
         card_rows.append(dict(card=c, n=len(with_c), win_with=pct(wc, len(with_c)), win_without=pct(wo, len(without)),
+                              adjusted=adjusted,
                               delta=(wc / len(with_c) - wo / len(without)) if with_c and without else None,
                               problems=prob_by_card[c], known=known, attack=c in ATTACKS,
                               levels=", ".join(f"{k} {v}" for k, v in lv.items())))
-    card_rows.sort(key=lambda r: (r["delta"] if r["delta"] is not None else 9, -r["problems"]))
+    card_rows.sort(key=lambda r: (r["adjusted"] if r["adjusted"] is not None else 9, -r["problems"]))
 
     # ---- problems
     prob_counter = Counter()
@@ -169,10 +179,10 @@ def build(games):
             findings.append(f"{r['level']}: {r['wins']} of {r['played']} won ({r['winrate']}), "
                             f"about {r['turns']} turns per game, {r['attacks']} attacks answered and "
                             f"{r['problems']} problems per game.")
-    worst = [r for r in card_rows if r["delta"] is not None and r["n"] >= 2 and r["delta"] < 0]
+    worst = [r for r in card_rows if r["adjusted"] is not None and r["n"] >= 2 and r["adjusted"] < 0]
     if worst:
-        findings.append("Lowest win rate when present (at least 2 games): " + "; ".join(
-            f"{r['card']} {r['win_with']} with vs {r['win_without']} without (n={r['n']})" for r in worst[:4]) + ".")
+        findings.append("Below the level average when present (at least 2 games): " + "; ".join(
+            f"{r['card']} {100 * r['adjusted']:+.0f} pts (n={r['n']})" for r in worst[:4]) + ".")
     if prompt_counter:
         top = prompt_counter.most_common(3)
         findings.append("Prompts it didn't understand: " + "; ".join(
@@ -187,6 +197,12 @@ def build(games):
     findings.append("Samples are small: a few games per level. Treat card win rates as hints, not measurements.")
     return dict(level_rows=level_rows, card_rows=card_rows, prob_counter=prob_counter,
                 prompt_counter=prompt_counter, findings=findings)
+
+
+def analysis_html():
+    """A written analysis (autopilot/stats/analysis.html), shown above the computed tables when present."""
+    path = os.path.join(HERE, "stats", "analysis.html")
+    return open(path).read() if os.path.exists(path) else ""
 
 
 def render(games, s):
@@ -211,7 +227,8 @@ Updated {esc(games[-1]['date']) if games else '–'}.</p>
 <div class="card"><div class="k">Hardest level so far</div><div class="v" style="font-size:1.2rem">{esc(hardest)}</div></div>
 <div class="card"><div class="k">Problems logged</div><div class="v">{sum(v for k, v in s['prob_counter'].items() if k not in HANDLED)}</div><div class="s">{esc(', '.join(f'{k} {v}' for k, v in s['prob_counter'].most_common() if k not in HANDLED))}</div></div>
 </div>
-<h2>Findings so far</h2><div class="box"><ul>{''.join(f'<li>{esc(f)}</li>' for f in s['findings'])}</ul></div>
+{analysis_html()}
+<h2>Findings so far (computed)</h2><div class="box"><ul>{''.join(f'<li>{esc(f)}</li>' for f in s['findings'])}</ul></div>
 <h2>By opponent level</h2>
 <div class="tablewrap"><table class="t"><tr><th>Level</th><th>Games</th><th>Won</th><th>Lost</th><th>Not finished</th>
 <th>Win rate</th><th>Win rate without bug-hit games</th><th>Avg turns</th><th>Avg minutes</th><th>Attacks answered / game</th><th>Problems / game</th></tr>"""]
@@ -227,13 +244,16 @@ Turns = the score panel's turn count. Problems exclude hand misreads that a seco
 adjusting, unreadable counters, empty piles, missing buttons, games given up.</p>
 <h2>By kingdom card</h2>
 <p>Each base-set card that has appeared: win rate in finished games with it in the kingdom vs without it, and how many
-problems named it. Sorted by the gap (worst first). <b>unknown</b> = the model never learned the card and never buys it.</p>
-<div class="tablewrap"><table class="t"><tr><th>Card</th><th>Games with it</th><th>Win with</th><th>Win without</th>
+problems named it. <b>vs level average</b>: how much more or less often it won than the usual win rate at
+the same opponent levels (games hit by autopilot bugs left out), so a card that only turned up against Hard isn't
+blamed for Hard being hard. Sorted by that (worst first). <b>unknown</b> = the model never learned the card and never buys it.</p>
+<div class="tablewrap"><table class="t"><tr><th>Card</th><th>Games with it</th><th>Win with</th><th>Win without</th><th>vs level average</th>
 <th>Problems naming it</th><th>Model</th><th>Levels</th></tr>""")
     for r in s["card_rows"]:
         tag = "attack" if r["attack"] else ""
         out.append(f"<tr><td>{esc(r['card'])}{' <span class=tag>attack</span>' if tag else ''}</td><td class='num'>{r['n']}</td>"
                    f"<td class='num'>{r['win_with']}</td><td class='num'>{r['win_without']}</td>"
+                   f"<td class='num'>{'–' if r['adjusted'] is None else f'{100 * r[chr(97) + "djusted"]:+.0f} pts'}</td>"
                    f"<td class='num'>{r['problems']}</td><td>{'knows' if r['known'] else 'unknown'}</td>"
                    f"<td class='small'>{esc(r['levels'])}</td></tr>")
     out.append("</table></div><h2>Prompts it didn't understand</h2>")

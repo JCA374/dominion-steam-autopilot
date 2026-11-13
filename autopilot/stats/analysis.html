@@ -1,0 +1,73 @@
+<h2>What the campaign shows</h2>
+<div class="box">
+<p class="small muted">Written after the first full campaign (12 games, 11 finished, model <code>k1-steam</code>, random base-set
+kingdoms). The tables below are recomputed after every game; this summary was written from them, and the numbers in it
+come from the same file.</p>
+
+<h3>1. Difficulty: wins stop at Medium</h3>
+<ul>
+<li><b>Very Easy and Easy: 4 of 4</b> clean games won. The one Very Easy loss (game 2) was caused by an autopilot bug,
+not the model (see below).</li>
+<li><b>Medium: 1 of 2</b> clean games won (63–50, then a 39–43 loss). The other Medium loss (game 6, 30–31) was also hit
+by the same autopilot bug.</li>
+<li><b>Hard: 0 of 3</b>, all clean losses, by about 2, 8 and 18 points. A fourth Hard game was lost to a crash of the
+game itself (the computer's disk filled up), not counted.</li>
+<li><b>The stronger opponents end the game early.</b> Against Hard, games took 17–23 turns. Against Very Easy and Easy
+they took 28–65. The model's deck is built for a slow money game, and Medium and Hard finish the Provinces
+before it catches up.</li>
+</ul>
+
+<h3>2. The model plays almost pure Big Money</h3>
+<ul>
+<li>On average <b>6 of the 10 kingdom cards</b> in a game were cards this model never learned or isn't allowed to
+buy. <code>k1-steam</code> was evolved on one fixed 10-card kingdom, so Witch, Militia, Moat, Council Room, Bandit,
+Bureaucrat, Gardens and the second-edition cards are invisible to it.</li>
+<li>Even among the cards it knows, it bought action cards in only <b>5 of 11</b> games: one Smithy in three games,
+five Merchants in one game, and a Village, Festival, Moneylender and Laboratory once each. Everything else was treasure and
+Victory cards.</li>
+<li>So kingdoms with strong engines or attacks favour the opponent. The model can't take part in them.</li>
+</ul>
+
+<h3>3. Cards</h3>
+<ul>
+<li>Adjusted for opponent level, <b>all four attack cards come out below average</b>: Bureaucrat −17 points,
+Bandit, Militia and Witch −12 each. <b>But that's mostly one game</b> (game 12, a Medium loss with all four in the
+kingdom). With 3–7 games per card these are hints, not measurements.</li>
+<li><b>Witch</b> was in 4 games and only one was won (against Easy). The model never buys Witch or Moat, so it takes
+the Curses without an answer.</li>
+<li><b>Militia</b> attacks were answered 21 times across the campaign (discarding by the model's own Militia order).
+Militia games went 3 won, 2 lost, and one of those losses was the bug game.</li>
+<li>Kingdoms with <b>Smithy</b> did best (+17 points over level average). Smithy is the one action card the early
+buy list wants first.</li>
+</ul>
+
+<h3>4. A known weak spot: long late games</h3>
+<ul>
+<li>When a game drags on (46 and 65 turns against the easiest opponents), the late buy list fills the deck with
+Estates and Copper and prefers Silver to Gold. $8 hands become rare, and only the weak opponent saved those games.
+The model was trained with a 40-turn cap, so it never faced this.</li>
+</ul>
+
+<h3>5. Autopilot problems found and fixed during the campaign</h3>
+<p>These are problems of the screen-reading autopilot, not the model. Each one was found in a real game, fixed, and is
+counted in the <i>Problems</i> columns:</p>
+<ul>
+<li><b>Attack prompts hidden under the played cards</b>: Militia's "Discard 2 cards" is covered by the big card, so the
+autopilot reads the attack card's name instead, and tells your own turn from the buttons.</li>
+<li><b>Stacked hands</b>: with 6+ cards (after an opponent's Council Room), duplicates are shown as one card with a
+count badge, and a click selects one copy. The autopilot reads the badges, presses OK only when it is green (enabled),
+and otherwise adjusts the selection (8 times).</li>
+<li><b>Clicks that don't register</b> (26 retries) and <b>covered counters</b> (17 times, then the coins are counted from
+the hand). Twice early on, a missed click was taken for an empty pile, so Gold or Silver was never bought again. That
+cost games 2 and 6 and led to the rule that a pile is only empty when it shows its red X.</li>
+<li><b>A crash of the game</b> when the disk ran full (outside the autopilot). The game had to be restarted, and the
+autopilot learned to work with the window's title bar.</li>
+</ul>
+
+<h3>What would help most</h3>
+<ul>
+<li>A model that knows the whole base set, with a stronger late game. For example the dominion-v1 model that covers Witch,
+Militia, Moat and Moneylender (<code>k4-20260614</code>) could play the same campaign for a direct comparison.</li>
+<li>More games per level: a few per level are enough to see the trend, not to rank cards.</li>
+</ul>
+</div>
