@@ -1,0 +1,31 @@
+[16:01:36] works film (resume)
+scene 13: s_timing 27.6 s
+scene 14: s_empty 32.1 s
+scene 15: s_turn 24.1 s
+scene 16: s_memory 20.3 s
+scene 17: s_ending 21.0 s
+scene 18: s_limits 26.1 s
+film: /home/jonas/code/games/steam/dominion/docs/video/how-it-works.mp4 508 s
+[16:04:05] run film
+scene 1: s_intro 14.0 s
+scene 2: s_needs 24.1 s
+scene 3: s_install 33.4 s
+scene 4: s_start 22.3 s
+scene 5: s_run 25.3 s
+scene 6: s_watch 20.9 s
+scene 7: s_score 14.6 s
+scene 8: s_options 25.7 s
+scene 9: s_stuck 23.3 s
+scene 10: s_trouble 31.7 s
+scene 11: s_outro 12.9 s
+film: /home/jonas/code/games/steam/dominion/docs/video/how-to-run.mp4 248 s
+[16:07:50] game voiceover check
+[16:09:54] game film
+scene 1: The game 22.0 s
+scene 2: Turns 1-5: the opening 17.4 s
+scene 3: Turn 6: the misread 25.6 s
+scene 4: Turns 8-15: the middle 20.8 s
+scene 5: Turns 16-29: the late phase 27.4 s
+scene 6: Turns 30-39: the end 26.6 s
+film: /home/jonas/code/games/steam/dominion/docs/video/full-game.mp4 140 s
+[16:13:28] commit films
