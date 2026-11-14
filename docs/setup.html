@@ -19,7 +19,7 @@
 </style>
 </head>
 <body>
-<nav class="top"><a class="brand" href="index.html">🃏 Dominion Autopilot</a><a href="index.html">Home</a><a class="on" href="setup.html">Setup</a><a href="how.html">How it works</a><a href="run.html">Run it</a><a href="videos.html">Videos</a><a href="stats.html">Stats</a><a href="podcast/index.html">Podcast</a><a href="lessons.html">Lessons</a></nav>
+<nav class="top"><a class="brand" href="index.html">🃏 Dominion Autopilot</a><a href="index.html">Home</a><a class="on" href="setup.html">Setup</a><a href="training.html">Training</a><a href="how.html">How it works</a><a href="run.html">Run it</a><a href="videos.html">Videos</a><a href="stats.html">Stats</a><a href="podcast/index.html">Podcast</a><a href="lessons.html">Lessons</a></nav>
 <main>
 <h1>The setup: engine, models, kingdoms</h1>
 <p class="lede">Three projects work together. The <b>engine</b> is the game. A <b>trainer</b> turns the engine into
@@ -93,17 +93,17 @@ Money) on 200 random Steam-like kingdoms. Re-measured on 14 November with the St
 played on Steam, and it never changes after release.</p>
 <div class="tablewrap"><table class="t">
 <tr><th>Model</th><th>Trained on</th><th>Key cards</th><th class="num">Score*</th></tr>
-<tr><td><b>k4-20260614</b></td><td>Chapel, Laboratory, Market, Merchant, Militia, Moat, Moneylender, Smithy, Village, Witch</td><td>2 Witch, 2 Market, 1 Merchant</td><td class="num">82%</td></tr>
-<tr><td>k2-gen8563</td><td>Chapel, Laboratory, Market, Militia, Mine, Moat, Smithy, Throne Room, Village, Witch</td><td>2 Laboratory, 1 Militia</td><td class="num">53%</td></tr>
-<tr><td>k1-gen3896</td><td rowspan="4">Chapel, Festival, Laboratory, Market, Merchant, Mine, Moneylender, Smithy, Throne Room, Village</td><td>1 Smithy</td><td class="num">52%</td></tr>
-<tr><td>k1-gen8938</td><td>1 Laboratory, 1 Market, 1 Smithy</td><td class="num">45%</td></tr>
-<tr><td>k1-steam <span class="tag">default</span></td><td>1 Smithy</td><td class="num">45%</td></tr>
+<tr><td><b>k4-20260614</b></td><td>Chapel, Laboratory, Market, Merchant, Militia, Moat, Moneylender, Smithy, Village, Witch</td><td>2 Witch, 2 Market, 1 Merchant</td><td class="num">79%</td></tr>
+<tr><td>k2-gen8563</td><td>Chapel, Laboratory, Market, Militia, Mine, Moat, Smithy, Throne Room, Village, Witch</td><td>2 Laboratory, 1 Militia</td><td class="num">48%</td></tr>
+<tr><td>k1-gen3896</td><td rowspan="4">Chapel, Festival, Laboratory, Market, Merchant, Mine, Moneylender, Smithy, Throne Room, Village</td><td>1 Smithy</td><td class="num">50%</td></tr>
+<tr><td>k1-gen8938</td><td>1 Laboratory, 1 Market, 1 Smithy</td><td class="num">46%</td></tr>
+<tr><td>k1-steam <span class="tag">default</span></td><td>1 Smithy</td><td class="num">44%</td></tr>
 <tr><td>k1-gen91439</td><td>9 Laboratory, 7 Merchant, 3 Market</td><td class="num">33%</td></tr>
-<tr><td>k2f-gen13665</td><td>Chapel, Festival, Laboratory, Market, Militia, Mine, Moat, Smithy, Throne Room, Village, Witch</td><td>2 Festival, 2 Witch, 1 Militia</td><td class="num">39%</td></tr>
+<tr><td>k2f-gen13665</td><td>Chapel, Festival, Laboratory, Market, Militia, Mine, Moat, Smithy, Throne Room, Village, Witch</td><td>2 Festival, 2 Witch, 1 Militia</td><td class="num">37%</td></tr>
 <tr><td class="muted">big-money</td><td class="muted">any</td><td class="muted">none</td><td class="num muted">29%</td></tr>
 </table></div>
 <p class="small muted">* Average score (win = 1, tie = ½) against the three fixed opponents on kingdoms that contain the model's key
-cards, Steam rules. Two older models (k2-gen29756, mixed-gen10324) use a genome format the loader misreads. They are
+cards, Steam rules, every kingdom with its own games (benchmark version 3). Two older models (k2-gen29756, mixed-gen10324) use a genome format the loader misreads. They are
 marked retired and never chosen. k1-steam is the model behind every Steam game so far.</p>
 
 <h2 id="kingdoms">3 · Kingdoms</h2>

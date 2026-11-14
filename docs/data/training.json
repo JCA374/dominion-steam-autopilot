@@ -1,0 +1,52 @@
+{
+ "generated": "2026-11-14 19:47",
+ "runs": [
+  {
+   "name": "generalist",
+   "must": [],
+   "banned": false,
+   "gen": 100,
+   "gens": 500,
+   "best": 0.5994,
+   "bots": {
+    "Big Money": 0.6775,
+    "Smithy-BM": 0.5725,
+    "Witch-BM": 0.5483
+   },
+   "curve": [
+    [
+     25,
+     0.5925
+    ],
+    [
+     50,
+     0.5925
+    ],
+    [
+     75,
+     0.594
+    ],
+    [
+     100,
+     0.5994
+    ]
+   ],
+   "done": false,
+   "updated": "2026-11-14 19:47",
+   "minutes": 1.1
+  }
+ ],
+ "headline": [],
+ "entries": [
+  {
+   "when": "14 November 2026, evening",
+   "title": "Plan: a portfolio of specialists, picked per kingdom",
+   "html": "<p>Steam deals 10 of the 26 cards at random, and a GA genome trained on one fixed kingdom only knows those 10. The new model is a <b>portfolio</b>: about twenty specialists, each evolved with <b>all 26 cards</b> on fresh random kingdoms that always hold its key cards (Witch, Militia, Smithy, Laboratory, Library, Gardens + Workshop, Village + Smithy\u2026), plus a generalist for any kingdom.</p><p>The picker is a model too, but not a learned one: when a game starts it plays every specialist on <i>that exact kingdom</i> against the benchmark bots on the C engine (about 25,000 games per second) and the best one plays the game. The new trainer is <code>ga/specialist.py</code>, the model kind <code>ga-portfolio</code> (<code>policy/portfolio.py</code>), and the model goes in its own folder, <code>models/portfolio-v1/</code>.</p><p>The nine cards the autopilot can't play on Steam yet (Cellar, Remodel, Library\u2026) are in training. During play they are never bought, and the picker tries each specialist the same way, so it picks one that wins without them. One run, <i>generalist-safe</i>, trains without them as a fallback.</p>"
+  },
+  {
+   "when": "14 November 2026, 19:50",
+   "title": "A benchmark bug, fixed: every kingdom now gets its own games",
+   "html": "<p>The first Witch specialist stalled at the same validation score many times, and the per-bot numbers were suspiciously round (95.0%, 62.5%). The cause: every kingdom in a test set reused the same game seeds. When neither player buys the other kingdom cards, a Witch-and-money deck plays <i>exactly the same game</i> on all 60 kingdoms, so \u201c60 kingdoms \u00d7 10 seeds\u201d was really 10 games per seat. The model benchmark (<code>policy.bench</code>) had the same flaw.</p><p>Fixed in both: each kingdom gets its own seeds (benchmark version 3), and all models were re-measured. The best old model, k4-20260614, scores <b>78.9%</b> (it was 81.5%), and k1-steam, the model behind every Steam game so far, scores <b>43.7%</b>. Those are the numbers to beat. Training restarted with the fix: 21 specialists \u00d7 500 generations, about two hours.</p>"
+  }
+ ]
+}
