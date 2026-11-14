@@ -1,0 +1,5 @@
+["Steam campaign: 5 won, 6 lost of 11 finished games (Very Easy/Easy 4 of 5, Medium 1 of 3, Hard 0 of 3), model k1-steam",
+ "The old simulator differed from Steam: 12 Provinces instead of 8, 15 of 26 cards, a turn-40 cap, ties as half a win",
+ "New shared engine with Steam's rules and all 26 cards, Python + C; 1,500 random games compared decision by decision, zero differences",
+ "Setup: engine/ (the game) -> trainers/ga-v1/ (evolves and releases models) -> autopilot/ (reads the kingdom, the selector picks a model, clicks)",
+ "All models re-benchmarked on Steam rules; nine new cards (Cellar, Remodel...) are not bought until the autopilot can answer their prompts"]
