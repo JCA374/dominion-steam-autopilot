@@ -207,7 +207,7 @@ def analysis_html():
 
 def render(games, s):
     nav = ('<nav class="top"><a class="brand" href="index.html">🃏 Dominion Autopilot</a><a href="index.html">Home</a>'
-           '<a href="how.html">How it works</a><a href="run.html">How to run it</a><a href="videos.html">Videos</a>'
+           '<a href="setup.html">Setup</a><a href="how.html">How it works</a><a href="run.html">Run it</a><a href="videos.html">Videos</a>'
            '<a class="on" href="stats.html">Stats</a><a href="podcast/index.html">Podcast</a><a href="lessons.html">Lessons</a></nav>')
     done = [g for g in games if played(g)]
     wins = sum(g["outcome"] == "win" for g in done)

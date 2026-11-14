@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dominion Autopilot: The setup</title>
+<meta name="description" content="How the pieces fit: the shared game engine, the trainers and their models, kingdoms, the model selector and the autopilot.">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="site.css">
+<style>
+.pipe { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 8px; align-items: stretch; margin: 16px 0; }
+.pipe .step { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.pipe .step b { display: block; margin-bottom: 4px; }
+.pipe .arrow { align-self: center; color: var(--muted); font-size: 1.4rem; }
+.pipe .step.e { border-top: 4px solid var(--accent); }
+.pipe .step.t { border-top: 4px solid var(--good); }
+.pipe .step.a { border-top: 4px solid var(--warn); }
+@media (max-width: 760px) { .pipe { grid-template-columns: 1fr; } .pipe .arrow { transform: rotate(90deg); justify-self: center; } }
+</style>
+</head>
+<body>
+<nav class="top"><a class="brand" href="index.html">🃏 Dominion Autopilot</a><a href="index.html">Home</a><a class="on" href="setup.html">Setup</a><a href="how.html">How it works</a><a href="run.html">Run it</a><a href="videos.html">Videos</a><a href="stats.html">Stats</a><a href="podcast/index.html">Podcast</a><a href="lessons.html">Lessons</a></nav>
+<main>
+<h1>The setup: engine, models, kingdoms</h1>
+<p class="lede">Three projects work together. The <b>engine</b> is the game. A <b>trainer</b> turns the engine into
+<b>models</b>. The <b>autopilot</b> picks a model for the kingdom Steam dealt and plays it on the real game. This page
+explains each piece, and where to look when you want to change something. Updated 14 November 2026.</p>
+
+<div class="pipe">
+<div class="step e"><b>1 · Engine</b>The rules of Dominion, as Steam plays them. Python for clarity, C for speed. Identical games in both.<br><code>engine/</code></div>
+<div class="arrow">→</div>
+<div class="step t"><b>2 · Trainer</b>Plays millions of games on the engine and evolves a strategy. Releases it as a model folder.<br><code>trainers/ga-v1/</code></div>
+<div class="arrow">→</div>
+<div class="step a"><b>3 · Autopilot</b>Reads the Steam screen, asks a model, clicks. Picks the model that fits the kingdom.<br><code>autopilot/</code></div>
+</div>
+
+<h2>The folders</h2>
+<pre><code>dominion/
+├── engine/              github: dominion-engine       the game (shared by everything)
+│   ├── dominion_engine/   Python engine: cards, rules, bots
+│   ├── c/                 the same engine in C (≈60× faster)
+│   ├── tests/             rules per card + Python/C parity
+│   └── RULES.md           every rule, and how it differs from the first engine
+│
+├── trainers/            one folder per kind of model
+│   └── ga-v1/           github: dominion-v1             the genetic algorithm
+│       ├── engine/          → the engine, as a git submodule (pinned version)
+│       ├── core/agent.py    the genome as a player of the engine (c/ga_agent.c in C)
+│       ├── ga/              training: population, fitness, hall of fame
+│       ├── policy/          the protocol: how the autopilot asks a model for a decision
+│       ├── models/          released models (one folder each)
+│       └── best_model/      live output of the current training run
+│
+└── autopilot/           github: dominion-steam-autopilot   plays Steam Dominion
+    ├── autopilot/           pilot (eyes, brain, hands), control panel, campaign, stats
+    ├── dominion-v1/         → the GA trainer, as a git submodule (brings engine/ with it)
+    ├── models/              extra model folders (plug-ins)
+    └── docs/                this website</code></pre>
+<p>A new kind of model, for example a neural network, gets its own folder next to the GA: <code>trainers/nn-v1/</code>,
+with the engine as a submodule and the same protocol. The rules are never copied into a trainer.
+The <a href="https://github.com/JCA374/dominion-engine">engine</a>,
+<a href="https://github.com/JCA374/dominion-v1">GA trainer</a> and
+<a href="https://github.com/JCA374/dominion-steam-autopilot">autopilot</a> are separate repositories.</p>
+
+<h2 id="engine">1 · The engine</h2>
+<p>Until 14 November the GA trained on its own small simulator, and that simulator played a slightly different game from
+Steam. The engine is that game rebuilt to Steam's rules, in its own repository, so every future model trains on the
+real thing.</p>
+<div class="tablewrap"><table class="t">
+<tr><th>Rule</th><th>Engine now (= Steam)</th><th>First simulator</th></tr>
+<tr><td>Provinces, Duchies, Estates (2 players)</td><td>8 each</td><td>12 / 12 / 6</td></tr>
+<tr><td>Kingdom cards</td><td>all 26 of the base set</td><td>15</td></tr>
+<tr><td>Curse pile</td><td>always there, counts for the 3-pile ending</td><td>only with Witch or Militia</td></tr>
+<tr><td>Game length</td><td>no limit</td><td>stopped at turn 40</td></tr>
+<tr><td>Equal points</td><td>fewer turns wins</td><td>half a win</td></tr>
+<tr><td>Council Room</td><td>the opponent draws a card</td><td>no effect on the opponent</td></tr>
+</table></div>
+<p>Every choice in the game (play an action, buy, what to trash, what to discard to a Militia…) is one
+<b>decision</b> with a list of options. Any player answers decisions: a scripted bot, the evolved genome, a person
+in the GUI, or later a neural network. The Python and C engines ask the same decisions in the same order with the same
+shuffles, and a test plays 1,500 random games in both and compares every decision: zero differences.</p>
+
+<h2 id="models">2 · Models</h2>
+<p>A <b>model</b> is a folder. For the GA it holds the evolved <code>strategy.json</code> (buy lists per phase, action order,
+Chapel and Throne Room choices) and <code>model.json</code> (name, the kingdom it was trained on, date). Two more files
+are measured, not trained:</p>
+<ul>
+<li><b>Key cards</b>: the kingdom cards the model is built around (it buys them and wins more with them).</li>
+<li><b><code>bench.json</code></b>: its strength against three fixed opponents (Big Money, Smithy–Big Money, Witch–Big
+Money) on 200 random Steam-like kingdoms. Re-measured on 14 November with the Steam-rules engine.</li>
+</ul>
+<p><code>best_model/</code> changes every training run. Only a <b>released</b> model (<code>models/&lt;name&gt;/</code>) is
+played on Steam, and it never changes after release.</p>
+<div class="tablewrap"><table class="t">
+<tr><th>Model</th><th>Trained on</th><th>Key cards</th><th class="num">Score*</th></tr>
+<tr><td><b>k4-20260614</b></td><td>Chapel, Laboratory, Market, Merchant, Militia, Moat, Moneylender, Smithy, Village, Witch</td><td>2 Witch, 2 Market, 1 Merchant</td><td class="num">82%</td></tr>
+<tr><td>k2-gen8563</td><td>Chapel, Laboratory, Market, Militia, Mine, Moat, Smithy, Throne Room, Village, Witch</td><td>2 Laboratory, 1 Militia</td><td class="num">53%</td></tr>
+<tr><td>k1-gen3896</td><td rowspan="4">Chapel, Festival, Laboratory, Market, Merchant, Mine, Moneylender, Smithy, Throne Room, Village</td><td>1 Smithy</td><td class="num">52%</td></tr>
+<tr><td>k1-gen8938</td><td>1 Laboratory, 1 Market, 1 Smithy</td><td class="num">45%</td></tr>
+<tr><td>k1-steam <span class="tag">default</span></td><td>1 Smithy</td><td class="num">45%</td></tr>
+<tr><td>k1-gen91439</td><td>9 Laboratory, 7 Merchant, 3 Market</td><td class="num">33%</td></tr>
+<tr><td>k2f-gen13665</td><td>Chapel, Festival, Laboratory, Market, Militia, Mine, Moat, Smithy, Throne Room, Village, Witch</td><td>2 Festival, 2 Witch, 1 Militia</td><td class="num">39%</td></tr>
+<tr><td class="muted">big-money</td><td class="muted">any</td><td class="muted">none</td><td class="num muted">29%</td></tr>
+</table></div>
+<p class="small muted">* Average score (win = 1, tie = ½) against the three fixed opponents on kingdoms that contain the model's key
+cards, Steam rules. Two older models (k2-gen29756, mixed-gen10324) use a genome format the loader misreads. They are
+marked retired and never chosen. k1-steam is the model behind every Steam game so far.</p>
+
+<h2 id="kingdoms">3 · Kingdoms</h2>
+<p>A Steam game deals 10 of the 26 base-set kingdom cards. Three things to know:</p>
+<ul>
+<li><b>How the autopilot learns the kingdom.</b> It isn't read from the screen. Dominion saves every game as XML in its
+Proton folder, and the newest file lists the ten cards.</li>
+<li><b>How a kingdom gets chosen.</b> In the control panel you pick <i>Random</i> (Steam deals), a list of cards, or
+<i>Auto</i>: the training kingdom of the best model, so the model plays the cards it knows. The campaign types each
+name into the game's <i>Specify Card</i> box.</li>
+<li><b>What a model does with cards it never learned.</b> Nothing. A model only buys cards on its own buy lists, which
+come from its training kingdom. The rest are logged as <i>untrained</i>. In the Steam campaign, about 6 of the 10 cards
+in a typical game were invisible to k1-steam.</li>
+</ul>
+<p>The engine knows all 26 cards now, so new models can learn any of them. One safety rule: for nine of the new cards
+(Artisan, Cellar, Harbinger, Library, Poacher, Remodel, Sentry, Vassal, Workshop) the autopilot can't yet answer the
+question Steam asks when you play them. Models are never told to buy those nine until that is built.</p>
+
+<h2 id="selector">4 · Picking a model for a kingdom</h2>
+<p>With <code>--model auto</code> (the default) the selector ranks every released model after the deal:</p>
+<ol>
+<li>a model trained on exactly this kingdom;</li>
+<li>else a model whose key cards are all in the kingdom, highest benchmark score first;</li>
+<li>else the model with the most key cards dealt.</li>
+</ol>
+<p>Plain Big Money and retired models are never chosen. Models are plug-ins: drop a folder into <code>models/</code>,
+run the benchmark, and the selector, the control panel and the pilot see it without code changes.</p>
+
+<h2 id="decision">5 · One decision, end to end</h2>
+<ol class="steps">
+<li>The autopilot takes a screenshot and reads the prompt (<i>Buy a card.</i>), the counters ($6, 1 buy) and the
+Province count.</li>
+<li>It sends the model a small JSON question: turn, Provinces left, kingdom, empty piles, cards owned, hand, coins.</li>
+<li>The model's <code>policy</code> rebuilds that position as an engine game and asks its agent the engine's own BUY
+decision: the same code that played it in training.</li>
+<li>The answer comes back (<code>["Gold"]</code>), and the autopilot clicks the Gold pile, then checks that coins went down.</li>
+</ol>
+
+<h2 id="where">Where to change what</h2>
+<div class="tablewrap"><table class="t">
+<tr><th>You want to…</th><th>Go to</th></tr>
+<tr><td>Fix or add a game rule or card</td><td><code>engine/</code>: Python and C together, plus a rules test</td></tr>
+<tr><td>Train a better GA model</td><td><code>trainers/ga-v1/</code>: <code>python train.py</code>, then <code>python -m policy.release</code></td></tr>
+<tr><td>Try a new kind of model</td><td>a new <code>trainers/&lt;kind&gt;-v1/</code> with the engine as submodule</td></tr>
+<tr><td>Teach the autopilot a new Steam prompt</td><td><code>autopilot/autopilot/pilot.py</code> and the protocol in <code>policy/</code></td></tr>
+<tr><td>Play, benchmark or run a campaign</td><td>the control panel: <code>autopilot/ui.py</code> (see <a href="run.html">Run it</a>)</td></tr>
+</table></div>
+</main>
+<footer>Dominion Autopilot · an evolved strategy plays Steam Dominion through the screen. Not affiliated with the makers of Dominion.</footer>
+</body></html>

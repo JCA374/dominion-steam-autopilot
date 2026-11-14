@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="site.css">
 </head>
 <body>
-<nav class="top"><a class="brand" href="index.html">🃏 Dominion Autopilot</a><a href="index.html">Home</a><a class="on" href="how.html">How it works</a><a href="run.html">How to run it</a><a href="videos.html">Videos</a><a href="stats.html">Stats</a><a href="podcast/index.html">Podcast</a><a href="lessons.html">Lessons</a></nav>
+<nav class="top"><a class="brand" href="index.html">🃏 Dominion Autopilot</a><a href="index.html">Home</a><a href="setup.html">Setup</a><a class="on" href="how.html">How it works</a><a href="run.html">Run it</a><a href="videos.html">Videos</a><a href="stats.html">Stats</a><a href="podcast/index.html">Podcast</a><a href="lessons.html">Lessons</a></nav>
 <main>
 <h1>How it works</h1>
 <p class="lede">An evolved strategy plays a game it was never built for, through the same screen and mouse a person uses.
@@ -26,10 +26,11 @@ steps on recorded footage.</p>
 </ol></div>
 
 <h2 id="problem">The problem</h2>
-<p>The strategy comes from <a href="https://github.com/JCA374/dominion-v1">dominion-v1</a>: a genetic algorithm that
-evolved Dominion strategies over thousands of games in its own small engine (Python, with a C version for speed). Its
-output is one file, <code>best_model/strategy.json</code>. Against its hall of fame it wins about 54% of games, and 73%
-against plain Big Money (50 seat-swapped games each).</p>
+<p>The strategies come from <a href="https://github.com/JCA374/dominion-v1">dominion-v1</a>: a genetic algorithm that
+evolves Dominion strategies over millions of games in a simulator. Since 14 November that simulator is the shared
+<a href="https://github.com/JCA374/dominion-engine">dominion-engine</a>, rebuilt to Steam's rules (Python, with an identical C
+version for speed). Each released model is a folder with its evolved <code>strategy.json</code>. Which model plays a game
+depends on the kingdom: see <a href="setup.html">The setup</a>.</p>
 <p>The Steam game is a different program: a closed Windows game (by Temple Gates) that runs on Linux through Proton. It has no
 bot interface, no mods, and no file that shows your hand. So the autopilot does what a person does: look, decide, click.</p>
 
@@ -101,21 +102,21 @@ change from game to game.</p>
 then terminals <i>Throne Room &gt; Smithy &gt; Moneylender &gt; Chapel &gt; Mine</i>), Chapel trash lists per phase, the
 Throne Room target order, buy targets (maximum copies, e.g. at most 1 Village), and a terminal-slack number.</p>
 
-<h2 id="buy">Brain 2: buying with the strategy's own code</h2>
+<h2 id="buy">Brain 2: buying with the model's own code</h2>
 <p>The autopilot doesn't re-implement the buy rules. On the first <i>Buy a card.</i> prompt of a turn it:</p>
 <ol>
 <li>reads coins and buys from the counters, and the Province count;</li>
-<li>builds a stand-in <code>GameState</code>: those coins and buys, a supply (10 of each card, the real Province count, 0
-for piles seen empty), and a deck of every card it owns;</li>
-<li>calls <code>core.engine.play_buy_phase(state, strategy)</code> from dominion-v1, the same function used in training;</li>
-<li>takes whatever that function put in the discard pile as the plan, and clicks the piles one by one.</li>
+<li>sends the model a protocol question (<code>buy</code>) with an observation: turn, Provinces left, kingdom, piles seen
+empty, every card it owns, hand, coins and buys;</li>
+<li>the model's <code>policy</code> rebuilds that position as a game of the shared <a href="setup.html#engine">engine</a> and asks
+its agent the engine's own BUY decision, once per buy: the same agent code that played every game in training;</li>
+<li>takes the answer (e.g. <code>["Gold", "Silver"]</code>) as the plan, and clicks the piles one by one.</li>
 </ol>
 <p>So the buys on Steam are exactly the buys the strategy makes in its simulator, with its two hidden rules: <b>buy
 targets</b> (stop at N copies) and <b>terminal density</b> (refuse a terminal action card when the deck has no spare
 actions for it, given the slack).</p>
 <p><b>Empty piles</b> (found by a recording, see <a href="lessons.html">Lessons</a>): if a buy click leaves coins and
-buys unchanged, the click bought nothing, so that pile is empty. It is set to 0 in the stand-in supply and the strategy
-is asked again.</p>
+buys unchanged, the click bought nothing, so that pile is empty. It is reported as empty and the model is asked again.</p>
 
 <h2 id="actions">Brain 3: playing actions</h2>
 <p>When the prompt asks for actions, it reads the hand and the actions counter, and plays the first card of the
@@ -123,16 +124,17 @@ non-terminal list that is in hand, else the first terminal. A Moneylender withou
 without another action, are skipped. After every play it takes a new screenshot, because the hand has changed. With no
 card worth playing it presses <i>End Actions</i>. Treasures are always played with the <i>Play Treasures</i> button.</p>
 <p>Prompts for trashing (Chapel) and for discarding down to a number (e.g. against Militia) have handlers that use the
-strategy's Chapel lists and the GA engine's own Militia discard order. They are written but haven't come up in a
-recorded game yet.</p>
+model's Chapel lists and its engine agent's Militia discard order. Militia discards came up 21 times in the campaign.</p>
 
 <h2 id="unknown">Cards it never learned</h2>
-<p>The strategy was evolved with 15 base-set kingdom cards: Village, Smithy, Market, Laboratory, Festival, Chapel, Throne
-Room, Council Room, Moneylender, Gardens, Mine, Merchant, Militia, Witch, Moat. Steam deals kingdoms from hundreds of
-cards. Any other card is left out of the stand-in supply, so the strategy can't buy it, and the autopilot never needs
-to know how to play it. In the recorded games Harbinger, Vassal, Workshop, Remodel, Artisan and Bureaucrat were ignored this way.
-Some kingdom cards it does know (Witch, Moat, Council Room) don't appear in this model's buy lists, so it never buys
-those either.</p>
+<p>A model only buys cards on its own buy lists, and those come from the kingdom it was trained on. k1-steam, the
+model behind every Steam game so far, was trained on Chapel, Festival, Laboratory, Market, Merchant, Mine, Moneylender,
+Smithy, Throne Room and Village. Every other kingdom card is logged as <i>untrained</i> and never bought, so the
+autopilot never needs to know how to play it. In the campaign that was about 6 of the 10 cards in a typical game.</p>
+<p>The shared engine now knows all 26 base-set cards, so new models can learn any of them, and the
+<a href="setup.html#selector">model selector</a> picks the model whose cards were dealt. For nine of the new cards
+(Artisan, Cellar, Harbinger, Library, Poacher, Remodel, Sentry, Vassal, Workshop) the autopilot can't answer Steam's
+question yet when you play them, so models are never told to buy those.</p>
 
 <h2 id="click">Hands: the patient click</h2>
 <p><code>click.py</code> sends pointer events with the XTEST extension, which XWayland passes on to the game. The first
@@ -182,11 +184,13 @@ and starts again.</p>
 <tr><th>File</th><th>Job</th></tr>
 <tr><td><code>autopilot/pilot.py</code></td><td>The loop, prompt handlers, memory, rematch, command-line options</td></tr>
 <tr><td><code>autopilot/vision.py</code></td><td>Regions, OCR, name matching, the upside-down re-read</td></tr>
-<tr><td><code>autopilot/brain.py</code></td><td>Decisions from <code>strategy.json</code>; buying through dominion-v1's <code>play_buy_phase</code></td></tr>
+<tr><td><code>autopilot/brain.py</code></td><td>Tracks the game and asks the model through dominion-v1's <code>policy</code> protocol; picks the model with the selector</td></tr>
+<tr><td><code>autopilot/ui.py</code>, <code>campaign.py</code></td><td>Control panel (kingdom, difficulty, model, Play) and the campaign runner behind the Stats tab</td></tr>
 <tr><td><code>autopilot/grab.py</code>, <code>click.py</code></td><td>Screenshot and click on the XWayland window</td></tr>
 <tr><td><code>autopilot/recorder.py</code></td><td><code>--record</code>: frames (4/s) and an event log, on a second X connection</td></tr>
 <tr><td><code>video/</code></td><td>Film scripts and builders (every frame from a recording)</td></tr>
-<tr><td><code>dominion-v1/</code></td><td>Submodule: the genetic algorithm, its engine and the evolved strategy</td></tr>
+<tr><td><code>dominion-v1/</code></td><td>Submodule: the GA trainer, its released models and the protocol; brings the shared engine as its own submodule <code>dominion-v1/engine/</code></td></tr>
+<tr><td><code>models/</code></td><td>Extra model folders (plug-ins) next to dominion-v1's own</td></tr>
 </table></div>
 </main>
 <footer>Dominion Autopilot · an evolved strategy plays Steam Dominion through the screen. Not affiliated with the makers of Dominion.</footer>

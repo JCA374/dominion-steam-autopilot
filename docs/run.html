@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="site.css">
 </head>
 <body>
-<nav class="top"><a class="brand" href="index.html">🃏 Dominion Autopilot</a><a href="index.html">Home</a><a href="how.html">How it works</a><a class="on" href="run.html">How to run it</a><a href="videos.html">Videos</a><a href="stats.html">Stats</a><a href="podcast/index.html">Podcast</a><a href="lessons.html">Lessons</a></nav>
+<nav class="top"><a class="brand" href="index.html">🃏 Dominion Autopilot</a><a href="index.html">Home</a><a href="setup.html">Setup</a><a href="how.html">How it works</a><a class="on" href="run.html">Run it</a><a href="videos.html">Videos</a><a href="stats.html">Stats</a><a href="podcast/index.html">Podcast</a><a href="lessons.html">Lessons</a></nav>
 <main>
 <h1>How to run it</h1>
 <p class="lede">About five minutes to set up, then one command per session. The film
@@ -32,11 +32,12 @@ one folder.</li>
 cd dominion-steam-autopilot
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt</code></pre>
-<p>The submodule <code>dominion-v1/</code> is the genetic-algorithm project. It holds the evolved strategy
-(<code>best_model/strategy.json</code>) and the game engine whose buy code the autopilot calls. The five packages are
+<p>The submodule <code>dominion-v1/</code> is the genetic-algorithm project. It holds the released models and the
+protocol the autopilot asks them through, and brings the shared game engine as its own submodule
+(<a href="setup.html">the setup</a>). The five packages are
 <code>python-xlib</code> (screenshots and clicks), <code>numpy</code>, <code>opencv-python-headless</code>, <code>pillow</code>
 and <code>rapidocr-onnxruntime</code> (the text reader, which ships its own small models, so nothing else downloads later).</p>
-<p>Already cloned without <code>--recurse-submodules</code>? Run <code>git submodule update --init</code>.</p>
+<p>Already cloned without <code>--recurse-submodules</code>, or updating? Run <code>git submodule update --init --recursive</code>.</p>
 
 <h2>2. Start a game</h2>
 <ol>
@@ -47,6 +48,13 @@ so a window lying on top of the game would get them instead.</li>
 </ol>
 
 <h2>3. Run</h2>
+<h3>The control panel</h3>
+<pre><code>.venv/bin/python autopilot/ui.py        # then open http://127.0.0.1:8642</code></pre>
+<p>Pick a <b>kingdom</b> (leave as is, Random, a card list, or Auto = the training kingdom of the best model), a
+<b>difficulty</b> (or Auto = the easiest level the model hasn't beaten 2 of its last 3 games at), a <b>model</b> (or Auto
+= the selector picks after the deal), and press Play. It can also run the benchmark for new models. Its output shows in
+the page. Play clicks in the real game window.</p>
+<h3>Or the pilot directly</h3>
 <pre><code>.venv/bin/python autopilot/pilot.py</code></pre>
 <p>Keep your hand off the mouse while it plays: it moves the real pointer. Stop it at any time with <b>Ctrl+C</b>. It
 stops by itself on the score screen.</p>
@@ -70,7 +78,7 @@ prompt: Play Treasure cards.
 <tr><th>Line</th><th>Meaning</th></tr>
 <tr><td><code>game seed … vs …</code></td><td>Read from the game's save file: the seed names this game's memory file; the opponent's name.</td></tr>
 <tr><td><code>kingdom:</code></td><td>The ten kingdom cards, also from the save file.</td></tr>
-<tr><td><code>never learned</code></td><td>Kingdom cards outside the 15 the strategy was evolved with. It never buys them.</td></tr>
+<tr><td><code>never learned</code> / <code>not in this model's training kingdom</code></td><td>Kingdom cards the model never trained with. It never buys them.</td></tr>
 <tr><td><code>prompt:</code></td><td>The sentence under the supply that says what the game wants now.</td></tr>
 <tr><td><code>=== turn N (phase)</code></td><td>A new turn: the strategy's phase (early, mid, late), Provinces left, cards owned.</td></tr>
 <tr><td><code>hand […] actions N -&gt; X</code></td><td>What it read in your hand, the actions counter, and the card it chose to play.</td></tr>
@@ -85,7 +93,9 @@ prompt: Play Treasure cards.
 <tr><td><code>--turn N</code></td><td>You start it in the middle of a game on turn N (and it has no memory file for this game yet).</td></tr>
 <tr><td><code>--dry</code></td><td>Read and decide, but never click. A safe first test: watch the log while you play yourself.</td></tr>
 <tr><td><code>--record DIR</code></td><td>Also save window frames (4 per second) and every read, decision and click to <code>DIR/</code>. The films on this site were built from such recordings.</td></tr>
-<tr><td><code>--model FILE</code></td><td>Play a different strategy file (default <code>dominion-v1/best_model/strategy.json</code>).</td></tr>
+<tr><td><code>--model NAME</code></td><td>Play this released model (a name, or a folder path). Default <code>auto</code>: the selector picks the model that fits the kingdom.</td></tr>
+<tr><td><code>--list-models</code></td><td>List every model with its training kingdom, key cards and benchmark score, then exit.</td></tr>
+<tr><td><code>--auto</code></td><td>Answer prompts it doesn't know with a safe generic choice instead of waiting (used by campaigns).</td></tr>
 <tr><td><code>--once</code></td><td>Handle one prompt and exit (debugging).</td></tr>
 <tr><td><code>--poll S</code>, <code>--delay S</code></td><td>Seconds between screen reads (0.5) and after each click (0.8).</td></tr>
 </table></div>
