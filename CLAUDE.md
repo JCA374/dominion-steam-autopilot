@@ -9,9 +9,10 @@ players). Steam Dominion has no bot API, so the autopilot works like a person: X
 RapidOCR on fixed screen regions → ask a released model what to do → XTEST click. Repo:
 `JCA374/dominion-steam-autopilot`; live site (GitHub Pages from `docs/`): https://jca374.github.io/dominion-steam-autopilot/
 
-`dominion-v1/` is a **git submodule** (`JCA374/dominion-v1`): the genetic algorithm, its Python/C engine, the released
-models (`models/`) and the `policy` protocol. It has its own README/HOWTO. `../dominion-GA1` is a separate checkout of
-the same dominion-v1 repo (where training runs); it is not part of this repo.
+`dominion-v1/` is a **git submodule** (`JCA374/dominion-v1`): the genetic algorithm, the released models (`models/`)
+and the `policy` protocol. It has its own submodule `dominion-v1/engine/` (`JCA374/dominion-engine`, the game with
+Steam's rules), so clone/update with `--recursive` / `git submodule update --init --recursive`. `../trainers/ga-v1`
+is a separate checkout of dominion-v1 (where training runs) and `../engine` of the engine; neither is part of this repo.
 
 ## Commands
 
@@ -73,10 +74,11 @@ Running the pilot, a campaign or Play in the UI clicks in the real game window: 
 Models are released in dominion-v1, then pulled in here by bumping the submodule:
 
 ```bash
-# in dominion-v1 (or ../dominion-GA1): release training output as an immutable, named model
+# in dominion-v1 (or ../trainers/ga-v1): release training output as an immutable, named model
 python -m policy.release best_model <name> --description "..." && git add models && git commit && git push
 # here
-git -C dominion-v1 pull origin main && git add dominion-v1 && git commit -m "dominion-v1: <name>"
+git -C dominion-v1 pull origin main && git -C dominion-v1 submodule update --init
+git add dominion-v1 && git commit -m "dominion-v1: <name>"
 .venv/bin/python autopilot/bench_models.py           # so the selector has its score
 .venv/bin/python autopilot/pilot.py --model <name>
 ```
