@@ -123,7 +123,8 @@ class Menus:
         (none = the game deals a random kingdom). Returns the card names read back."""
         from click import key, type_text
         self.click(*KINGDOM_TAB, long=True, wait=1.5, ref=True)
-        self.click(*CARDS_BUTTON, long=True, wait=1.5, ref=True)
+        if not self.find(self.texts(), "Specify Card"):       # Cards toggles: in card mode it opens the Gallery
+            self.click(*CARDS_BUTTON, long=True, wait=1.5, ref=True)
         if (pos := self.find(self.texts(), "Clear")):
             self.click(*pos, long=True, wait=1.5)
         for card in cards:

@@ -30,7 +30,7 @@ from policy import (PROTOCOL_VERSION, best_kingdom, cards, key_cards, list_model
 AUTO = "auto"
 
 BASE = cards.BASE
-NEEDS_PROTOCOL = 1
+NEEDS_PROTOCOL = 2
 if PROTOCOL_VERSION != NEEDS_PROTOCOL:
     raise ImportError(f"dominion-v1 speaks protocol {PROTOCOL_VERSION}, autopilot needs "
                       f"{NEEDS_PROTOCOL}; update the submodule or the autopilot")
@@ -77,6 +77,47 @@ class Brain:
     def choose_buys(self, coins: int, buys: int) -> list[str]:
         return self.policy.buy(self.obs(coins=coins, buys=buys))
 
+    # -- the cards' own choices (protocol 2) -----------------------------------
+
+    def cellar(self, hand) -> list[str]:
+        return self.policy.cellar(self.obs(hand))
+
+    def poacher(self, hand, n: int) -> list[str]:
+        return self.policy.poacher(self.obs(hand), n)
+
+    def remodel(self, hand) -> dict:
+        return self.policy.remodel(self.obs(hand))
+
+    def workshop(self, hand=()) -> str | None:
+        return self.policy.workshop(self.obs(hand))
+
+    def artisan(self, hand) -> dict:
+        return self.policy.artisan(self.obs(hand))
+
+    def mine(self, hand) -> dict:
+        return self.policy.mine(self.obs(hand))
+
+    def moneylender(self, hand) -> bool:
+        return self.policy.moneylender(self.obs(hand))
+
+    def harbinger(self, hand, discard_pile) -> str | None:
+        return self.policy.harbinger(self.obs(hand), list(discard_pile))
+
+    def vassal(self, card: str, actions: int = 0) -> bool:
+        return self.policy.vassal(self.obs(actions=actions), card)
+
+    def library(self, card: str, hand=(), actions: int = 0) -> bool:
+        return self.policy.library(self.obs(hand, actions=actions), card)
+
+    def sentry(self, cards) -> dict:
+        return self.policy.sentry(self.obs(), list(cards))
+
+    def bandit(self, cards) -> str | None:
+        return self.policy.bandit(self.obs(), list(cards))
+
+    def bureaucrat(self, hand) -> str | None:
+        return self.policy.bureaucrat(self.obs(hand))
+
     # -- bookkeeping ---------------------------------------------------------
 
     def bought(self, card: str):
@@ -89,6 +130,10 @@ class Brain:
             self.owned[card] -= 1
         if card == "Province":
             self.provinces += 1
+
+    def gained(self, card: str):
+        """A card gained without buying it (Workshop, Remodel, Artisan, Mine, Bureaucrat)."""
+        self.owned[card] += 1
 
     def trashed(self, trashed: list[str]):
         for c in trashed:

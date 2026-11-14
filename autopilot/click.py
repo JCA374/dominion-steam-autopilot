@@ -26,6 +26,27 @@ def click(d, win, x, y, hover=0.5, hold=0.15):
     d.sync()
 
 
+def drag(d, win, x0, y0, x1, y1, hover=0.5, steps=20, step_time=0.02):
+    """Drag with the left button from (x0, y0) to (x1, y1), game-area coordinates."""
+    from grab import content_offset
+    left, top, _, _ = content_offset(d, win)
+    pos = win.translate_coords(d.screen().root, 0, 0)
+    ox, oy = -pos.x + left, -pos.y + top
+    xtest.fake_input(d, X.MotionNotify, x=ox + x0, y=oy + y0)
+    d.sync()
+    time.sleep(hover)
+    xtest.fake_input(d, X.ButtonPress, 1)
+    d.sync()
+    time.sleep(0.2)
+    for i in range(1, steps + 1):
+        xtest.fake_input(d, X.MotionNotify, x=ox + x0 + (x1 - x0) * i // steps, y=oy + y0 + (y1 - y0) * i // steps)
+        d.sync()
+        time.sleep(step_time)
+    time.sleep(0.3)
+    xtest.fake_input(d, X.ButtonRelease, 1)
+    d.sync()
+
+
 def key(d, win, name, shift=False):
     """Press one key (an X keysym name such as "a", "space", "Return") in the window."""
     from Xlib import XK

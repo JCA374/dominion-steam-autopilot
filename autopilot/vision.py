@@ -17,6 +17,7 @@ REF_W, REF_H = 927, 1048
 
 # Regions (x0, y0, x1, y1) in reference coordinates.
 R_PROMPT = (150, 292, 780, 326)
+R_PROMPT_TIGHT = (0, 300, 927, 330)
 R_HAND = (100, 820, 780, 1000)
 R_HUD = (0, 735, 200, 782)
 R_BUTTONS = (760, 700, 927, 900)
@@ -89,7 +90,10 @@ class Vision:
     # -- individual readers ------------------------------------------------
 
     def prompt(self, img) -> str:
-        return " ".join(t.text for t in self.read(img, R_PROMPT))
+        text = " ".join(t.text for t in self.read(img, R_PROMPT))
+        if not text:       # big played cards right under the line can hide it from the wider crop
+            text = " ".join(t.text for t in self.read(img, R_PROMPT_TIGHT, cls=False))
+        return text
 
     def hand(self, img, card_names: set[str]) -> list[Text]:
         """Card-name banners in the hand, matched against known card names."""

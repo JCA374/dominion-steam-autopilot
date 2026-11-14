@@ -48,6 +48,10 @@ RESULTS_DIR = os.path.join(HERE, "results")
 
 
 REC: Recorder | None = None
+# What a played action adds to this turn's counters (the treasure-phase coin count needs it)
+ACTION_COINS = {"Festival": 2, "Market": 1, "Vassal": 2, "Poacher": 1}
+ACTION_BUYS = {"Festival": 1, "Market": 1, "Council Room": 1}
+GAINS_ON_PLAY = {"Bandit": "Gold", "Bureaucrat": "Silver"}     # gained with no prompt
 
 
 def log(*a):
@@ -123,6 +127,8 @@ class Pilot:
         self.expected = None      # (coins, buys) counted from the hand in the treasure phase
         self.action_coins = self.action_buys = self.merchants = 0   # from my own action plays this turn
         self.pending = None       # (card, (coins, buys) before the click) of the last buy click
+        self.resolving = None     # the action card I just played, while its prompts may come
+        self.card_step = 0        # how many of its prompts were answered
         if REC:
             REC.event("game_start", seed=self.seed, kingdom=self.kingdom, opponents=opps,
                       model=self.brain.policy.name,
@@ -265,15 +271,23 @@ class Pilot:
             REC.event("decide_action", hand=hand, actions=s.actions, coins=s.coins, buys=s.buys,
                       choice=card, turn=self.brain.turn, phase=self.brain.phase())
         if card:
-            self.action_coins += {"Festival": 2, "Market": 1}.get(card, 0)
-            self.action_buys += {"Festival": 1, "Market": 1, "Council Room": 1}.get(card, 0)
-            self.merchants += card == "Merchant"
+            self.count_play(card, hand)
             t = next(t for t in s.hand if t.text == card)
             self.click(t.x, t.y + int(55 * self.vision.sy), card)
+            self.resolving = card               # its own prompts come next (on_card)
+            self.card_step = 0
             if card == "Moneylender" and "Copper" in hand:
-                self.brain.trashed(["Copper"])
+                self.brain.trashed(["Copper"])          # Steam trashes it without asking
         else:
             self.press(img, "End Actions", "Treasures", "Done", "End")
+
+    def count_play(self, card, hand):
+        """Bookkeeping for one play of an action card: coins, buys, gains without a prompt."""
+        self.action_coins += ACTION_COINS.get(card, 0) + (3 if card == "Moneylender" and "Copper" in hand else 0)
+        self.action_buys += ACTION_BUYS.get(card, 0)
+        self.merchants += card == "Merchant"
+        if card in GAINS_ON_PLAY and GAINS_ON_PLAY[card] not in self.brain.empty:
+            self.brain.gained(GAINS_ON_PLAY[card])
 
     def on_treasure(self, img):
         # Count the coins now: on the buy prompt the counters are sometimes hidden under the
@@ -289,6 +303,7 @@ class Pilot:
 
     def on_buy(self, img):
         a, coins, buys = self.vision.hud(img)
+        read = coins is not None and buys is not None
         if coins is None or buys is None:
             self.hud_misses += 1
             if self.hud_misses < 3:
@@ -306,6 +321,17 @@ class Pilot:
             log(f"  counter says ${coins} but the hand counted ${self.expected[0]} - using ${self.expected[0]}")
             self.problem("coins_disagree", read=coins, counted=self.expected[0])
             coins = self.expected[0]
+        if self.pending and not read:
+            # Counters unreadable: the fallback numbers never change, so they can't tell whether
+            # the last click bought anything. Trust it (a missed click just costs that buy).
+            card, before, _ = self.pending
+            self.pending = None
+            coins = max(0, before[0] - (cards.cost(card) or 0))
+            buys = max(0, before[1] - 1)
+            if buys == 0:
+                self.press(img, "End Buys", "End Turn", "End")
+                self._save_state()
+                return
         if self.pending and (coins, buys) == self.pending[1]:
             # Coins and buys didn't change, so the click bought nothing: either the click didn't
             # register (it happens) or the pile is empty. An empty pile shows a big red X.
@@ -378,9 +404,11 @@ class Pilot:
     def on_discard(self, img, prompt):
         s = self.vision.screen(img, self.names)
         hand = [t.text for t in s.hand for _ in range(t.count)]
-        m = re.search(r"(\d+)", prompt)
+        low = prompt.lower()
+        m = (re.search(r"down\s*to\s*(\d+)", low) or re.search(r"discard\s*(\d+)", low)
+             or re.search(r"(\d+)\s*card", low))      # not the "(0 of 2)" counter of repeated attacks
         n = int(m.group(1)) if m else None
-        keep = n if (n is not None and "down to" in prompt.lower()) else (
+        keep = n if (n is not None and "down to" in low) else (
             len(hand) - n if n is not None else 3)
         out = self.brain.discard_down_to(hand, keep)
         log(f"  discard prompt '{prompt}' hand {hand} -> discard {out}")
@@ -394,7 +422,8 @@ class Pilot:
     def center_card(self, img):
         """The name on the big card shown in the middle (an attack being resolved), if any."""
         names = []
-        for t in self.vision.read(img, (0, 315, 927, 370), cls=False):   # a row of played cards
+        texts = sorted(self.vision.read(img, (0, 315, 927, 370), cls=False), key=lambda t: t.x)
+        for t in texts:                               # a row of played cards, the newest on the right
             name = match_name(t.text, {n.upper(): n for n in self.names})
             if name:
                 names.append(name)
@@ -435,6 +464,326 @@ class Pilot:
         self.press_ok_if_any(card, prefer=out)
         self.unknown_count = 0
         self.last_progress = time.time()
+        return True
+
+    # -- the cards' own prompts (protocol 2) -----------------------------------------------
+
+    def prompt_card(self, prompt):
+        """The card a prompt line is about: Steam writes '<Card>: <what to do>'."""
+        head = prompt.split(":")[0] if ":" in prompt else ""
+        return match_name(head.upper().replace(" ", ""),
+                          {n.upper().replace(" ", ""): n for n in self.names}) if head else None
+
+    def hand_now(self, img):
+        s = self.vision.screen(img, self.names)
+        return s, [t.text for t in s.hand for _ in range(t.count)]
+
+    @staticmethod
+    def handler_name(card):
+        return "card_" + card.lower().replace(" ", "_")
+
+    def on_card(self, img, prompt, card) -> bool:
+        """A prompt of a card I played (or that attacks me). False: not handled."""
+        handler = getattr(self, self.handler_name(card), None)
+        if handler is None:
+            return False
+        log(f"prompt: {prompt or '(hidden)'} [{card}]")
+        done = handler(img, prompt)
+        if done is not False:
+            self.card_step += 1
+            if REC:
+                REC.event("card_prompt", card=card, prompt=prompt, step=self.card_step)
+        return done is not False
+
+    def refresh_empty(self, img):
+        """Mark kingdom piles that show the empty X (gains and Poacher depend on them)."""
+        for c in self.kingdom:
+            if c not in self.brain.empty and self.pile_shows_x(img, c):
+                log(f"  the {c} pile is empty")
+                self.brain.empty.add(c)
+
+    def gain_pile(self, card, what):
+        """Click a supply pile to gain `card` (Workshop, Remodel, Artisan, Mine)."""
+        img = self.shot()
+        pos = self.pile_pos(img, card)
+        if pos is None:
+            log(f"  can't find the {card} pile to gain")
+            self.problem("gain_pile_missing", card=card)
+            return False
+        self.click(*pos, f"{what}: gain {card}")
+        self.brain.gained(card)
+        return True
+
+    def card_workshop(self, img, prompt):
+        self.refresh_empty(img)
+        s, hand = self.hand_now(img)
+        g = self.brain.workshop(hand)
+        log(f"  Workshop -> gain {g}")
+        return self.gain_pile(g, "Workshop") if g else self.press(img, "Done", "OK")
+
+    @staticmethod
+    def says_gain(prompt) -> bool:
+        """The prompt asks to gain (OCR of a half-hidden prompt: 'Goin', 'Gaim'...)."""
+        return bool(re.search(r"g[oa][il1][nmr]", prompt.lower().replace(" ", "")))
+
+    @staticmethod
+    def says_trash(prompt) -> bool:
+        return bool(re.search(r"tr[ao][s5c]", prompt.lower().replace(" ", "")))
+
+    def click_hand(self, s, card, what, chosen=None):
+        t = self.card_slot(s.hand, card, chosen if chosen is not None else [card])
+        if t is None:
+            log(f"  {card} is not in the hand I read")
+            self.problem("card_not_in_hand", card=card, what=what)
+            return False
+        self.click(t.x, t.y + int(55 * self.vision.sy), f"{what}: {card}")
+        return True
+
+    def card_remodel(self, img, prompt):
+        s, hand = self.hand_now(img)
+        gain_step = self.says_gain(prompt) or (self.card_step % 2 == 1 and not self.says_trash(prompt))
+        if gain_step:
+            self.refresh_empty(img)
+            g = getattr(self, "planned_gain", None)
+            if g is None or g in self.brain.empty:
+                g = self.brain.remodel(hand + [getattr(self, "remodel_trashed", "Copper")])["gain"]
+            self.planned_gain = None
+            log(f"  Remodel -> gain {g}")
+            return self.gain_pile(g, "Remodel")
+        self.refresh_empty(img)
+        r = self.brain.remodel(hand)
+        log(f"  Remodel hand {hand} -> trash {r['trash']}, then gain {r['gain']}")
+        self.remodel_trashed = r["trash"]
+        if not self.click_hand(s, r["trash"], "Remodel trash"):
+            return False
+        self.brain.trashed([r["trash"]])
+        self.planned_gain = r["gain"]
+        return True
+
+    def popup_cards(self, img, region=(0, 55, 927, 100)):
+        """Card titles in a pop-up row (Harbinger's discard pile, Sentry's look): [(name, x, y)]."""
+        names = {n.upper().replace(" ", ""): n for n in self.names}
+        out = []
+        for t in sorted(self.vision.read(img, region, cls=False), key=lambda t: t.x):
+            name = match_name(t.text.upper().replace(" ", ""), names)
+            if name:
+                out.append((name, t.x, t.y))
+        return out
+
+    def select_and_ok(self, s, cards, what):
+        """Click each card (a multi-select from the hand), then the OK/Done button. Choosing
+        nothing is the Decline button."""
+        if not cards:
+            return self.press(self.shot(), "Decline", "Done", "OK", "Confirm")
+        for c in cards:
+            self.click_hand(s, c, what, chosen=cards)
+        img = self.shot()
+        if self.ok_button(img) is None and not any(
+                w in b.text.lower() for b in self.vision.buttons(img) for w in ("discard", "trash")):
+            return True                      # a one-card choice resolves on the click (Poacher)
+        if not self.press_ok_if_any(what, prefer=cards):
+            self.press(self.shot(), "OK", "Done", "Confirm", "Discard", "Trash")
+        return True
+
+    def card_cellar(self, img, prompt):
+        s, hand = self.hand_now(img)
+        out = self.brain.cellar(hand)
+        log(f"  Cellar hand {hand} -> discard {out or 'nothing'}")
+        return self.select_and_ok(s, out, "Cellar discard")
+
+    def card_poacher(self, img, prompt):
+        s, hand = self.hand_now(img)
+        self.refresh_empty(img)
+        m = re.search(r"(\d+)", prompt)
+        n = int(m.group(1)) if m else max(1, len([c for c in self.brain.empty if c in self.kingdom]))
+        out = self.brain.poacher(hand, n)
+        log(f"  Poacher: discard {n} -> {out}")
+        return self.select_and_ok(s, out, "Poacher discard")
+
+    def card_vassal(self, img, prompt):
+        shown = self.popup_cards(img)
+        if not shown:
+            log("  Vassal: no card window read")
+            return self.press(img, "Decline", "Done", "OK")
+        card, x, y = shown[0]
+        a, _, _ = self.vision.hud(img)
+        play = self.brain.vassal(card, actions=a or 0)
+        log(f"  Vassal discarded {card} -> {'play it' if play else 'decline'}")
+        if not play:
+            return self.press(img, "Decline", "Done", "OK")
+        self.click(x, y + int(90 * self.vision.sy), f"Vassal: play {card}")
+        self.resolving, self.card_step = card, -1        # its own prompts come next
+        return True
+
+    def drag(self, x0, y0, x1, y1, what):
+        from click import drag
+        log(f"  drag {what} ({x0},{y0}) -> ({x1},{y1})")
+        if REC:
+            REC.event("drag", x0=x0, y0=y0, x1=x1, y1=y1, what=what)
+        if not self.args.dry:
+            drag(self.d, self.win, x0, y0, x1, y1)
+        time.sleep(self.args.delay)
+
+    def sentry_layout(self, img):
+        """Sentry's window: {zone: x} from its Discard / Deck / Trash labels, and the cards
+        [(name, x, y, zone)] left to right (in the Deck zone, left = bottom, right = top)."""
+        zones = {}
+        for t in self.vision.read(img, (60, 45, 870, 80), cls=False):
+            w = t.text.lower()
+            for z in ("discard", "deck", "trash"):
+                if z in w:
+                    zones[z] = (t.x, t.y)
+        cards = []
+        if len(zones) == 3:
+            for name, x, y in self.popup_cards(img, (60, 80, 870, 115)):
+                zone = min(zones, key=lambda z: abs(zones[z][0] - x))
+                cards.append((name, x, y, zone))
+        return zones, cards
+
+    def card_sentry(self, img, prompt):
+        zones, cards = self.sentry_layout(img)
+        if len(zones) < 3 or not cards:
+            log(f"  Sentry window not read (zones {list(zones)}, cards {cards})")
+            return False
+        looked = [c[0] for c in cards]
+        plan = self.brain.sentry(list(reversed(looked)))            # top card first
+        log(f"  Sentry looks at {looked} (bottom..top) -> {plan}")
+        down = int(90 * self.vision.sy)
+        for zone in ("trash", "discard"):
+            for name in plan[zone]:
+                zones_now, now = self.sentry_layout(self.shot())
+                card = next((c for c in now if c[0] == name and c[3] == "deck"), None)
+                if card:
+                    zx, zy = zones_now[zone]
+                    self.drag(card[1], card[2] + down, zx, zy + 2 * down, f"Sentry: {name} to {zone}")
+        keep = plan["keep"]
+        if len(keep) == 2 and keep[0] != keep[1]:
+            zones_now, now = self.sentry_layout(self.shot())
+            deck = [c for c in now if c[3] == "deck"]
+            if len(deck) == 2 and deck[-1][0] != keep[0]:             # the wanted top card is on the left
+                left, right = deck
+                self.drag(left[1], left[2] + down, right[1] + int(80 * self.vision.sx), right[2] + down,
+                          f"Sentry: {left[0]} on top")
+        _, now = self.sentry_layout(self.shot())
+        placed = {z: [c[0] for c in now if c[3] == z] for z in ("trash", "discard", "deck")}
+        log(f"  Sentry window now: {placed}")
+        want = {"trash": sorted(plan["trash"]), "discard": sorted(plan["discard"])}
+        if any(sorted(placed[z]) != want[z] for z in want):
+            self.problem("sentry_mismatch", want=plan, seen=placed)
+        self.brain.trashed(plan["trash"])
+        return self.press(self.shot(), "OK", "Done")
+
+    def card_mine(self, img, prompt):
+        s, hand = self.hand_now(img)
+        gain_step = self.says_gain(prompt) or (self.card_step % 2 == 1 and not self.says_trash(prompt))
+        if gain_step:
+            self.refresh_empty(img)
+            g = getattr(self, "planned_gain", None)
+            if g is None or g in self.brain.empty:
+                g = self.brain.mine(hand + [getattr(self, "mine_trashed", "Copper")])["gain"]
+            self.planned_gain = None
+            log(f"  Mine -> gain {g} (to hand)")
+            return self.gain_pile(g, "Mine") if g else self.press(img, "Decline", "Done", "OK")
+        self.refresh_empty(img)
+        r = self.brain.mine(hand)
+        log(f"  Mine hand {hand} -> trash {r['trash']}, then gain {r['gain']}")
+        if r["trash"] is None:
+            return self.press(img, "Decline", "Done", "OK")
+        if not self.click_hand(s, r["trash"], "Mine trash"):
+            return False
+        self.brain.trashed([r["trash"]])
+        self.mine_trashed, self.planned_gain = r["trash"], r["gain"]
+        return True
+
+    def card_artisan(self, img, prompt):
+        s, hand = self.hand_now(img)
+        q = prompt.lower().replace(" ", "")
+        topdeck_step = ("onto" in q or "deck" in q or "put" in q or
+                        (self.card_step % 2 == 1 and not self.says_gain(prompt)))
+        if topdeck_step:
+            top = getattr(self, "planned_top", None)
+            if top is None or top not in hand:
+                top = self.brain.artisan(hand)["topdeck"]
+                top = top if top in hand else (hand[0] if hand else None)
+            self.planned_top = None
+            log(f"  Artisan -> put {top} onto the deck")
+            return self.click_hand(s, top, "Artisan topdeck") if top else self.press(img, "Done", "OK")
+        self.refresh_empty(img)
+        r = self.brain.artisan(hand)
+        log(f"  Artisan hand {hand} -> gain {r['gain']}, then topdeck {r['topdeck']}")
+        self.planned_top = r["topdeck"]
+        return self.gain_pile(r["gain"], "Artisan") if r["gain"] else self.press(img, "Done", "OK")
+
+    def card_moneylender(self, img, prompt):
+        s, hand = self.hand_now(img)
+        yes = self.brain.moneylender(hand)
+        log(f"  Moneylender hand {hand} -> {'trash a Copper' if yes else 'decline'}")
+        if yes and self.click_hand(s, "Copper", "Moneylender trash"):
+            return True                       # on_action already counted the Copper as trashed
+        self.brain.gained("Copper")           # ... so declining puts it back in the count
+        return self.press(img, "Decline", "Done", "OK")
+
+    def card_library(self, img, prompt):
+        shown = self.popup_cards(img)
+        s, hand = self.hand_now(img)
+        a, _, _ = self.vision.hud(img)
+        card = shown[0][0] if shown else next(
+            (c for c in self.names if c.lower() in prompt.lower().replace(" ", "")), None)
+        if card is None:
+            log(f"  Library: which card? (prompt '{prompt}', window {shown})")
+            return False
+        skip = self.brain.library(card, hand, actions=a or 0)
+        log(f"  Library drew {card} -> {'set it aside' if skip else 'keep it'}")
+        labels = [b.text for b in self.vision.buttons(img)]
+        if skip:
+            return self.press(img, "Set Aside", "Aside", "Skip", "Yes")
+        return self.press(img, "Keep", "Take", "Decline", "No")
+
+    def card_throne_room(self, img, prompt):
+        s, hand = self.hand_now(img)
+        t = self.brain.throne_target(hand)
+        log(f"  Throne Room hand {hand} -> {t or 'decline'}")
+        if t is None or not self.click_hand(s, t, "Throne Room: play twice"):
+            return self.press(img, "Decline", "Done", "OK")
+        self.count_play(t, hand)
+        self.count_play(t, hand)
+        self.resolving, self.card_step = t, -1           # its prompts come next, twice
+        return True
+
+    def card_moat(self, img, prompt):
+        """Attacked while holding a Moat: always reveal it (the engine does too). Not yet seen on
+        Steam; if its prompt differs, the pilot saves it as an unknown prompt."""
+        if self.my_phase_buttons(img):
+            return False                       # my own Moat play: no prompt of its own
+        log("  Moat: reveal it")
+        return self.press(img, "Reveal", "Yes", "OK", "Done") or False
+
+    def card_bandit(self, img, prompt):
+        """Attacked by Bandit with two treasures to choose from (only then is there a choice).
+        Not yet seen on Steam."""
+        if self.my_phase_buttons(img):
+            return False
+        shown = [n for n, _, _ in self.popup_cards(img)]
+        pick = self.brain.bandit(shown)
+        log(f"  Bandit revealed {shown} -> trash {pick}")
+        if pick is None:
+            return self.press(img, "OK", "Done") or False
+        _, x, y = next(p for p in self.popup_cards(img) if p[0] == pick)
+        self.click(x, y + int(90 * self.vision.sy), f"Bandit: trash {pick}")
+        return True
+
+    def card_harbinger(self, img, prompt):
+        s, hand = self.hand_now(img)
+        pile = self.popup_cards(img)
+        if not pile:
+            log("  Harbinger: no discard pile window read")
+            return self.press(img, "Decline", "Done", "OK")
+        top = self.brain.harbinger(hand, [n for n, _, _ in pile])
+        log(f"  Harbinger discard pile {[n for n, _, _ in pile]} -> {top or 'decline'}")
+        if top is None:
+            return self.press(img, "Decline", "Done", "OK")
+        _, x, y = next(p for p in pile if p[0] == top)
+        self.click(x, y + int(90 * self.vision.sy), f"Harbinger: topdeck {top}")
         return True
 
     def card_slot(self, hand_texts, card, chosen):
@@ -591,6 +940,12 @@ class Pilot:
             if not self.my_phase_buttons(img) and self.on_attack(img, "(blank)"):
                 self.blank = 0
                 return
+            card = self.resolving or self.center_card(img)
+            if (card and hasattr(self, self.handler_name(card)) and not self.my_phase_buttons(img)
+                    and self.on_card(img, "", card)):
+                self.blank = 0
+                self.last_progress = time.time()
+                return
             self.blank += 1
             if self.blank % 3 == 0:
                 # Usually a card viewer (a big card with arrows, opened by a long press) covers the
@@ -607,11 +962,17 @@ class Pilot:
             self._save_state()
             return "done"
         q = p.replace(" ", "")      # OCR drops spaces, and stray pile digits can come before the text
+        named = self.prompt_card(prompt)          # '<Card>: ...' goes to that card's handler first
+        if named and hasattr(self, self.handler_name(named)) and self.on_card(img, prompt, named):
+            self.unknown_count = 0
+            self.last_progress = time.time()
+            return
         kind = ("buy" if "buyacard" in q else
                 "treasure" if "playtreasure" in q else
                 "action" if "playaction" in q else
                 "trash" if "trash" in p and "up to" in p else
-                "discard" if "discard" in p and re.search(r"\d", p) else None)
+                "discard" if "discard" in p and re.search(r"\d", p) and len(p) < 45 else None)
+        # (a long text is a card's own text from a hover tooltip, not a prompt)
         if kind is None and "wait" not in p and "turn" not in p:
             # The last card played stays big in the middle and can hide the prompt line.
             # Then the buttons tell the phase: an OK button means a choice is wanted.
@@ -627,10 +988,17 @@ class Pilot:
                 kind = "buy"
             if kind:
                 prompt = f"({kind} phase, prompt hidden)"
+        if kind is None and "wait" not in p and "turn" not in p:
+            card = self.prompt_card(prompt) or self.resolving or self.center_card(img)
+            if card and self.on_card(img, prompt, card):
+                self.unknown_count = 0
+                self.last_progress = time.time()
+                return
         if kind is None:
             if "wait" not in p and "turn" not in p:
                 self.on_unknown(img, prompt)
             return
+        self.resolving = None
         self.unknown_count = 0
         self.last_progress = time.time()
         log(f"prompt: {prompt}")
