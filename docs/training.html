@@ -29,6 +29,24 @@ specialist on that exact kingdom against the benchmark bots (about half a second
 
 <div class="cards" id="cards"></div>
 
+<h2>How it works</h2>
+<ol class="steps">
+<li><b>A specialist is one evolved genome</b>: buy priority lists for the early, mid and late game, an order for
+playing actions, how many copies of each card to own, and when to switch phase. Its lists hold all 26 cards.</li>
+<li><b>Training (genetic algorithm).</b> 64 genomes per generation. Each generation draws <i>new</i> random kingdoms
+that always contain the specialist's key card (e.g. Witch) plus 9 random others. Every genome plays 384 games against
+three fixed bots: Big Money, Smithy–Big Money and Witch–Big Money. The best ones are copied, mixed (crossover) and
+changed a little (mutation), and the next generation starts. 500 generations ≈ 5 minutes on the C engine.</li>
+<li><b>Validation.</b> Every 25 generations the top 3 play a fixed set of 60 kingdoms per bot that they never trained
+on. The best of those is kept. That number is the <b>Score</b> below and the curve.</li>
+<li><b>The portfolio</b> is all specialists in one model folder (<code>models/portfolio-v1/</code>).</li>
+<li><b>Picking per game.</b> When Steam deals the 10 cards, the portfolio plays <i>every</i> specialist on exactly that
+kingdom against the bots (a few thousand games, under a second). The one that scores best plays the whole game. A
+Witch kingdom gets the Witch specialist, a kingdom without strong cards gets the generalist.</li>
+<li><b>Cards the autopilot can't click yet</b> (Cellar, Remodel, Library and six more) are used in training, but in
+the trial and on Steam they are never bought. So the pick is made for the game that will really be played.</li>
+</ol>
+
 <h2>Log</h2>
 <div id="log"><p class="muted">Loading…</p></div>
 
