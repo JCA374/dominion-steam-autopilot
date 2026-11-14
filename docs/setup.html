@@ -93,18 +93,20 @@ Money) on 200 random Steam-like kingdoms. Re-measured on 14 November with the St
 played on Steam, and it never changes after release.</p>
 <div class="tablewrap"><table class="t">
 <tr><th>Model</th><th>Trained on</th><th>Key cards</th><th class="num">Score*</th></tr>
+<tr><td><b>portfolio-v1</b> <span class="tag">default</span></td><td>21 specialists, random kingdoms, all 26 cards</td><td>any: picks a specialist per kingdom</td><td class="num">75%</td></tr>
 <tr><td><b>k4-20260614</b></td><td>Chapel, Laboratory, Market, Merchant, Militia, Moat, Moneylender, Smithy, Village, Witch</td><td>2 Witch, 2 Market, 1 Merchant</td><td class="num">79%</td></tr>
 <tr><td>k2-gen8563</td><td>Chapel, Laboratory, Market, Militia, Mine, Moat, Smithy, Throne Room, Village, Witch</td><td>2 Laboratory, 1 Militia</td><td class="num">48%</td></tr>
 <tr><td>k1-gen3896</td><td rowspan="4">Chapel, Festival, Laboratory, Market, Merchant, Mine, Moneylender, Smithy, Throne Room, Village</td><td>1 Smithy</td><td class="num">50%</td></tr>
 <tr><td>k1-gen8938</td><td>1 Laboratory, 1 Market, 1 Smithy</td><td class="num">46%</td></tr>
-<tr><td>k1-steam <span class="tag">default</span></td><td>1 Smithy</td><td class="num">44%</td></tr>
+<tr><td>k1-steam</td><td>1 Smithy</td><td class="num">44%</td></tr>
 <tr><td>k1-gen91439</td><td>9 Laboratory, 7 Merchant, 3 Market</td><td class="num">33%</td></tr>
 <tr><td>k2f-gen13665</td><td>Chapel, Festival, Laboratory, Market, Militia, Mine, Moat, Smithy, Throne Room, Village, Witch</td><td>2 Festival, 2 Witch, 1 Militia</td><td class="num">37%</td></tr>
 <tr><td class="muted">big-money</td><td class="muted">any</td><td class="muted">none</td><td class="num muted">29%</td></tr>
 </table></div>
 <p class="small muted">* Average score (win = 1, tie = ½) against the three fixed opponents on kingdoms that contain the model's key
 cards, Steam rules, every kingdom with its own games (benchmark version 3). Two older models (k2-gen29756, mixed-gen10324) use a genome format the loader misreads. They are
-marked retired and never chosen. k1-steam is the model behind every Steam game so far.</p>
+marked retired and never chosen. k1-steam is the model behind every Steam game so far.
+portfolio-v1's score is on random kingdoms (it has no key cards); the others are on kingdoms holding their key cards.</p>
 
 <h2 id="kingdoms">3 · Kingdoms</h2>
 <p>A Steam game deals 10 of the 26 base-set kingdom cards. Three things to know:</p>
@@ -125,6 +127,8 @@ question Steam asks when you play them. Models are never told to buy those nine 
 <h2 id="selector">4 · Picking a model for a kingdom</h2>
 <p>With <code>--model auto</code> (the default) the selector ranks every released model after the deal:</p>
 <ol>
+<li>a portfolio model (<code>portfolio-v1</code>): it plays every kingdom. It tries all its specialists on the dealt
+kingdom in the engine (under a second) and the best one plays the game. See the <a href="training.html">training log</a>;</li>
 <li>a model trained on exactly this kingdom;</li>
 <li>else a model whose key cards are all in the kingdom, highest benchmark score first;</li>
 <li>else the model with the most key cards dealt.</li>

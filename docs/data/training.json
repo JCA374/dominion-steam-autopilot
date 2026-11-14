@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-14 21:47",
+ "generated": "2026-11-14 21:48",
  "runs": [
   {
    "name": "artisan",
@@ -2100,7 +2100,18 @@
    "minutes": 5.1
   }
  ],
- "headline": [],
+ "headline": [
+  {
+   "k": "portfolio-v1",
+   "v": "79%",
+   "s": "random Steam kingdoms, per-kingdom pick"
+  },
+  {
+   "k": "k1-steam",
+   "v": "42%",
+   "s": "same kingdoms, the old default"
+  }
+ ],
  "entries": [
   {
    "when": "14 November 2026, evening",
@@ -2116,6 +2127,11 @@
    "when": "14 November 2026, 19:57",
    "title": "First two specialists: generalist 71%, Witch 84%",
    "html": "<p>The <b>generalist</b> (any kingdom, all 26 cards) climbed from 59% to <b>71.2%</b> in 500 generations (5 minutes): 79% against Big Money, 71% against Smithy\u2013Big Money, 63% against Witch\u2013Big Money. For comparison, k1-steam scores 43.7% on random kingdoms.</p><p>The <b>Witch</b> specialist reached <b>83.8%</b> on kingdoms with a Witch (97% / 93% / 60% against the three bots). The best old model, k4-20260614, scores 78.9% on its own Witch kingdoms. Nineteen specialists to go.</p>"
+  },
+  {
+   "when": "14 November 2026, 21:45",
+   "title": "portfolio-v1 released: 79% on random kingdoms, almost twice k1-steam",
+   "html": "<p>All 21 specialists finished (500 generations each, about 5 minutes per specialist). They became one model, <code>models/portfolio-v1/</code>, together with the best old model k4-20260614. It is now the default and the selector's first choice.</p>\n<p><b>Test:</b> 200 random Steam kingdoms the model never saw, 40 games per seat against each fitting bot, played the way the autopilot plays today (the nine blocked cards are never bought):</p>\n<div class=\"tablewrap\"><table class=\"t\"><tr><th>Player</th><th class=\"num\">Score</th></tr>\n<tr><td><b>portfolio-v1</b> (picks per kingdom)</td><td class=\"num\"><b>79.3%</b></td></tr>\n<tr><td>best possible pick in hindsight</td><td class=\"num\">81.9%</td></tr>\n<tr><td>best single specialist (remodel, never buying Remodel)</td><td class=\"num\">75.7%</td></tr>\n<tr><td>k4-20260614 (old best)</td><td class=\"num\">50.9%</td></tr>\n<tr><td>k1-steam (every Steam game so far)</td><td class=\"num\">41.9%</td></tr></table></div>\n<p>The pick works: it gets within about two and a half points of a perfect choice and beats every single specialist. With all 26 cards allowed the portfolio would score 80.1%, so teaching the autopilot the nine missing cards is worth about one and a half points overall. The Gardens + Workshop specialist is the clearest case: 87.6% in training but 6.9% without Workshop, so it is never picked today. Workshop is the first card to teach the autopilot.</p>\n<p>The stored benchmark (<code>policy.bench</code>) is <b>75.0%</b>: 87% against Big Money, 74% against Smithy\u2013Big Money, 64% against Witch\u2013Big Money.</p>\n<details><summary>Every member alone (200 kingdoms) and how often it was picked</summary><div class=\"tablewrap\"><table class=\"t\"><tr><th>Member</th><th class=\"num\">Steam (blocked cards off)</th><th class=\"num\">all cards</th><th class=\"num\">picked</th></tr><tr><td>remodel</td><td class='num'>75.7%</td><td class='num'>75.7%</td><td class='num'>14</td></tr><tr><td>generalist-safe</td><td class='num'>73.8%</td><td class='num'>73.8%</td><td class='num'>35</td></tr><tr><td>generalist</td><td class='num'>73.5%</td><td class='num'>73.3%</td><td class='num'>24</td></tr><tr><td>sentry</td><td class='num'>72.9%</td><td class='num'>72.9%</td><td class='num'>9</td></tr><tr><td>market</td><td class='num'>71.6%</td><td class='num'>73.1%</td><td class='num'>20</td></tr><tr><td>smithy</td><td class='num'>71.1%</td><td class='num'>71.1%</td><td class='num'>12</td></tr><tr><td>village-smithy</td><td class='num'>71.0%</td><td class='num'>71.0%</td><td class='num'>14</td></tr><tr><td>artisan</td><td class='num'>70.6%</td><td class='num'>71.6%</td><td class='num'>7</td></tr><tr><td>council-room</td><td class='num'>70.6%</td><td class='num'>70.7%</td><td class='num'>21</td></tr><tr><td>militia</td><td class='num'>70.0%</td><td class='num'>69.9%</td><td class='num'>8</td></tr><tr><td>bandit</td><td class='num'>69.9%</td><td class='num'>69.9%</td><td class='num'>4</td></tr><tr><td>chapel</td><td class='num'>69.6%</td><td class='num'>69.6%</td><td class='num'>4</td></tr><tr><td>bureaucrat</td><td class='num'>68.0%</td><td class='num'>68.0%</td><td class='num'>1</td></tr><tr><td>festival</td><td class='num'>67.6%</td><td class='num'>67.6%</td><td class='num'>6</td></tr><tr><td>mine</td><td class='num'>67.6%</td><td class='num'>69.0%</td><td class='num'>6</td></tr><tr><td>throne-room</td><td class='num'>65.5%</td><td class='num'>67.3%</td><td class='num'>0</td></tr><tr><td>laboratory</td><td class='num'>65.4%</td><td class='num'>65.4%</td><td class='num'>2</td></tr><tr><td>library</td><td class='num'>62.3%</td><td class='num'>65.6%</td><td class='num'>5</td></tr><tr><td>moneylender</td><td class='num'>62.2%</td><td class='num'>62.2%</td><td class='num'>2</td></tr><tr><td>witch</td><td class='num'>61.9%</td><td class='num'>61.9%</td><td class='num'>4</td></tr><tr><td>k4-20260614</td><td class='num'>50.9%</td><td class='num'>50.9%</td><td class='num'>2</td></tr><tr><td>gardens</td><td class='num'>6.9%</td><td class='num'>17.5%</td><td class='num'>0</td></tr></table></div></details>\n<p><b>Not tested yet:</b> real Steam games. The portfolio buys cards k1-steam never bought (Bandit, Bureaucrat, Council Room, Festival, Gardens\u2026), so the first games should be watched.</p>"
   }
  ]
 }

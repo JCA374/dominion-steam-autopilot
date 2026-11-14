@@ -92,6 +92,12 @@ class Pilot:
         self.brain = Brain(self.kingdom, self.args.model, turn=turn or 1)
         log(f"model {self.brain.policy.name} ({self.brain.policy.kind}), "
             f"trained on {', '.join(self.brain.policy.kingdom)}")
+        if self.brain.policy.kind == "ga-portfolio":       # it picks a specialist for this kingdom
+            self.brain.policy.member(self.brain.obs())
+            ch = self.brain.policy.chosen
+            log(f"portfolio plays {ch['member']}; trial vs {', '.join(ch['bots'])}: "
+                + ", ".join(f"{n} {100 * v:.0f}%" for n, v in
+                            sorted(ch["scores"].items(), key=lambda x: -x[1])[:4]))
         if self.brain.ranking:
             pick = self.brain.ranking[0]
             log(f"model selector: {pick['name']} ({pick['reason']}"
@@ -120,6 +126,8 @@ class Pilot:
         if REC:
             REC.event("game_start", seed=self.seed, kingdom=self.kingdom, opponents=opps,
                       model=self.brain.policy.name,
+                      member=(self.brain.policy.chosen or {}).get("member")
+                      if self.brain.policy.kind == "ga-portfolio" else None,
                       unknown=self.brain.unknown, turn=self.brain.turn)
 
     # -- persistence (so a restart mid-game keeps the deck count) ------------
