@@ -19,9 +19,17 @@ cd dominion-steam-autopilot
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 
-# start Dominion from Steam, begin a game against the computer, then:
+# start Dominion from Steam (main menu is fine), then open the control panel:
+.venv/bin/python autopilot/ui.py          # http://127.0.0.1:8642
+# or, with a game against the computer already running:
 .venv/bin/python autopilot/pilot.py
 ```
+
+The **control panel** (`autopilot/ui.py`) is a local web page: pick the kingdom (Auto, whatever the game deals, or
+up to 10 cards of your choice), the difficulty (Auto or Very Easy..Hard) and the model (Auto or any model), see
+which model would play and why, press Play. It sets up New Game (kingdom cards are typed into Kingdom > Cards),
+plays, and records each game in `autopilot/stats/games.jsonl`. The same from the command line:
+`autopilot/campaign.py --games 1 --levels auto --kingdom auto --model auto --no-publish`.
 
 Keep the game window at its normal size and in plain view, and keep your hands off the mouse while it plays.
 
@@ -31,8 +39,8 @@ Keep the game window at its normal size and in plain view, and keep your hands o
 | `--turn N` | joining a game already on turn N |
 | `--dry` | read and decide, never click |
 | `--record DIR` | save frames and events (the films are built from these) |
-| `--model NAME` | another released dominion-v1 model (or a path); default `dominion-v1/models/DEFAULT` |
-| `--list-models` | list the released models and the kingdom each was trained on |
+| `--model NAME` | play this model (or a path); default `auto`: the model selector picks for the dealt kingdom |
+| `--list-models` | list the models: key cards, benchmark score, training kingdom |
 
 Needs Linux (built on GNOME/Wayland, where the game runs in XWayland), Steam with Dominion via Proton, Python 3.10+.
 
@@ -48,7 +56,26 @@ Needs Linux (built on GNOME/Wayland, where the game runs in XWayland), Steam wit
 - **Loop** (`autopilot/pilot.py`): one prompt per pass, only on a still screen; a memory file per game; empty-pile
   detection; score screen and rematch.
 
+## Which model plays
+
+Every model knows its **key cards**, the kingdom cards its game is built around (e.g. 2× Witch + 2× Market +
+1× Merchant), measured from its own games. With `--model auto` (the default) the selector in dominion-v1
+(`policy.select_model`) picks, after the deal:
+
+1. a model trained on exactly the dealt kingdom;
+2. else the model with the best stored benchmark score among those whose key cards are all dealt, whatever the
+   other cards are;
+3. else the model with the largest share of its key cards dealt. Never a Big Money fallback.
+
+The scores come from the **benchmark runner**, `autopilot/bench_models.py` (button *Benchmark new models* in the
+control panel): every model against Big Money, Smithy-BM and Witch-BM on Steam-like kingdoms holding its key cards,
+stored as `bench.json` in the model's folder.
+
 ## New models
+
+Models are **plug-ins**: a model is a folder. Drop one into `models/` here (see `models/README.md`) or release it
+into `dominion-v1/models/`, run `autopilot/bench_models.py`, and it shows up in the control panel and the selector;
+no code changes.
 
 The autopilot never reaches into dominion-v1's internals. It loads models with `policy.load_policy(name)` and asks
 them JSON questions (`action`, `buy`, `trash`, `discard`, `throne_room`), as described in
@@ -72,7 +99,8 @@ Details, films, podcast and lessons: **https://jca374.github.io/dominion-steam-a
 
 | Path | |
 |---|---|
-| `autopilot/` | the autopilot |
+| `autopilot/` | the autopilot (`ui.py` control panel, `pilot.py` player, `campaign.py` game setup, `bench_models.py`) |
+| `models/` | plug-in models (folders), next to `dominion-v1/models/` |
 | `dominion-v1/` | submodule: the genetic algorithm, its engine, the released models (`models/`) and the `policy` protocol |
 | `video/` | film scripts and builders (`common.py`, `build_*.py`); every frame comes from a recording |
 | `podcast/` | podcast episode scripts (audio in `docs/podcast/`) |

@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Autopilot Control</title>
+<style>
+:root {
+  --bg: #f6f3ec; --panel: #fffdf8; --ink: #2a2620; --muted: #776f62; --line: #e2dbcc;
+  --accent: #6b4f1d; --accent-ink: #fff; --chip: #efe9dc; --chip-on: #3f6b3a; --chip-on-ink: #fff;
+  --good: #3f6b3a; --warn: #9a5b12; --bad: #9b2f2f; --log: #1e1c18; --log-ink: #e8e2d4;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171512; --panel: #211e1a; --ink: #ece6da; --muted: #a39a8a; --line: #36312a;
+    --accent: #d2a54e; --accent-ink: #1b1813; --chip: #2c2822; --chip-on: #6fa564; --chip-on-ink: #10140f;
+    --good: #7fbf72; --warn: #e0a24f; --bad: #e07a7a; --log: #0f0e0c; --log-ink: #ddd6c6;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #171512; --panel: #211e1a; --ink: #ece6da; --muted: #a39a8a; --line: #36312a;
+  --accent: #d2a54e; --accent-ink: #1b1813; --chip: #2c2822; --chip-on: #6fa564; --chip-on-ink: #10140f;
+  --good: #7fbf72; --warn: #e0a24f; --bad: #e07a7a; --log: #0f0e0c; --log-ink: #ddd6c6;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+.sub { color: var(--muted); margin: 0 0 18px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+section h2 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.wide { grid-column: 1 / -1; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.seg button, .chip { border: 1px solid var(--line); background: var(--chip); color: var(--ink);
+  border-radius: 999px; padding: 6px 12px; font: inherit; cursor: pointer; }
+.seg button[aria-pressed="true"], .chip[aria-pressed="true"] { background: var(--chip-on); color: var(--chip-on-ink); border-color: transparent; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 4px 10px; font-size: 14px; }
+.chip.key { box-shadow: inset 0 0 0 2px var(--accent); }
+.hint { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
+select, input[type=number] { font: inherit; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); max-width: 100%; }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.go { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 8px; padding: 10px 22px;
+  font: 600 16px system-ui, sans-serif; cursor: pointer; }
+.go:disabled { opacity: .45; cursor: default; }
+.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; font: inherit; cursor: pointer; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { white-space: nowrap; color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+td:first-child { white-space: nowrap; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.scroll { overflow-x: auto; }
+.pick td { font-weight: 600; }
+.tag { font-size: 12px; padding: 1px 7px; border-radius: 999px; background: var(--chip); color: var(--muted); white-space: nowrap; }
+.t1 { color: var(--good); } .t2 { color: var(--ink); } .t3 { color: var(--warn); }
+.retired { color: var(--muted); text-decoration: line-through; }
+pre { background: var(--log); color: var(--log-ink); border-radius: 8px; padding: 10px 12px; height: 260px; overflow: auto;
+  font: 12.5px/1.4 ui-monospace, monospace; margin: 0; white-space: pre-wrap; }
+.status { font-size: 14px; color: var(--muted); }
+.status b { color: var(--ink); }
+.err { color: var(--bad); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Steam Dominion autopilot</h1>
+  <p class="sub">Choose the kingdom, the difficulty and the model, or leave any of them on <b>Auto</b>.
+    Models come from the model folders, so a new folder shows up when you reload.</p>
+
+  <div class="grid">
+    <section>
+      <h2>Kingdom</h2>
+      <div class="seg" id="kmode">
+        <button data-v="auto">Auto</button>
+        <button data-v="random">Game deals</button>
+        <button data-v="cards">Choose cards</button>
+      </div>
+      <div id="cardsBox" hidden>
+        <div class="chips" id="cards"></div>
+        <p class="hint"><span id="ccount">0</span>/10 chosen. Fewer than 10: the game deals the rest.
+          Outlined cards are key cards of the selected model. <a href="#" id="clearCards">Clear</a></p>
+      </div>
+      <p class="hint" id="kHint"></p>
+    </section>
+
+    <section>
+      <h2>Difficulty</h2>
+      <div class="seg" id="level"></div>
+      <p class="hint" id="lHint"></p>
+      <h2 style="margin-top:14px">Model</h2>
+      <select id="model"></select>
+      <p class="hint" id="mHint"></p>
+    </section>
+
+    <section class="wide">
+      <h2>Who plays</h2>
+      <p class="hint" id="pNote" style="margin-top:0"></p>
+      <div class="scroll"><table id="rank"></table></div>
+    </section>
+
+    <section class="wide">
+      <div class="row">
+        <label>Games <input type="number" id="games" min="1" max="50" value="1" style="width:5em"></label>
+        <label><input type="checkbox" id="publish"> commit + push the Stats page after each game</label>
+        <span style="flex:1"></span>
+        <button class="go" id="play">Play</button>
+        <button class="ghost" id="stop">Stop</button>
+      </div>
+      <p class="hint">Play takes over the Dominion window: it opens New Game, sets the kingdom and the opponent, and plays.</p>
+    </section>
+
+    <section class="wide">
+      <div class="row" style="margin-bottom:8px">
+        <h2 style="margin:0">Output</h2><span class="status" id="status"></span>
+      </div>
+      <pre id="log"></pre>
+    </section>
+
+    <section class="wide">
+      <div class="row" style="margin-bottom:8px">
+        <h2 style="margin:0">Models</h2>
+        <span style="flex:1"></span>
+        <button class="ghost" id="bench">Benchmark new models</button>
+        <button class="ghost" id="benchAll">Benchmark all</button>
+      </div>
+      <div class="scroll"><table id="models"></table></div>
+      <p class="hint">Benchmark: score (win + tie/2) against Big Money, Smithy-BM and Witch-BM on Steam-like kingdoms that hold the
+        model's key cards; the selector ranks by it. "Random" is the same on any kingdom. Steam = real games in autopilot/stats.</p>
+    </section>
+  </div>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pct = x => x == null ? "–" : Math.round(100 * x) + "%";
+let S = null;
+const ui = { kmode: "auto", cards: [], level: "auto", model: "auto" };
+try { Object.assign(ui, JSON.parse(localStorage.getItem("autopilot-ui") || "{}")); } catch (e) {}
+const save = () => { try { localStorage.setItem("autopilot-ui", JSON.stringify(ui)); } catch (e) {} };
+
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+
+function seg(el, values, current, onPick, labels) {
+  el.innerHTML = values.map(v => `<button data-v="${esc(v)}" aria-pressed="${v === current}">${esc(labels ? labels[v] || v : v)}</button>`).join("");
+  el.onclick = e => { const b = e.target.closest("button"); if (b) onPick(b.dataset.v); };
+}
+
+function selectedModel() { return S.models.find(m => m.name === ui.model); }
+
+function render() {
+  // kingdom
+  seg($("#kmode"), ["auto", "random", "cards"], ui.kmode, v => { ui.kmode = v; changed(); },
+      {auto: "Auto", random: "Game deals", cards: "Choose cards"});
+  $("#cardsBox").hidden = ui.kmode !== "cards";
+  const keys = (selectedModel() || {}).key_cards || {};
+  $("#cards").innerHTML = S.cards.map(c =>
+    `<button class="chip${c in keys ? " key" : ""}" data-c="${esc(c)}" aria-pressed="${ui.cards.includes(c)}">${esc(c)}</button>`).join("");
+  $("#ccount").textContent = ui.cards.length;
+  $("#kHint").textContent = ui.kmode === "auto" && S.best
+    ? `Auto: ${S.best.kingdom.join(", ")} (training kingdom of ${S.best.model}).`
+    : ui.kmode === "random" ? "Whatever the game deals from the base set." : "";
+  // difficulty
+  seg($("#level"), ["auto", ...S.levels], ui.level, v => { ui.level = v; changed(); }, {auto: "Auto"});
+  const forModel = ui.model !== "auto" ? ui.model : (ui.kmode === "auto" && S.best ? S.best.model : "auto");
+  $("#lHint").textContent = ui.level === "auto"
+    ? `Auto: ${S.auto_level[forModel] || S.levels[0]}, the easiest level ${forModel === "auto" ? "the autopilot" : forModel} hasn't beaten yet (2 wins in its last 3 games there).`
+    : "";
+  // model
+  $("#model").innerHTML = `<option value="auto">Auto: the model selector picks</option>` + S.models.map(m =>
+    `<option value="${esc(m.name)}"${m.retired ? ' class="retired"' : ""}>${esc(m.name)} · ${pct(m.score)} · ${esc(fmtKeys(m.key_cards))}${m.retired ? " (retired)" : ""}</option>`).join("");
+  $("#model").value = S.models.some(m => m.name === ui.model) ? ui.model : "auto";
+  ui.model = $("#model").value;
+  const m = selectedModel();
+  $("#mHint").textContent = m ? (m.description || "") + (m.retired ? " Retired: never chosen automatically." : "") : "";
+  // models table
+  $("#models").innerHTML = `<tr><th>Model</th><th>Key cards</th><th class="num">Benchmark</th><th class="num">Random</th><th class="num">Steam W-L-T</th><th>Trained on</th></tr>` +
+    S.models.map(m => { const st = S.steam[m.name];
+      return `<tr${m.retired ? ' class="retired"' : ""}><td>${esc(m.name)}${m.kind !== "ga-strategy" ? ` <span class="tag">${esc(m.kind)}</span>` : ""}</td>
+      <td>${esc(fmtKeys(m.key_cards))}</td><td class="num">${pct(m.score)}</td><td class="num">${pct(m.random_score)}</td>
+      <td class="num">${st ? `${st.win}-${st.loss}-${st.tie}` : "–"}</td><td>${esc((m.kingdom || []).join(", "))}</td></tr>`; }).join("");
+  $("#play").disabled = S.running;
+  save();
+}
+
+function fmtKeys(k) { return k == null ? "?" : Object.entries(k).map(([c, n]) => `${n}× ${c}`).join(" + ") || "–"; }
+
+async function changed() {
+  render();
+  try {
+    const p = await api("/api/preview", {kingdom_mode: ui.kmode, cards: ui.cards, model: ui.model});
+    $("#pNote").textContent = p.note;
+    const tier = {1: "exact kingdom", 2: "key cards dealt", 3: "key cards missing"};
+    $("#rank").innerHTML = p.ranking.length ? `<tr><th></th><th>Model</th><th>Key cards</th><th class="num">Benchmark</th><th>Why</th></tr>` +
+      p.ranking.map((r, i) => `<tr class="${i === 0 ? "pick" : ""}"><td>${i === 0 ? "▶" : i + 1}</td><td>${esc(r.name)}</td><td>${esc(r.key_cards)}</td>
+        <td class="num">${pct(r.score)}</td><td class="t${r.tier}"><span class="tag">${tier[r.tier]}</span> ${esc(r.reason)}</td></tr>`).join("") : "";
+  } catch (e) { $("#pNote").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+}
+
+$("#cards").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const c = b.dataset.c;
+  if (ui.cards.includes(c)) ui.cards = ui.cards.filter(x => x !== c);
+  else if (ui.cards.length < 10) ui.cards = [...ui.cards, c];
+  changed();
+};
+$("#clearCards").onclick = e => { e.preventDefault(); ui.cards = []; changed(); };
+$("#model").onchange = () => { ui.model = $("#model").value; changed(); };
+
+$("#play").onclick = async () => {
+  if (ui.kmode === "cards" && !ui.cards.length) { alert("Choose at least one card, or pick Auto / Game deals."); return; }
+  try {
+    await api("/api/start", {kingdom_mode: ui.kmode, cards: ui.cards, level: ui.level, model: ui.model,
+      games: +$("#games").value || 1, publish: $("#publish").checked});
+    poll();
+  } catch (e) { alert(e.message); }
+};
+$("#stop").onclick = () => api("/api/stop", {}).then(poll);
+$("#bench").onclick = () => api("/api/bench", {}).then(poll).catch(e => alert(e.message));
+$("#benchAll").onclick = () => api("/api/bench", {all: true}).then(poll).catch(e => alert(e.message));
+
+let wasRunning = false;
+async function poll() {
+  try {
+    const l = await api("/api/log");
+    const pre = $("#log"), atEnd = pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 8;
+    pre.textContent = l.lines.join("\n");
+    if (atEnd) pre.scrollTop = pre.scrollHeight;
+    $("#status").innerHTML = l.running ? `<b>running:</b> ${esc(l.job)}` : (l.job ? `last: ${esc(l.job)}` : "idle");
+    $("#play").disabled = l.running;
+    if (wasRunning && !l.running) { await load(); }       // new benchmark numbers / stats
+    wasRunning = l.running;
+  } catch (e) { $("#status").innerHTML = `<span class="err">control panel not reachable</span>`; }
+}
+
+async function load() { S = await api("/api/state"); changed(); }
+load().then(poll);
+setInterval(poll, 2000);
+</script>
+</body>
+</html>

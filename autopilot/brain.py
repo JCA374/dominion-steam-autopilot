@@ -2,9 +2,13 @@
 
 The autopilot keeps the game state it can see (turn, deck, Provinces, empty
 piles) and asks the model through dominion-v1's `policy` protocol
-(dominion-v1/docs/PROTOCOL.md). Any released model works: `--model NAME`, a
-path, or models/DEFAULT. A GA model plays exactly as in training; cards the
-model never learned are never bought.
+(dominion-v1/docs/PROTOCOL.md). Any model works: `--model NAME`, a path,
+`auto` (dominion-v1's model selector picks the best model for the dealt
+kingdom) or None (models/DEFAULT). A GA model plays exactly as in training;
+cards the model never learned are never bought.
+
+Models are plug-in folders: dominion-v1/models/ plus this repo's models/
+(added to DOMINION_MODELS here), so a new model is a new folder, no code change.
 """
 from __future__ import annotations
 
@@ -12,10 +16,18 @@ import os
 import sys
 from collections import Counter
 
-REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "dominion-v1"))
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+REPO = os.path.join(ROOT, "dominion-v1")
+PLUGIN_MODELS = os.path.join(ROOT, "models")
 sys.path.insert(0, REPO)
+if PLUGIN_MODELS not in os.environ.get("DOMINION_MODELS", "").split(os.pathsep):
+    os.environ["DOMINION_MODELS"] = os.pathsep.join(
+        p for p in (os.environ.get("DOMINION_MODELS"), PLUGIN_MODELS) if p)
 
-from policy import PROTOCOL_VERSION, cards, list_models, load_policy, observation  # noqa: E402
+from policy import (PROTOCOL_VERSION, best_kingdom, cards, key_cards, list_models,  # noqa: E402
+                    load_policy, observation, rank_models, read_bench)
+
+AUTO = "auto"
 
 BASE = cards.BASE
 NEEDS_PROTOCOL = 1
@@ -26,6 +38,10 @@ if PROTOCOL_VERSION != NEEDS_PROTOCOL:
 
 class Brain:
     def __init__(self, kingdom: list[str], model: str | None = None, turn: int = 1):
+        self.ranking = None
+        if model == AUTO:                          # the selector picks for this kingdom
+            self.ranking = rank_models(kingdom)
+            model = self.ranking[0]["name"]
         self.policy = load_policy(model)
         self.kingdom = kingdom
         self.unknown = [c for c in kingdom if not cards.known(c)]
@@ -80,8 +96,28 @@ class Brain:
                 self.owned[c] -= 1
 
 
-def print_models():
+def model_rows() -> list[dict]:
+    """Every model with what the UI and --list-models show: key cards, stored score."""
+    rows = []
     for m in list_models():
-        print(f"{m['name']:18s} {m['kind']:12s} {', '.join(m.get('kingdom', []))}")
-        if m.get("description"):
-            print(f"{'':18s} {m['description']}")
+        bench = read_bench(m) or {}
+        rows.append({"name": m["name"], "kind": m.get("kind"), "kingdom": m.get("kingdom", []),
+                     "key_cards": key_cards(m), "score": bench.get("score"),
+                     "random_score": bench.get("random_score"), "bench_date": bench.get("date"),
+                     "description": m.get("description", ""), "retired": bool(m.get("retired")),
+                     "folder": m.get("dir")})
+    return rows
+
+
+def fmt_keys(keys) -> str:
+    return "?" if keys is None else (" + ".join(f"{n}x {c}" for c, n in keys.items()) or "-")
+
+
+def print_models():
+    for r in model_rows():
+        score = "  -  " if r["score"] is None else f"{100 * r['score']:4.0f}%"
+        print(f"{r['name']:18s} {score}  key cards {fmt_keys(r['key_cards'])}"
+              + ("  (retired)" if r["retired"] else ""))
+        print(f"{'':18s} trained on {', '.join(r['kingdom'])}")
+        if r["description"]:
+            print(f"{'':18s} {r['description']}")

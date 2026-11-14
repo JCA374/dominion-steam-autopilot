@@ -6,7 +6,8 @@
     .venv/bin/python autopilot/pilot.py --games 3  # play, press Rematch, play again (3 games)
     .venv/bin/python autopilot/pilot.py --record recordings/game1   # also save frames + events
     .venv/bin/python autopilot/pilot.py --list-models   # released dominion-v1 models
-    .venv/bin/python autopilot/pilot.py --model k4-20260614         # play another model
+    .venv/bin/python autopilot/pilot.py --model k4-20260614         # play this model
+    .venv/bin/python autopilot/pilot.py --model auto     # the model selector picks (the default)
 
 Each loop: screenshot -> OCR the prompt line -> act on it. Anything it does not
 understand is saved to autopilot/unknown/ and it waits for you to handle it.
@@ -91,6 +92,10 @@ class Pilot:
         self.brain = Brain(self.kingdom, self.args.model, turn=turn or 1)
         log(f"model {self.brain.policy.name} ({self.brain.policy.kind}), "
             f"trained on {', '.join(self.brain.policy.kingdom)}")
+        if self.brain.ranking:
+            pick = self.brain.ranking[0]
+            log(f"model selector: {pick['name']} ({pick['reason']}"
+                + (f"; benchmark {100 * pick['score']:.0f}%" if pick["score"] is not None else "") + ")")
         self._load_state(turn)
         if self.brain.unknown:
             log("cards the GA never learned (never bought):", ", ".join(self.brain.unknown))
@@ -657,8 +662,9 @@ class Pilot:
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--turn", type=int, help="current turn number when joining a game in progress")
-    ap.add_argument("--model", help="released model name (see --list-models) or a path "
-                                    "(default: dominion-v1/models/DEFAULT)")
+    ap.add_argument("--model", default="auto",
+                    help="model name (see --list-models), a path, or 'auto': the model selector picks "
+                         "the best model for the dealt kingdom (default)")
     ap.add_argument("--list-models", action="store_true", help="list released models and exit")
     ap.add_argument("--dry", action="store_true", help="read and decide, but never click")
     ap.add_argument("--once", action="store_true", help="handle one prompt and exit")

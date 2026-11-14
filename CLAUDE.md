@@ -19,12 +19,15 @@ All Python runs through the repo venv (`python3 -m venv .venv && .venv/bin/pip i
 There is no test suite here; dominion-v1 has its own (`cd dominion-v1 && python -m pytest -q tests`).
 
 ```bash
+.venv/bin/python autopilot/ui.py                     # control panel http://127.0.0.1:8642: kingdom/difficulty/model or Auto, Play
+.venv/bin/python autopilot/bench_models.py [--all]   # benchmark runner: bench.json per model (the selector's scores)
 .venv/bin/python autopilot/pilot.py                  # play the current game (Dominion must be open in Steam)
 .venv/bin/python autopilot/pilot.py --dry            # read + decide, never click (safe for testing vision/brain)
 .venv/bin/python autopilot/pilot.py --once           # handle one prompt and exit
 .venv/bin/python autopilot/pilot.py --games 3 --record recordings/x --model k4-20260614 --list-models --auto
 .venv/bin/python autopilot/debug_screen.py [shot.png]  # print what vision reads from a screenshot or the live window
 .venv/bin/python autopilot/campaign.py --per 3       # games vs Very Easy..Hard AI; commits+pushes Stats page unless --no-publish
+.venv/bin/python autopilot/campaign.py --games 1 --levels auto --kingdom auto|random|"Smithy,Witch" --model auto --no-publish
 autopilot/stop_campaign.sh                           # stop a running campaign
 .venv/bin/python autopilot/stats_report.py           # rebuild docs/stats.html + docs/data/stats.json
 .venv/bin/python video/build_game.py [--only N] [--preview] [--resume]   # also build_run.py, build_works.py
@@ -32,7 +35,7 @@ autopilot/stop_campaign.sh                           # stop a running campaign
 ```
 
 Anything pilot.py doesn't recognise is saved to `autopilot/unknown/` and it waits (unless `--auto`).
-Running the pilot or a campaign clicks in the real game window: only do it when the user asks.
+Running the pilot, a campaign or Play in the UI clicks in the real game window: only do it when the user asks.
 
 ## Architecture
 
@@ -47,7 +50,15 @@ Running the pilot or a campaign clicks in the real game window: only do it when 
   dominion-v1 internals**: it imports only `policy` (`load_policy`, `observation`, `list_models`, `cards`) and checks
   `PROTOCOL_VERSION` against `NEEDS_PROTOCOL`. Questions are JSON (`action`, `buy`, `trash`, `discard`,
   `throne_room`), specified in `dominion-v1/docs/PROTOCOL.md`. Cards a model never learned are never bought.
-- **Campaign/stats** – `campaign.py` sets up each game via the menus, runs pilot in `--auto` mode, appends to
+  `--model auto` (default) asks `policy.rank_models(kingdom)` after the deal: exact training kingdom, else key
+  cards all dealt + best `bench.json` score, else most key cards dealt; never Big Money; `"retired"` models skipped.
+- **Models are plug-ins**: folders in `dominion-v1/models/` and `models/` (brain.py adds the latter to
+  `DOMINION_MODELS`). Nothing in the autopilot or UI lists models by name; `brain.model_rows()` reads them all.
+- **Control panel** – `ui.py` (stdlib HTTP server + `ui.html`) runs `campaign.py` / `bench_models.py` as child
+  processes and shows their output. Auto kingdom = `policy.best_kingdom()` (best model's training kingdom); auto
+  difficulty = easiest level the model hasn't won 2 of its last 3 games at (`campaign.auto_level`).
+- **Campaign/stats** – `campaign.py` sets up each game via the menus (kingdom: Kingdom > Cards > Clear, type each
+  name + Enter into "Specify Card", read the slots back), runs pilot in `--auto` mode, appends to
   `autopilot/stats/games.jsonl`; `stats_report.py` builds the Stats tab only from that file
   (`autopilot/stats/analysis.html` is the hand-written summary embedded in it).
 - **Films** (`video/`) – a film is a list of scene functions yielding 1280×720 PIL frames; scene k is paired with
@@ -66,8 +77,11 @@ Models are released in dominion-v1, then pulled in here by bumping the submodule
 python -m policy.release best_model <name> --description "..." && git add models && git commit && git push
 # here
 git -C dominion-v1 pull origin main && git add dominion-v1 && git commit -m "dominion-v1: <name>"
+.venv/bin/python autopilot/bench_models.py           # so the selector has its score
 .venv/bin/python autopilot/pilot.py --model <name>
 ```
+
+Or skip the release: drop the model folder into `models/` (see `models/README.md`) and run `bench_models.py`.
 
 `dominion-v1/models/DEFAULT` is `k1-steam`, the model behind the recorded wins. Non-GA models (e.g. a neural net in
 its own venv) can be `subprocess` models speaking the same protocol over stdin/stdout, with no autopilot changes.
