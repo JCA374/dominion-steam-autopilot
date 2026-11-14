@@ -51,7 +51,7 @@ Running the pilot, a campaign or Play in the UI clicks in the real game window: 
   dominion-v1 internals**: it imports only `policy` (`load_policy`, `observation`, `list_models`, `cards`) and checks
   `PROTOCOL_VERSION` against `NEEDS_PROTOCOL`. Questions are JSON (`action`, `buy`, `trash`, `discard`,
   `throne_room`), specified in `dominion-v1/docs/PROTOCOL.md`. Cards a model never learned are never bought.
-  `--model auto` (default) asks `policy.rank_models(kingdom)` after the deal: exact training kingdom, else key
+  `--model auto` (default) asks `policy.rank_models(kingdom)` after the deal: a `ga-portfolio` model first, else exact training kingdom, else key
   cards all dealt + best `bench.json` score, else most key cards dealt; never Big Money; `"retired"` models skipped.
 - **Models are plug-ins**: folders in `dominion-v1/models/` and `models/` (brain.py adds the latter to
   `DOMINION_MODELS`). Nothing in the autopilot or UI lists models by name; `brain.model_rows()` reads them all.
@@ -85,7 +85,11 @@ git add dominion-v1 && git commit -m "dominion-v1: <name>"
 
 Or skip the release: drop the model folder into `models/` (see `models/README.md`) and run `bench_models.py`.
 
-`dominion-v1/models/DEFAULT` is `k1-steam`, the model behind the recorded wins. Non-GA models (e.g. a neural net in
+`dominion-v1/models/DEFAULT` is `portfolio-v1` (kind `ga-portfolio`, since 2026-11-14): 21 specialists trained on
+random kingdoms with all 26 cards; at game start it plays each on the dealt kingdom in the engine (~1 s) and the best
+one plays (pilot logs `portfolio plays <member>`). Not yet played on Steam. `k1-steam` is the model behind the
+recorded wins. Training progress: `docs/training.html` from `autopilot/training_log.py` (reads
+`../trainers/ga-v1/runs/*/progress.json` + hand-written `docs/data/training_notes.json`; `--push` commits only those). Non-GA models (e.g. a neural net in
 its own venv) can be `subprocess` models speaking the same protocol over stdin/stdout, with no autopilot changes.
 
 ## Conventions
