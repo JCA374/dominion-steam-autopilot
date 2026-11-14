@@ -1,17 +1,17 @@
 {
- "generated": "2026-11-14 19:47",
+ "generated": "2026-11-14 19:56",
  "runs": [
   {
    "name": "generalist",
    "must": [],
    "banned": false,
-   "gen": 100,
+   "gen": 500,
    "gens": 500,
-   "best": 0.5994,
+   "best": 0.7119,
    "bots": {
-    "Big Money": 0.6775,
-    "Smithy-BM": 0.5725,
-    "Witch-BM": 0.5483
+    "Big Money": 0.7933,
+    "Smithy-BM": 0.7117,
+    "Witch-BM": 0.6308
    },
    "curve": [
     [
@@ -29,11 +29,199 @@
     [
      100,
      0.5994
+    ],
+    [
+     125,
+     0.5994
+    ],
+    [
+     150,
+     0.5994
+    ],
+    [
+     175,
+     0.6432
+    ],
+    [
+     200,
+     0.6469
+    ],
+    [
+     225,
+     0.6542
+    ],
+    [
+     250,
+     0.6746
+    ],
+    [
+     275,
+     0.6746
+    ],
+    [
+     300,
+     0.7047
+    ],
+    [
+     325,
+     0.7064
+    ],
+    [
+     350,
+     0.7103
+    ],
+    [
+     375,
+     0.7103
+    ],
+    [
+     400,
+     0.7103
+    ],
+    [
+     425,
+     0.7103
+    ],
+    [
+     450,
+     0.7103
+    ],
+    [
+     475,
+     0.7119
+    ],
+    [
+     500,
+     0.7119
+    ]
+   ],
+   "done": true,
+   "updated": "2026-11-14 19:51",
+   "minutes": 5.2
+  },
+  {
+   "name": "militia",
+   "must": [
+    "Militia"
+   ],
+   "banned": false,
+   "gen": 25,
+   "gens": 500,
+   "best": 0.6251,
+   "bots": {
+    "Big Money": 0.7825,
+    "Smithy-BM": 0.5692,
+    "Witch-BM": 0.5238
+   },
+   "curve": [
+    [
+     25,
+     0.6251
     ]
    ],
    "done": false,
-   "updated": "2026-11-14 19:47",
-   "minutes": 1.1
+   "updated": "2026-11-14 19:56",
+   "minutes": 0.2
+  },
+  {
+   "name": "witch",
+   "must": [
+    "Witch"
+   ],
+   "banned": false,
+   "gen": 500,
+   "gens": 500,
+   "best": 0.8378,
+   "bots": {
+    "Big Money": 0.9658,
+    "Smithy-BM": 0.9279,
+    "Witch-BM": 0.6033
+   },
+   "curve": [
+    [
+     25,
+     0.8011
+    ],
+    [
+     50,
+     0.8011
+    ],
+    [
+     75,
+     0.8072
+    ],
+    [
+     100,
+     0.8072
+    ],
+    [
+     125,
+     0.8072
+    ],
+    [
+     150,
+     0.8072
+    ],
+    [
+     175,
+     0.8072
+    ],
+    [
+     200,
+     0.8072
+    ],
+    [
+     225,
+     0.8072
+    ],
+    [
+     250,
+     0.8072
+    ],
+    [
+     275,
+     0.8072
+    ],
+    [
+     300,
+     0.8096
+    ],
+    [
+     325,
+     0.8096
+    ],
+    [
+     350,
+     0.8096
+    ],
+    [
+     375,
+     0.8096
+    ],
+    [
+     400,
+     0.8271
+    ],
+    [
+     425,
+     0.8271
+    ],
+    [
+     450,
+     0.8378
+    ],
+    [
+     475,
+     0.8378
+    ],
+    [
+     500,
+     0.8378
+    ]
+   ],
+   "done": true,
+   "updated": "2026-11-14 19:56",
+   "minutes": 5.1
   }
  ],
  "headline": [],
@@ -47,6 +235,11 @@
    "when": "14 November 2026, 19:50",
    "title": "A benchmark bug, fixed: every kingdom now gets its own games",
    "html": "<p>The first Witch specialist stalled at the same validation score many times, and the per-bot numbers were suspiciously round (95.0%, 62.5%). The cause: every kingdom in a test set reused the same game seeds. When neither player buys the other kingdom cards, a Witch-and-money deck plays <i>exactly the same game</i> on all 60 kingdoms, so \u201c60 kingdoms \u00d7 10 seeds\u201d was really 10 games per seat. The model benchmark (<code>policy.bench</code>) had the same flaw.</p><p>Fixed in both: each kingdom gets its own seeds (benchmark version 3), and all models were re-measured. The best old model, k4-20260614, scores <b>78.9%</b> (it was 81.5%), and k1-steam, the model behind every Steam game so far, scores <b>43.7%</b>. Those are the numbers to beat. Training restarted with the fix: 21 specialists \u00d7 500 generations, about two hours.</p>"
+  },
+  {
+   "when": "14 November 2026, 19:57",
+   "title": "First two specialists: generalist 71%, Witch 84%",
+   "html": "<p>The <b>generalist</b> (any kingdom, all 26 cards) climbed from 59% to <b>71.2%</b> in 500 generations (5 minutes): 79% against Big Money, 71% against Smithy\u2013Big Money, 63% against Witch\u2013Big Money. For comparison, k1-steam scores 43.7% on random kingdoms.</p><p>The <b>Witch</b> specialist reached <b>83.8%</b> on kingdoms with a Witch (97% / 93% / 60% against the three bots). The best old model, k4-20260614, scores 78.9% on its own Witch kingdoms. Nineteen specialists to go.</p>"
   }
  ]
 }
