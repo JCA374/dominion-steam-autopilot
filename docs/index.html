@@ -28,7 +28,10 @@ evolved <b>model</b> what to do, and <b>clicks</b>. Whole games, on its own, aga
 <h3>15 November: every card playable, and portfolio-v2</h3>
 <p>The autopilot now plays all 26 base-set cards on Steam (Sentry by drag and drop), and the models may buy every card.
 Overnight a second training round produced <b>portfolio-v2</b>, trained against strong evolved opponents as well as
-the bots: it beats portfolio-v1 in <b>57%</b> of head-to-head games. <a href="training.html">Training log →</a></p>
+the bots: it beats portfolio-v1 in <b>57%</b> of head-to-head games. A new kind of player builds on it: <b>rollout
+search</b> plays each buy option out hundreds of times in the engine and beats the same specialist without search in
+<b>64%</b> of games. It needs to know the opponent's cards, so the autopilot now tracks them from the opponent's
+“Added:” banner (<code>--model portfolio-v2s</code>, not yet played on Steam). <a href="training.html">Training log →</a></p>
 <h3>New default model: portfolio-v1, one model for any kingdom</h3>
 <p>21 specialists evolved with all 26 cards on random kingdoms (Witch, Militia, Market, Remodel, Village and Smithy, a
 generalist…). When Steam deals, it plays every specialist on that exact kingdom in the engine and lets the best one play.
