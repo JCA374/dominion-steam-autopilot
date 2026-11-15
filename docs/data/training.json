@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 12:08",
+ "generated": "2026-11-15 12:15",
  "runs": [
   {
    "name": "artisan",
@@ -6405,17 +6405,17 @@
     "Remodel"
    ],
    "banned": false,
-   "gen": 175,
+   "gen": 300,
    "gens": 400,
-   "best": 0.6577,
+   "best": 0.6694,
    "bots": {
-    "Big Money": 0.8483,
-    "Smithy-BM": 0.6713,
+    "Big Money": 0.8517,
+    "Smithy-BM": 0.6954,
     "Witch-BM": 0.6125,
-    "hall:v2-generalist": 0.4771,
-    "hall:v2-witch": 0.5708,
-    "hall:v2-gardens": 0.8717,
-    "hall:v2-market": 0.5417
+    "hall:v2-generalist": 0.5167,
+    "hall:v2-witch": 0.585,
+    "hall:v2-gardens": 0.8737,
+    "hall:v2-market": 0.5508
    },
    "curve": [
     [
@@ -6445,11 +6445,31 @@
     [
      175,
      0.6577
+    ],
+    [
+     200,
+     0.6581
+    ],
+    [
+     225,
+     0.6581
+    ],
+    [
+     250,
+     0.6581
+    ],
+    [
+     275,
+     0.6694
+    ],
+    [
+     300,
+     0.6694
     ]
    ],
    "done": false,
-   "updated": "2026-11-15 12:07",
-   "minutes": 7.9
+   "updated": "2026-11-15 12:13",
+   "minutes": 14.0
   },
   {
    "name": "v3-sentry",
