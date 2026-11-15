@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 03:35",
+ "generated": "2026-11-15 03:46",
  "runs": [
   {
    "name": "artisan",
@@ -2142,6 +2142,91 @@
    "minutes": 5.1
   },
   {
+   "name": "v2-bandit",
+   "round": "v2",
+   "hall": [
+    "generalist",
+    "remodel",
+    "witch"
+   ],
+   "must": [
+    "Bandit"
+   ],
+   "banned": false,
+   "gen": 350,
+   "gens": 500,
+   "best": 0.644,
+   "bots": {
+    "Big Money": 0.8383,
+    "Smithy-BM": 0.67,
+    "Witch-BM": 0.6346,
+    "hall:generalist": 0.4958,
+    "hall:remodel": 0.5542,
+    "hall:witch": 0.6713
+   },
+   "curve": [
+    [
+     25,
+     0.6432
+    ],
+    [
+     50,
+     0.6433
+    ],
+    [
+     75,
+     0.644
+    ],
+    [
+     100,
+     0.644
+    ],
+    [
+     125,
+     0.644
+    ],
+    [
+     150,
+     0.644
+    ],
+    [
+     175,
+     0.644
+    ],
+    [
+     200,
+     0.644
+    ],
+    [
+     225,
+     0.644
+    ],
+    [
+     250,
+     0.644
+    ],
+    [
+     275,
+     0.644
+    ],
+    [
+     300,
+     0.644
+    ],
+    [
+     325,
+     0.644
+    ],
+    [
+     350,
+     0.644
+    ]
+   ],
+   "done": false,
+   "updated": "2026-11-15 03:45",
+   "minutes": 10.8
+  },
+  {
    "name": "v2-chapel",
    "round": "v2",
    "hall": [
@@ -3239,15 +3324,15 @@
    ],
    "must": [],
    "banned": false,
-   "gen": 400,
+   "gen": 475,
    "gens": 1500,
-   "best": 0.6378,
+   "best": 0.6414,
    "bots": {
-    "Big Money": 0.7933,
-    "Smithy-BM": 0.7137,
+    "Big Money": 0.7975,
+    "Smithy-BM": 0.7212,
     "Witch-BM": 0.6308,
-    "hall:generalist": 0.51,
-    "hall:remodel": 0.5337,
+    "hall:generalist": 0.5158,
+    "hall:remodel": 0.5375,
     "hall:witch": 0.6454
    },
    "curve": [
@@ -3314,11 +3399,23 @@
     [
      400,
      0.6378
+    ],
+    [
+     425,
+     0.6378
+    ],
+    [
+     450,
+     0.6378
+    ],
+    [
+     475,
+     0.6414
     ]
    ],
    "done": false,
-   "updated": "2026-11-15 03:30",
-   "minutes": 71.8
+   "updated": "2026-11-15 03:44",
+   "minutes": 85.5
   }
  ],
  "headline": [
