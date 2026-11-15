@@ -128,6 +128,8 @@ class Pilot:
         self.action_coins = self.action_buys = self.merchants = 0   # from my own action plays this turn
         self.pending = None       # (card, (coins, buys) before the click) of the last buy click
         self.resolving = None     # the action card I just played, while its prompts may come
+        self.opp_banner = None    # the opponent "Added:" banner on screen (counted once)
+        self.plan_seen = False    # I have reached my first buy (to tell who moved first)
         self.card_step = 0        # how many of its prompts were answered
         self.throned = False      # the resolving card was played by Throne Room (prompts twice)
         if REC:
@@ -156,6 +158,10 @@ class Pilot:
             self.brain.owned.clear()
             self.brain.owned.update(s["owned"])
             self.brain.empty = set(s.get("empty", []))
+            if "opp_owned" in s:
+                self.brain.opp_owned.clear()
+                self.brain.opp_owned.update(s["opp_owned"])
+                self.brain.first = s.get("first", True)
             log(f"resumed: turn {self.brain.turn}, deck {dict(self.brain.owned)}")
 
     def _save_state(self):
@@ -164,7 +170,8 @@ class Pilot:
         try:
             with open(tmp, "w") as f:
                 json.dump({"turn": self.brain.turn, "provinces": self.brain.provinces,
-                           "owned": dict(self.brain.owned), "empty": sorted(self.brain.empty)}, f)
+                           "owned": dict(self.brain.owned), "empty": sorted(self.brain.empty),
+                           "opp_owned": dict(self.brain.opp_owned), "first": self.brain.first}, f)
             os.replace(tmp, self.state_file)
         except OSError as e:
             log(f"  couldn't save the game memory: {e}")
@@ -363,6 +370,7 @@ class Pilot:
             p = self.vision.provinces_left(img)
             if p is not None and 0 < p <= 8:          # 8 in a two-player game; more is a misread
                 self.brain.provinces = p
+            self.plan_seen = True
             self.plan = self.brain.choose_buys(coins, buys)
             log(f"  ${coins} {buys} buy(s), provinces {self.brain.provinces} -> buy {self.plan or 'nothing'}")
             if REC:
@@ -944,8 +952,47 @@ class Pilot:
         self._save_state()
         return True
 
+    # -- the opponent's cards (the top bar shows "Added: <cards>" after each of their gains) -------
+
+    def parse_added(self, text):
+        """'Added: 2 Cellars' / 'Added: Harbinger and Copper' -> ['Cellar', 'Cellar', 'Harbinger', 'Copper']."""
+        m = re.search(r"added\s*:?\s*(.*)", text, re.I)
+        if not m:
+            return None
+        names = {n.upper().replace(" ", ""): n for n in self.names}
+        out = []
+        for item in re.split(r",|\band\b|&", m.group(1)):
+            item = item.strip()
+            k = re.match(r"(\d+)\s*(.*)", item)
+            count, word = (int(k.group(1)), k.group(2)) if k else (1, item)
+            key = re.sub(r"[^A-Za-z]", "", word).upper()
+            name = match_name(key, names) or (match_name(key[:-1], names) if key.endswith("S") else None)
+            if name and count < 10:
+                out += [name] * count
+        return out or None
+
+    def track_opponent(self, img):
+        text = self.vision.opponent_bar(img)
+        cards = self.parse_added(text)
+        if cards is None:
+            self.opp_banner = None
+            return
+        if cards == getattr(self, "opp_banner", None):
+            return                                   # the same banner still showing
+        self.opp_banner = cards
+        if self.brain.turn == 1 and not self.plan_seen:
+            self.brain.first = False                 # they gained before my first buy: they went first
+        self.brain.opp_owned.update(cards)
+        log(f"  opponent gained {cards} -> {sum(self.brain.opp_owned.values())} cards")
+        if REC:
+            REC.event("opponent_gain", cards=cards, text=text)
+
     def step(self):
         img = self.stable_shot()
+        try:
+            self.track_opponent(img)
+        except Exception as e:                       # tracking must never stop the game
+            log(f"  opponent tracking failed: {e!r}")
         prompt = self.vision.prompt(img)
         p = prompt.lower()
         if not prompt:

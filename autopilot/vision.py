@@ -18,6 +18,7 @@ REF_W, REF_H = 927, 1048
 # Regions (x0, y0, x1, y1) in reference coordinates.
 R_PROMPT = (150, 292, 780, 326)
 R_PROMPT_TIGHT = (0, 300, 927, 330)
+R_OPPONENT = (230, 0, 700, 40)     # the opponent's bar: name, or "Added: <cards>" after a gain
 R_HAND = (100, 820, 780, 1000)
 R_HUD = (0, 735, 200, 782)
 R_BUTTONS = (760, 700, 927, 900)
@@ -88,6 +89,9 @@ class Vision:
         return out
 
     # -- individual readers ------------------------------------------------
+
+    def opponent_bar(self, img) -> str:
+        return " ".join(t.text for t in self.read(img, R_OPPONENT, cls=False))
 
     def prompt(self, img) -> str:
         text = " ".join(t.text for t in self.read(img, R_PROMPT))

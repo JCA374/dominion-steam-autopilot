@@ -47,6 +47,8 @@ class Brain:
         self.unknown = [c for c in kingdom if not cards.known(c)]
         self.untrained = [c for c in kingdom if cards.known(c) and c not in self.policy.kingdom]
         self.owned = Counter({"Copper": 7, "Estate": 3})
+        self.opp_owned = Counter({"Copper": 7, "Estate": 3})   # the opponent's cards, as seen gained
+        self.first = True                                     # I moved first (seat 0)
         self.turn = turn
         self.provinces = 8
         self.empty: set[str] = set()   # piles seen to be empty (a buy click did nothing)
@@ -54,7 +56,8 @@ class Brain:
     def obs(self, hand=(), actions=1, coins=0, buys=1) -> dict:
         return observation(turn=self.turn, provinces_left=self.provinces, kingdom=self.kingdom,
                            empty_piles=sorted(self.empty), owned=dict(self.owned),
-                           hand=list(hand), actions=actions, coins=coins, buys=buys)
+                           hand=list(hand), actions=actions, coins=coins, buys=buys,
+                           opponent_owned=dict(self.opp_owned), first=self.first)
 
     def phase(self) -> str:
         return self.policy.phase(self.obs()) or "-"
