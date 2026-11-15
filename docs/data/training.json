@@ -5171,17 +5171,17 @@
     "Artisan"
    ],
    "banned": false,
-   "gen": 300,
+   "gen": 325,
    "gens": 400,
    "best": 0.6424,
    "bots": {
-    "Big Money": 0.785,
-    "Smithy-BM": 0.6254,
-    "Witch-BM": 0.5858,
-    "hall:v2-generalist": 0.4954,
-    "hall:v2-witch": 0.5738,
-    "hall:v2-gardens": 0.9033,
-    "hall:v2-market": 0.5283
+    "Big Money": 0.7738,
+    "Smithy-BM": 0.6125,
+    "Witch-BM": 0.5863,
+    "hall:v2-generalist": 0.4992,
+    "hall:v2-witch": 0.5733,
+    "hall:v2-gardens": 0.9042,
+    "hall:v2-market": 0.5192
    },
    "curve": [
     [
@@ -5231,11 +5231,15 @@
     [
      300,
      0.6424
+    ],
+    [
+     325,
+     0.6424
     ]
    ],
    "done": false,
-   "updated": "2026-11-15 11:41",
-   "minutes": 10.8
+   "updated": "2026-11-15 11:42",
+   "minutes": 11.5
   },
   {
    "name": "v3-bandit",
@@ -6626,7 +6630,7 @@
    "html": "<p>The idea from the last entry, built into both agents (Python and C) as a switch so it could be measured cleanly: <b>win now</b> = if a buy ends the game with me ahead, take it; <b>don't end losing</b> = never buy the last Province (or a third empty pile) when that leaves me level or behind.</p>\n<p>Each portfolio-v2 specialist played itself with the rule on against the rule off, 6,000 games on random kingdoms: <b>49.8%</b>. Each half alone: win-now 50.1%, don't-end-losing 49.6%. Against these strategies the score check almost never changes the outcome (they already take Provinces whenever they can), and holding back the last Province mostly hands it to the opponent. So it was reverted: no strength, more complexity, and the autopilot would have needed to read the opponent's score from the screen.</p>"
   },
   {
-   "when": "15 November 2026, 12:20",
+   "when": "15 November 2026, 11:40",
    "title": "Morning experiments: the GA portfolio is saturated",
    "html": "<p>Every cheap way to get more out of the current model was measured head to head (or against the bots where noted):</p>\n<div class=\"tablewrap\"><table class=\"t\"><tr><th>Experiment</th><th class=\"num\">Result</th><th>Kept?</th></tr>\n<tr><td>Round 3: league training against round-2 specialists (8 of 26 done)</td><td class=\"num\">50.4% vs v2</td><td>still running; released only if it wins</td></tr>\n<tr><td>Endgame rule: win now / never end the game losing</td><td class=\"num\">49.8% vs no rule</td><td>no, reverted</td></tr>\n<tr><td>Longer pick trial (300 games per opponent instead of 120)</td><td class=\"num\">80.4% \u2192 81.0% vs bots</td><td><b>yes</b> (a few seconds at game start)</td></tr>\n<tr><td>Bigger pool: v1 and v2 specialists together (47)</td><td class=\"num\">50.1% vs v2</td><td>no</td></tr>\n<tr><td>Money gate: no Province before the deck holds enough money</td><td class=\"num\">50.0% vs no gate</td><td>no (the evolved lists already wait)</td></tr>\n<tr><td>Rollout search prototype (12 simulated futures per buy option)</td><td class=\"num\">~20% vs no search</td><td>no: far too noisy</td></tr></table></div>\n<p><b>Reading:</b> the evolved buy lists already contain the simple Dominion heuristics, and selection is within about 2.5 points of a perfect pick. The next real gain needs a different kind of player. The most promising is <b>rollout search done properly</b>: start simulations from the current position in the fast C engine, use the same random futures for every option, and only overrule the specialist when an option wins clearly more often. That would be its own trainer, <code>trainers/search-v1</code>, using the same protocol.</p>"
   }
