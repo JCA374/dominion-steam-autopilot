@@ -132,9 +132,10 @@ model behind every Steam game so far, was trained on Chapel, Festival, Laborator
 Smithy, Throne Room and Village. Every other kingdom card is logged as <i>untrained</i> and never bought, so the
 autopilot never needs to know how to play it. In the campaign that was about 6 of the 10 cards in a typical game.</p>
 <p>The shared engine now knows all 26 base-set cards, so new models can learn any of them, and the
-<a href="setup.html#selector">model selector</a> picks the model whose cards were dealt. For nine of the new cards
-(Artisan, Cellar, Harbinger, Library, Poacher, Remodel, Sentry, Vassal, Workshop) the autopilot can't answer Steam's
-question yet when you play them, so models are never told to buy those.</p>
+<a href="setup.html#selector">model selector</a> picks the model whose cards were dealt. Since 15 November every card's
+own prompt is handled too: gains are clicks on the glowing supply pile, Cellar and Poacher select cards and press OK or
+Decline, Harbinger and Vassal pick from a pop-up, Library uses Set Aside, and Sentry is drag and drop into its Trash,
+Discard and Deck zones.</p>
 
 <h2 id="click">Hands: the patient click</h2>
 <p><code>click.py</code> sends pointer events with the XTEST extension, which XWayland passes on to the game. The first

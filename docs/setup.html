@@ -120,9 +120,9 @@ name into the game's <i>Specify Card</i> box.</li>
 come from its training kingdom. The rest are logged as <i>untrained</i>. In the Steam campaign, about 6 of the 10 cards
 in a typical game were invisible to k1-steam.</li>
 </ul>
-<p>The engine knows all 26 cards now, so new models can learn any of them. One safety rule: for nine of the new cards
-(Artisan, Cellar, Harbinger, Library, Poacher, Remodel, Sentry, Vassal, Workshop) the autopilot can't yet answer the
-question Steam asks when you play them. Models are never told to buy those nine until that is built.</p>
+<p>The engine knows all 26 cards, and since 15 November the autopilot can play all of them on Steam: every card's own
+choice (Remodel's trash and gain, Cellar's discards, Sentry's look at two cards…) is a request in protocol 2, answered by
+the same agent code the model trained with, and the autopilot knows each card's prompt on the real game.</p>
 
 <h2 id="selector">4 · Picking a model for a kingdom</h2>
 <p>With <code>--model auto</code> (the default) the selector ranks every released model after the deal:</p>
