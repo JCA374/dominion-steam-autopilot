@@ -129,6 +129,7 @@ class Pilot:
         self.pending = None       # (card, (coins, buys) before the click) of the last buy click
         self.resolving = None     # the action card I just played, while its prompts may come
         self.card_step = 0        # how many of its prompts were answered
+        self.throned = False      # the resolving card was played by Throne Room (prompts twice)
         if REC:
             REC.event("game_start", seed=self.seed, kingdom=self.kingdom, opponents=opps,
                       model=self.brain.policy.name,
@@ -276,6 +277,7 @@ class Pilot:
             self.click(t.x, t.y + int(55 * self.vision.sy), card)
             self.resolving = card               # its own prompts come next (on_card)
             self.card_step = 0
+            self.throned = False
             if card == "Moneylender" and "Copper" in hand:
                 self.brain.trashed(["Copper"])          # Steam trashes it without asking
         else:
@@ -496,8 +498,8 @@ class Pilot:
         return done is not False
 
     def refresh_empty(self, img):
-        """Mark kingdom piles that show the empty X (gains and Poacher depend on them)."""
-        for c in self.kingdom:
+        """Mark supply piles that show the empty X (gains and Poacher depend on them)."""
+        for c in list(self.kingdom) + [c for c in BASE if c not in ("Copper", "Curse")]:
             if c not in self.brain.empty and self.pile_shows_x(img, c):
                 log(f"  the {c} pile is empty")
                 self.brain.empty.add(c)
@@ -505,6 +507,16 @@ class Pilot:
     def gain_pile(self, card, what):
         """Click a supply pile to gain `card` (Workshop, Remodel, Artisan, Mine)."""
         img = self.shot()
+        last = getattr(self, "last_gain", None)
+        if last == (card, self.brain.turn, what, self.card_step - 1) and not self.throned:
+            # The same gain prompt came back after clicking this pile: the click did nothing,
+            # so the pile is empty (or unreachable). Undo the count and choose again.
+            log(f"  gaining {card} did nothing - treating the pile as empty")
+            self.problem("gain_failed", card=card)
+            self.brain.empty.add(card)
+            self.brain.owned[card] -= 1
+            self.last_gain = None
+            return False
         pos = self.pile_pos(img, card)
         if pos is None:
             log(f"  can't find the {card} pile to gain")
@@ -512,6 +524,7 @@ class Pilot:
             return False
         self.click(*pos, f"{what}: gain {card}")
         self.brain.gained(card)
+        self.last_gain = (card, self.brain.turn, what, self.card_step)
         return True
 
     def card_workshop(self, img, prompt):
@@ -748,6 +761,7 @@ class Pilot:
         self.count_play(t, hand)
         self.count_play(t, hand)
         self.resolving, self.card_step = t, -1           # its prompts come next, twice
+        self.throned = True
         return True
 
     def card_moat(self, img, prompt):
