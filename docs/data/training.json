@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 09:14",
+ "generated": "2026-11-15 09:34",
  "runs": [
   {
    "name": "artisan",
@@ -5159,6 +5159,101 @@
    "minutes": 172.3
   },
   {
+   "name": "v3-council-room",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Council Room"
+   ],
+   "banned": false,
+   "gen": 400,
+   "gens": 400,
+   "best": 0.6748,
+   "bots": {
+    "Big Money": 0.8604,
+    "Smithy-BM": 0.7042,
+    "Witch-BM": 0.6108,
+    "hall:v2-generalist": 0.4813,
+    "hall:v2-witch": 0.6525,
+    "hall:v2-gardens": 0.8529,
+    "hall:v2-market": 0.5613
+   },
+   "curve": [
+    [
+     25,
+     0.6235
+    ],
+    [
+     50,
+     0.6235
+    ],
+    [
+     75,
+     0.6235
+    ],
+    [
+     100,
+     0.6235
+    ],
+    [
+     125,
+     0.6312
+    ],
+    [
+     150,
+     0.6718
+    ],
+    [
+     175,
+     0.6735
+    ],
+    [
+     200,
+     0.6737
+    ],
+    [
+     225,
+     0.6737
+    ],
+    [
+     250,
+     0.6737
+    ],
+    [
+     275,
+     0.6748
+    ],
+    [
+     300,
+     0.6748
+    ],
+    [
+     325,
+     0.6748
+    ],
+    [
+     350,
+     0.6748
+    ],
+    [
+     375,
+     0.6748
+    ],
+    [
+     400,
+     0.6748
+    ]
+   ],
+   "done": true,
+   "updated": "2026-11-15 09:30",
+   "minutes": 12.6
+  },
+  {
    "name": "v3-generalist",
    "round": "v3",
    "hall": [
@@ -5264,17 +5359,17 @@
     "Laboratory"
    ],
    "banned": false,
-   "gen": 275,
+   "gen": 400,
    "gens": 400,
    "best": 0.6351,
    "bots": {
-    "Big Money": 0.8042,
-    "Smithy-BM": 0.6842,
-    "Witch-BM": 0.6292,
-    "hall:v2-generalist": 0.4696,
-    "hall:v2-witch": 0.5312,
-    "hall:v2-gardens": 0.8754,
-    "hall:v2-market": 0.4517
+    "Big Money": 0.8054,
+    "Smithy-BM": 0.6813,
+    "Witch-BM": 0.6342,
+    "hall:v2-generalist": 0.4675,
+    "hall:v2-witch": 0.5342,
+    "hall:v2-gardens": 0.8725,
+    "hall:v2-market": 0.4508
    },
    "curve": [
     [
@@ -5320,11 +5415,78 @@
     [
      275,
      0.6351
+    ],
+    [
+     300,
+     0.6351
+    ],
+    [
+     325,
+     0.6351
+    ],
+    [
+     350,
+     0.6351
+    ],
+    [
+     375,
+     0.6351
+    ],
+    [
+     400,
+     0.6351
+    ]
+   ],
+   "done": true,
+   "updated": "2026-11-15 09:18",
+   "minutes": 12.1
+  },
+  {
+   "name": "v3-library",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Library"
+   ],
+   "banned": false,
+   "gen": 100,
+   "gens": 400,
+   "best": 0.6027,
+   "bots": {
+    "Big Money": 0.7863,
+    "Smithy-BM": 0.6138,
+    "Witch-BM": 0.5596,
+    "hall:v2-generalist": 0.4575,
+    "hall:v2-witch": 0.5625,
+    "hall:v2-gardens": 0.8342,
+    "hall:v2-market": 0.405
+   },
+   "curve": [
+    [
+     25,
+     0.5932
+    ],
+    [
+     50,
+     0.602
+    ],
+    [
+     75,
+     0.6027
+    ],
+    [
+     100,
+     0.6027
     ]
    ],
    "done": false,
-   "updated": "2026-11-15 09:14",
-   "minutes": 8.3
+   "updated": "2026-11-15 09:34",
+   "minutes": 3.2
   },
   {
    "name": "v3-militia",
