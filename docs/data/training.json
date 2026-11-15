@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 09:34",
+ "generated": "2026-11-15 09:54",
  "runs": [
   {
    "name": "artisan",
@@ -5159,6 +5159,89 @@
    "minutes": 172.3
   },
   {
+   "name": "v3-chapel",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Chapel"
+   ],
+   "banned": false,
+   "gen": 325,
+   "gens": 400,
+   "best": 0.6496,
+   "bots": {
+    "Big Money": 0.8296,
+    "Smithy-BM": 0.6504,
+    "Witch-BM": 0.6129,
+    "hall:v2-generalist": 0.4883,
+    "hall:v2-witch": 0.5675,
+    "hall:v2-gardens": 0.8987,
+    "hall:v2-market": 0.5
+   },
+   "curve": [
+    [
+     25,
+     0.6489
+    ],
+    [
+     50,
+     0.6494
+    ],
+    [
+     75,
+     0.6494
+    ],
+    [
+     100,
+     0.6494
+    ],
+    [
+     125,
+     0.6494
+    ],
+    [
+     150,
+     0.6495
+    ],
+    [
+     175,
+     0.6496
+    ],
+    [
+     200,
+     0.6496
+    ],
+    [
+     225,
+     0.6496
+    ],
+    [
+     250,
+     0.6496
+    ],
+    [
+     275,
+     0.6496
+    ],
+    [
+     300,
+     0.6496
+    ],
+    [
+     325,
+     0.6496
+    ]
+   ],
+   "done": false,
+   "updated": "2026-11-15 09:54",
+   "minutes": 11.0
+  },
+  {
    "name": "v3-council-room",
    "round": "v3",
    "hall": [
@@ -5454,17 +5537,17 @@
     "Library"
    ],
    "banned": false,
-   "gen": 100,
+   "gen": 400,
    "gens": 400,
-   "best": 0.6027,
+   "best": 0.6618,
    "bots": {
-    "Big Money": 0.7863,
-    "Smithy-BM": 0.6138,
-    "Witch-BM": 0.5596,
-    "hall:v2-generalist": 0.4575,
-    "hall:v2-witch": 0.5625,
-    "hall:v2-gardens": 0.8342,
-    "hall:v2-market": 0.405
+    "Big Money": 0.8225,
+    "Smithy-BM": 0.6642,
+    "Witch-BM": 0.6342,
+    "hall:v2-generalist": 0.53,
+    "hall:v2-witch": 0.6092,
+    "hall:v2-gardens": 0.8783,
+    "hall:v2-market": 0.4946
    },
    "curve": [
     [
@@ -5482,11 +5565,59 @@
     [
      100,
      0.6027
+    ],
+    [
+     125,
+     0.6027
+    ],
+    [
+     150,
+     0.6428
+    ],
+    [
+     175,
+     0.6428
+    ],
+    [
+     200,
+     0.6432
+    ],
+    [
+     225,
+     0.6432
+    ],
+    [
+     250,
+     0.6432
+    ],
+    [
+     275,
+     0.6432
+    ],
+    [
+     300,
+     0.6432
+    ],
+    [
+     325,
+     0.6432
+    ],
+    [
+     350,
+     0.6616
+    ],
+    [
+     375,
+     0.6616
+    ],
+    [
+     400,
+     0.6618
     ]
    ],
-   "done": false,
-   "updated": "2026-11-15 09:34",
-   "minutes": 3.2
+   "done": true,
+   "updated": "2026-11-15 09:43",
+   "minutes": 12.3
   },
   {
    "name": "v3-militia",
