@@ -52,8 +52,9 @@ the trial and on Steam they are never bought. So the pick is made for the game t
 
 <h2>Specialists</h2>
 <p class="small muted">Score = win + ½ tie against Big Money, Smithy–Big Money and Witch–Big Money, on 60 fixed validation
-kingdoms per bot that hold the specialist's key cards (Steam rules, both seats). “Safe” runs never buy the nine cards the
-autopilot can't play yet. <span id="gen"></span></p>
+kingdoms per opponent that hold the specialist's key cards (Steam rules, both seats). Round v1 trained against the three
+bots; round v2 also against three strong v1 specialists (the “hall”), so its scores include those harder games and are
+lower than v1's for the same strength. Compare rounds in the log entries (same tests for both). <span id="gen"></span></p>
 <div class="tablewrap"><table class="t" id="runs"></table></div>
 </main>
 <footer>Dominion Autopilot · an evolved strategy plays Steam Dominion through the screen. Not affiliated with the makers of Dominion.</footer>
@@ -83,7 +84,7 @@ fetch("data/training.json", {cache: "no-store"}).then(r => r.json()).then(d => {
   document.getElementById("runs").innerHTML =
     `<tr><th>Specialist</th><th>Key cards</th><th>Progress</th><th class="num">Score</th>` +
     bots.map(b => `<th class="num">${b}</th>`).join("") + `<th>Curve</th></tr>` +
-    runs.map(r => `<tr><td><b>${esc(r.name)}</b>${r.banned ? ' <span class="tag">safe</span>' : ""}</td>` +
+    runs.map(r => `<tr><td><span class="tag">${esc(r.round || "v1")}</span><b>${esc(r.name)}</b>${r.banned ? ' <span class="tag">safe</span>' : ""}${(r.hall || []).length ? '<br><span class="small muted">vs bots + ' + esc(r.hall.join(", ")) + "</span>" : ""}</td>` +
       `<td>${r.must.length ? esc(r.must.join(" + ")) : '<span class="muted">any kingdom</span>'}</td>` +
       `<td><div class="bar${r.done ? " done" : ""}"><i style="width:${Math.min(100, 100 * r.gen / (r.gens || 1))}%"></i></div>` +
       `<span class="small muted">${r.done ? "done" : `gen ${r.gen} / ${r.gens}`} · ${r.minutes} min</span></td>` +

@@ -28,13 +28,15 @@ def runs(path: str) -> list[dict]:
     for f in sorted(glob.glob(os.path.join(path, "*", "progress.json"))):
         p = json.load(open(f))
         hist = p.get("history", [])
-        out.append({"name": p["name"], "must": p.get("must", []), "banned": bool(p.get("banned")),
+        rnd = p["name"].split("-")[0] if p["name"].split("-")[0] in ("v2", "v2big", "v3") else "v1"
+        out.append({"name": p["name"], "round": rnd, "hall": p.get("hall", []),
+                    "must": p.get("must", []), "banned": bool(p.get("banned")),
                     "gen": p.get("gen", 0), "gens": p.get("gens"), "best": p.get("best_val"),
                     "bots": hist[-1]["bots"] if hist else {},
                     "curve": [[h["gen"], h["best"]] for h in hist],
                     "done": bool(p.get("done")), "updated": p.get("updated") or p.get("started"),
                     "minutes": round(p.get("elapsed_s", 0) / 60, 1)})
-    return out
+    return sorted(out, key=lambda r: (r["round"] != "v1", r["round"], r["name"]))
 
 
 def build(runs_path: str) -> dict:
