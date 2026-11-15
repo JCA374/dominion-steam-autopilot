@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 11:55",
+ "generated": "2026-11-15 12:08",
  "runs": [
   {
    "name": "artisan",
@@ -6215,17 +6215,17 @@
     "Mine"
    ],
    "banned": false,
-   "gen": 275,
+   "gen": 400,
    "gens": 400,
    "best": 0.6811,
    "bots": {
     "Big Money": 0.8729,
-    "Smithy-BM": 0.7283,
-    "Witch-BM": 0.5946,
-    "hall:v2-generalist": 0.5371,
-    "hall:v2-witch": 0.61,
-    "hall:v2-gardens": 0.9046,
-    "hall:v2-market": 0.5204
+    "Smithy-BM": 0.7288,
+    "Witch-BM": 0.5904,
+    "hall:v2-generalist": 0.535,
+    "hall:v2-witch": 0.6104,
+    "hall:v2-gardens": 0.9042,
+    "hall:v2-market": 0.5192
    },
    "curve": [
     [
@@ -6271,11 +6271,31 @@
     [
      275,
      0.6811
+    ],
+    [
+     300,
+     0.6811
+    ],
+    [
+     325,
+     0.6811
+    ],
+    [
+     350,
+     0.6811
+    ],
+    [
+     375,
+     0.6811
+    ],
+    [
+     400,
+     0.6811
     ]
    ],
-   "done": false,
-   "updated": "2026-11-15 11:54",
-   "minutes": 9.9
+   "done": true,
+   "updated": "2026-11-15 12:00",
+   "minutes": 15.0
   },
   {
    "name": "v3-moneylender",
@@ -6371,6 +6391,65 @@
    "done": true,
    "updated": "2026-11-15 11:17",
    "minutes": 13.8
+  },
+  {
+   "name": "v3-remodel",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Remodel"
+   ],
+   "banned": false,
+   "gen": 175,
+   "gens": 400,
+   "best": 0.6577,
+   "bots": {
+    "Big Money": 0.8483,
+    "Smithy-BM": 0.6713,
+    "Witch-BM": 0.6125,
+    "hall:v2-generalist": 0.4771,
+    "hall:v2-witch": 0.5708,
+    "hall:v2-gardens": 0.8717,
+    "hall:v2-market": 0.5417
+   },
+   "curve": [
+    [
+     25,
+     0.6571
+    ],
+    [
+     50,
+     0.6571
+    ],
+    [
+     75,
+     0.6571
+    ],
+    [
+     100,
+     0.6571
+    ],
+    [
+     125,
+     0.6571
+    ],
+    [
+     150,
+     0.6577
+    ],
+    [
+     175,
+     0.6577
+    ]
+   ],
+   "done": false,
+   "updated": "2026-11-15 12:07",
+   "minutes": 7.9
   },
   {
    "name": "v3-sentry",
@@ -6720,6 +6799,11 @@
    "when": "15 November 2026, 11:40",
    "title": "Morning experiments: the GA portfolio is saturated",
    "html": "<p>Every cheap way to get more out of the current model was measured head to head (or against the bots where noted):</p>\n<div class=\"tablewrap\"><table class=\"t\"><tr><th>Experiment</th><th class=\"num\">Result</th><th>Kept?</th></tr>\n<tr><td>Round 3: league training against round-2 specialists (8 of 26 done)</td><td class=\"num\">50.4% vs v2</td><td>still running; released only if it wins</td></tr>\n<tr><td>Endgame rule: win now / never end the game losing</td><td class=\"num\">49.8% vs no rule</td><td>no, reverted</td></tr>\n<tr><td>Longer pick trial (300 games per opponent instead of 120)</td><td class=\"num\">80.4% \u2192 81.0% vs bots</td><td><b>yes</b> (a few seconds at game start)</td></tr>\n<tr><td>Bigger pool: v1 and v2 specialists together (47)</td><td class=\"num\">50.1% vs v2</td><td>no</td></tr>\n<tr><td>Money gate: no Province before the deck holds enough money</td><td class=\"num\">50.0% vs no gate</td><td>no (the evolved lists already wait)</td></tr>\n<tr><td>Rollout search prototype (12 simulated futures per buy option)</td><td class=\"num\">~20% vs no search</td><td>no: far too noisy</td></tr></table></div>\n<p><b>Reading:</b> the evolved buy lists already contain the simple Dominion heuristics, and selection is within about 2.5 points of a perfect pick. The next real gain needs a different kind of player. The most promising is <b>rollout search done properly</b>: start simulations from the current position in the fast C engine, use the same random futures for every option, and only overrule the specialist when an option wins clearly more often. That would be its own trainer, <code>trainers/search-v1</code>, using the same protocol.</p>"
+  },
+  {
+   "when": "15 November 2026, 12:45",
+   "title": "A new kind of player: rollout search on top of the GA specialists",
+   "html": "<p>The C engine can now continue a copied game from the middle of a buy phase (<code>de_resume_buy</code>), and reshuffle everything the deciding player can't see (<code>de_hide</code>); a test checks that a copy resumed with the same answer finishes the game identically. On top of that, a <b>search agent</b>: at each buy it takes the specialist's choice, its next two choices and \u201cbuy nothing\u201d, plays each out 100\u2013300 times to the end with the same random futures for every option, and overrules the specialist only when another option wins clearly more often (a margin of 2\u20135%).</p>\n<div class=\"tablewrap\"><table class=\"t\"><tr><th>Search setting (vs the same specialist without search)</th><th class=\"num\">Score</th></tr>\n<tr><td>30 rollouts, no margin</td><td class=\"num\">43.8%</td></tr>\n<tr><td>100 rollouts, 5% margin</td><td class=\"num\"><b>60.8%</b></td></tr>\n<tr><td>300 rollouts, 2% margin</td><td class=\"num\"><b>62.5%</b></td></tr>\n<tr><td>300 rollouts, 3% margin, 4 options</td><td class=\"num\"><b>63.2%</b></td></tr></table></div>\n<p>The biggest gain so far (round 2 gave 57%). It holds with a wrong model of the opponent's strategy: against Big Money 82\u219286%, Smithy-BM 63\u219269%, Witch-BM 59\u219263%, another specialist 50\u219258%. <b>But it needs to know what is in the opponent's deck:</b> with the opponent imagined as a mirror of my own deck, the gain disappears (50.4% vs 49.5%). On Steam that is observable \u2014 the banner at the top shows every card the opponent gains, and their header shows their points \u2014 so the next step is reading that banner, then a search model the autopilot can use.</p>"
   }
  ]
 }
