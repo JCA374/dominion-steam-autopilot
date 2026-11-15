@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 12:35",
+ "generated": "2026-11-15 12:55",
  "runs": [
   {
    "name": "artisan",
@@ -5349,6 +5349,61 @@
    "minutes": 13.1
   },
   {
+   "name": "v3-bureaucrat",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Bureaucrat"
+   ],
+   "banned": false,
+   "gen": 150,
+   "gens": 400,
+   "best": 0.6127,
+   "bots": {
+    "Big Money": 0.7946,
+    "Smithy-BM": 0.6379,
+    "Witch-BM": 0.5704,
+    "hall:v2-generalist": 0.4333,
+    "hall:v2-witch": 0.555,
+    "hall:v2-gardens": 0.8567,
+    "hall:v2-market": 0.4413
+   },
+   "curve": [
+    [
+     25,
+     0.5999
+    ],
+    [
+     50,
+     0.6004
+    ],
+    [
+     75,
+     0.6004
+    ],
+    [
+     100,
+     0.6004
+    ],
+    [
+     125,
+     0.6004
+    ],
+    [
+     150,
+     0.6127
+    ]
+   ],
+   "done": false,
+   "updated": "2026-11-15 12:54",
+   "minutes": 5.4
+  },
+  {
    "name": "v3-chapel",
    "round": "v3",
    "hall": [
@@ -6676,6 +6731,101 @@
    "done": true,
    "updated": "2026-11-15 09:06",
    "minutes": 12.3
+  },
+  {
+   "name": "v3-throne-room",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Throne Room"
+   ],
+   "banned": false,
+   "gen": 400,
+   "gens": 400,
+   "best": 0.6503,
+   "bots": {
+    "Big Money": 0.8308,
+    "Smithy-BM": 0.6675,
+    "Witch-BM": 0.6217,
+    "hall:v2-generalist": 0.4958,
+    "hall:v2-witch": 0.5704,
+    "hall:v2-gardens": 0.8592,
+    "hall:v2-market": 0.5067
+   },
+   "curve": [
+    [
+     25,
+     0.6385
+    ],
+    [
+     50,
+     0.6385
+    ],
+    [
+     75,
+     0.6385
+    ],
+    [
+     100,
+     0.6385
+    ],
+    [
+     125,
+     0.6386
+    ],
+    [
+     150,
+     0.6386
+    ],
+    [
+     175,
+     0.6481
+    ],
+    [
+     200,
+     0.6481
+    ],
+    [
+     225,
+     0.6481
+    ],
+    [
+     250,
+     0.6492
+    ],
+    [
+     275,
+     0.6492
+    ],
+    [
+     300,
+     0.6493
+    ],
+    [
+     325,
+     0.6503
+    ],
+    [
+     350,
+     0.6503
+    ],
+    [
+     375,
+     0.6503
+    ],
+    [
+     400,
+     0.6503
+    ]
+   ],
+   "done": true,
+   "updated": "2026-11-15 12:49",
+   "minutes": 14.9
   },
   {
    "name": "v3-village-smithy",
