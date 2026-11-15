@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 11:42",
+ "generated": "2026-11-15 11:55",
  "runs": [
   {
    "name": "artisan",
@@ -5171,17 +5171,17 @@
     "Artisan"
    ],
    "banned": false,
-   "gen": 325,
+   "gen": 400,
    "gens": 400,
-   "best": 0.6424,
+   "best": 0.6451,
    "bots": {
-    "Big Money": 0.7738,
-    "Smithy-BM": 0.6125,
-    "Witch-BM": 0.5863,
-    "hall:v2-generalist": 0.4992,
-    "hall:v2-witch": 0.5733,
-    "hall:v2-gardens": 0.9042,
-    "hall:v2-market": 0.5192
+    "Big Money": 0.7867,
+    "Smithy-BM": 0.6275,
+    "Witch-BM": 0.585,
+    "hall:v2-generalist": 0.5029,
+    "hall:v2-witch": 0.5787,
+    "hall:v2-gardens": 0.9004,
+    "hall:v2-market": 0.5342
    },
    "curve": [
     [
@@ -5235,11 +5235,23 @@
     [
      325,
      0.6424
+    ],
+    [
+     350,
+     0.6426
+    ],
+    [
+     375,
+     0.6446
+    ],
+    [
+     400,
+     0.6451
     ]
    ],
-   "done": false,
-   "updated": "2026-11-15 11:42",
-   "minutes": 11.5
+   "done": true,
+   "updated": "2026-11-15 11:44",
+   "minutes": 13.8
   },
   {
    "name": "v3-bandit",
@@ -6189,6 +6201,81 @@
    "done": true,
    "updated": "2026-11-15 08:53",
    "minutes": 13.1
+  },
+  {
+   "name": "v3-mine",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Mine"
+   ],
+   "banned": false,
+   "gen": 275,
+   "gens": 400,
+   "best": 0.6811,
+   "bots": {
+    "Big Money": 0.8729,
+    "Smithy-BM": 0.7283,
+    "Witch-BM": 0.5946,
+    "hall:v2-generalist": 0.5371,
+    "hall:v2-witch": 0.61,
+    "hall:v2-gardens": 0.9046,
+    "hall:v2-market": 0.5204
+   },
+   "curve": [
+    [
+     25,
+     0.671
+    ],
+    [
+     50,
+     0.671
+    ],
+    [
+     75,
+     0.671
+    ],
+    [
+     100,
+     0.671
+    ],
+    [
+     125,
+     0.6798
+    ],
+    [
+     150,
+     0.6799
+    ],
+    [
+     175,
+     0.6811
+    ],
+    [
+     200,
+     0.6811
+    ],
+    [
+     225,
+     0.6811
+    ],
+    [
+     250,
+     0.6811
+    ],
+    [
+     275,
+     0.6811
+    ]
+   ],
+   "done": false,
+   "updated": "2026-11-15 11:54",
+   "minutes": 9.9
   },
   {
    "name": "v3-moneylender",
