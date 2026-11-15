@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 09:54",
+ "generated": "2026-11-15 10:05",
  "runs": [
   {
    "name": "artisan",
@@ -5171,7 +5171,7 @@
     "Chapel"
    ],
    "banned": false,
-   "gen": 325,
+   "gen": 400,
    "gens": 400,
    "best": 0.6496,
    "bots": {
@@ -5235,11 +5235,23 @@
     [
      325,
      0.6496
+    ],
+    [
+     350,
+     0.6496
+    ],
+    [
+     375,
+     0.6496
+    ],
+    [
+     400,
+     0.6496
     ]
    ],
-   "done": false,
-   "updated": "2026-11-15 09:54",
-   "minutes": 11.0
+   "done": true,
+   "updated": "2026-11-15 09:56",
+   "minutes": 13.6
   },
   {
    "name": "v3-council-room",
@@ -5620,6 +5632,77 @@
    "minutes": 12.3
   },
   {
+   "name": "v3-market",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Market"
+   ],
+   "banned": false,
+   "gen": 250,
+   "gens": 400,
+   "best": 0.6576,
+   "bots": {
+    "Big Money": 0.8583,
+    "Smithy-BM": 0.7004,
+    "Witch-BM": 0.6533,
+    "hall:v2-generalist": 0.5017,
+    "hall:v2-witch": 0.5121,
+    "hall:v2-gardens": 0.8562,
+    "hall:v2-market": 0.5212
+   },
+   "curve": [
+    [
+     25,
+     0.6553
+    ],
+    [
+     50,
+     0.6553
+    ],
+    [
+     75,
+     0.6553
+    ],
+    [
+     100,
+     0.6567
+    ],
+    [
+     125,
+     0.6576
+    ],
+    [
+     150,
+     0.6576
+    ],
+    [
+     175,
+     0.6576
+    ],
+    [
+     200,
+     0.6576
+    ],
+    [
+     225,
+     0.6576
+    ],
+    [
+     250,
+     0.6576
+    ]
+   ],
+   "done": false,
+   "updated": "2026-11-15 10:05",
+   "minutes": 8.6
+  },
+  {
    "name": "v3-militia",
    "round": "v3",
    "hall": [
@@ -5952,6 +6035,11 @@
    "when": "15 November 2026, 07:45",
    "title": "portfolio-v2 released: wins 57% head to head against v1",
    "html": "<p>Round 2 finished overnight: 26 specialists (the 20 archetypes plus Workshop, Cellar, Poacher, Vassal, Harbinger and Merchant), each about 15 minutes, trained against the three bots and the hall of strong round-1 specialists. They form <b>portfolio-v2</b>, the new default, with the pick rule that also tries each specialist against the hall.</p>\n<div class=\"tablewrap\"><table class=\"t\"><tr><th>200 random Steam kingdoms</th><th class=\"num\">portfolio-v1</th><th class=\"num\">portfolio-v2</th></tr>\n<tr><td>Head to head (each picks its own specialist)</td><td class=\"num\">42.9%</td><td class=\"num\"><b>57.1%</b></td></tr>\n<tr><td>Against the bots</td><td class=\"num\">80.3%</td><td class=\"num\"><b>81.0%</b></td></tr>\n<tr><td>Stored benchmark (<code>policy.bench</code>)</td><td class=\"num\">75.3%</td><td class=\"num\"><b>76.2%</b></td></tr>\n<tr><td>\u2026 against Witch\u2013Big Money</td><td class=\"num\">63.6%</td><td class=\"num\"><b>65.7%</b></td></tr></table></div>\n<p><b>What it says:</b> against the simple bots both are near the ceiling, but against strong evolved play the round-2 specialists win clearly more often \u2014 the reason to train against the hall. <b>What didn't work:</b> giving the generalist four times the budget (population 128, 1,000 generations) left it at the same score from generation 475 on; its limit is the genome (fixed buy lists per phase), not training time.</p>\n<p><b>Next ideas:</b> a round 3 with round-2 specialists as the hall (a league), and a richer genome for the generalist. Real Steam games with v2 haven't been played yet.</p>"
+  },
+  {
+   "when": "15 November 2026, 10:20",
+   "title": "Round 3 (a league against round-2 specialists): no further gain so far",
+   "html": "<p>Round 3 (<code>v3-\u2026</code>) starts every specialist from its round-2 version and trains it against the bots plus four strong round-2 specialists (generalist, Witch, Gardens, Market). With 8 of 26 done, a provisional portfolio-v3 plays portfolio-v2 <b>50.4%</b> head to head (120 kingdoms) \u2014 a tie \u2014 and scores 80.2% against the bots, the same as v2. Round 2 gained 7 points head to head; round 3 gains nothing measurable.</p>\n<p><b>Reading:</b> the specialists have reached what their strategy shape can express, the same plateau the generalist hit overnight. portfolio-v2 stays the default; round 3 keeps running and is only released if the full set beats v2.</p>\n<p><b>The next real gain needs a richer genome, not more training.</b> The clearest gap: the agent never looks at the score. It will buy the last Province even when that ends the game in a loss, and it never takes a cheap Duchy or Estate that would end the game while ahead. An endgame rule using both scores (in the Python and C agents together) is the most promising next step; the autopilot would then also need the opponent's score from the screen.</p>"
   }
  ]
 }
