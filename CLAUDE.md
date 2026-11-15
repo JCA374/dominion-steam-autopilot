@@ -85,9 +85,12 @@ git add dominion-v1 && git commit -m "dominion-v1: <name>"
 
 Or skip the release: drop the model folder into `models/` (see `models/README.md`) and run `bench_models.py`.
 
-`dominion-v1/models/DEFAULT` is `portfolio-v1` (kind `ga-portfolio`, since 2026-11-14): 21 specialists trained on
-random kingdoms with all 26 cards; at game start it plays each on the dealt kingdom in the engine (~1 s) and the best
-one plays (pilot logs `portfolio plays <member>`). Not yet played on Steam. `k1-steam` is the model behind the
+`dominion-v1/models/DEFAULT` is `portfolio-v2` (kind `ga-portfolio`, since 2026-11-15): 26 specialists trained on
+random kingdoms with all 26 cards against the bots and a hall of strong specialists; at game start it plays each on the
+dealt kingdom in the engine (~2 s) and the best one plays (pilot logs `portfolio plays <member>`). Protocol 2: the
+pilot handles every card's own prompt (`card_<name>` handlers in pilot.py, dispatched from a '<Card>:' prompt line,
+the card just played, or the rightmost big card; Sentry is drag and drop via `click.drag`). Moat reveal and the Bandit
+victim's choice were never met on Steam yet. `k1-steam` is the model behind the
 recorded wins. Training progress: `docs/training.html` from `autopilot/training_log.py` (reads
 `../trainers/ga-v1/runs/*/progress.json` + hand-written `docs/data/training_notes.json`; `--push` commits only those). Non-GA models (e.g. a neural net in
 its own venv) can be `subprocess` models speaking the same protocol over stdin/stdout, with no autopilot changes.
