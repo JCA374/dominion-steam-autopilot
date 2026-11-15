@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 13:55",
+ "generated": "2026-11-15 14:15",
  "runs": [
   {
    "name": "artisan",
@@ -6595,17 +6595,17 @@
     "Poacher"
    ],
    "banned": false,
-   "gen": 200,
+   "gen": 400,
    "gens": 400,
-   "best": 0.6607,
+   "best": 0.6614,
    "bots": {
-    "Big Money": 0.8396,
-    "Smithy-BM": 0.6854,
-    "Witch-BM": 0.5871,
-    "hall:v2-generalist": 0.5142,
-    "hall:v2-witch": 0.59,
-    "hall:v2-gardens": 0.8975,
-    "hall:v2-market": 0.5112
+    "Big Money": 0.8329,
+    "Smithy-BM": 0.6704,
+    "Witch-BM": 0.6096,
+    "hall:v2-generalist": 0.5146,
+    "hall:v2-witch": 0.5933,
+    "hall:v2-gardens": 0.9054,
+    "hall:v2-market": 0.5038
    },
    "curve": [
     [
@@ -6639,11 +6639,43 @@
     [
      200,
      0.6607
+    ],
+    [
+     225,
+     0.6607
+    ],
+    [
+     250,
+     0.6607
+    ],
+    [
+     275,
+     0.6607
+    ],
+    [
+     300,
+     0.6607
+    ],
+    [
+     325,
+     0.6607
+    ],
+    [
+     350,
+     0.6607
+    ],
+    [
+     375,
+     0.6607
+    ],
+    [
+     400,
+     0.6614
     ]
    ],
-   "done": false,
-   "updated": "2026-11-15 13:55",
-   "minutes": 11.7
+   "done": true,
+   "updated": "2026-11-15 14:05",
+   "minutes": 21.8
   },
   {
    "name": "v3-remodel",
@@ -7024,6 +7056,69 @@
    "done": true,
    "updated": "2026-11-15 12:49",
    "minutes": 14.9
+  },
+  {
+   "name": "v3-vassal",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Vassal"
+   ],
+   "banned": false,
+   "gen": 200,
+   "gens": 400,
+   "best": 0.6174,
+   "bots": {
+    "Big Money": 0.8233,
+    "Smithy-BM": 0.6388,
+    "Witch-BM": 0.5813,
+    "hall:v2-generalist": 0.4783,
+    "hall:v2-witch": 0.5025,
+    "hall:v2-gardens": 0.8333,
+    "hall:v2-market": 0.4642
+   },
+   "curve": [
+    [
+     25,
+     0.6099
+    ],
+    [
+     50,
+     0.6099
+    ],
+    [
+     75,
+     0.6101
+    ],
+    [
+     100,
+     0.6102
+    ],
+    [
+     125,
+     0.6174
+    ],
+    [
+     150,
+     0.6174
+    ],
+    [
+     175,
+     0.6174
+    ],
+    [
+     200,
+     0.6174
+    ]
+   ],
+   "done": false,
+   "updated": "2026-11-15 14:15",
+   "minutes": 9.8
   },
   {
    "name": "v3-village-smithy",
