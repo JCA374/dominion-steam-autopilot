@@ -2,13 +2,13 @@
  "headline": [
   {
    "k": "portfolio-v2",
-   "v": "57%",
-   "s": "head to head vs portfolio-v1 (new default)"
+   "v": "default",
+   "s": "57% head to head vs v1; 81% vs bots"
   },
   {
-   "k": "vs bots",
-   "v": "81%",
-   "s": "random kingdoms, every card playable"
+   "k": "+ rollout search",
+   "v": "64%",
+   "s": "vs the same specialist without search (2,000 games)"
   }
  ],
  "entries": [
@@ -49,7 +49,7 @@
   },
   {
    "when": "15 November 2026, 10:20",
-   "title": "Round 3 (a league against round-2 specialists): no further gain so far",
+   "title": "Round 3 (a league against round-2 specialists): no further gain so far (stopped at 22 of 26)",
    "html": "<p>Round 3 (<code>v3-\u2026</code>) starts every specialist from its round-2 version and trains it against the bots plus four strong round-2 specialists (generalist, Witch, Gardens, Market). With 8 of 26 done, a provisional portfolio-v3 plays portfolio-v2 <b>50.4%</b> head to head (120 kingdoms) \u2014 a tie \u2014 and scores 80.2% against the bots, the same as v2. Round 2 gained 7 points head to head; round 3 gains nothing measurable.</p>\n<p><b>Reading:</b> the specialists have reached what their strategy shape can express, the same plateau the generalist hit overnight. portfolio-v2 stays the default; round 3 keeps running and is only released if the full set beats v2.</p>\n<p><b>The next real gain needs a richer genome, not more training.</b> The clearest gap: the agent never looks at the score. It will buy the last Province even when that ends the game in a loss, and it never takes a cheap Duchy or Estate that would end the game while ahead. An endgame rule using both scores (in the Python and C agents together) is the most promising next step; the autopilot would then also need the opponent's score from the screen.</p>"
   },
   {
@@ -66,6 +66,11 @@
    "when": "15 November 2026, 12:45",
    "title": "A new kind of player: rollout search on top of the GA specialists",
    "html": "<p>The C engine can now continue a copied game from the middle of a buy phase (<code>de_resume_buy</code>), and reshuffle everything the deciding player can't see (<code>de_hide</code>); a test checks that a copy resumed with the same answer finishes the game identically. On top of that, a <b>search agent</b>: at each buy it takes the specialist's choice, its next two choices and \u201cbuy nothing\u201d, plays each out 100\u2013300 times to the end with the same random futures for every option, and overrules the specialist only when another option wins clearly more often (a margin of 2\u20135%).</p>\n<div class=\"tablewrap\"><table class=\"t\"><tr><th>Search setting (vs the same specialist without search)</th><th class=\"num\">Score</th></tr>\n<tr><td>30 rollouts, no margin</td><td class=\"num\">43.8%</td></tr>\n<tr><td>100 rollouts, 5% margin</td><td class=\"num\"><b>60.8%</b></td></tr>\n<tr><td>300 rollouts, 2% margin</td><td class=\"num\"><b>62.5%</b></td></tr>\n<tr><td>300 rollouts, 3% margin, 4 options</td><td class=\"num\"><b>63.2%</b></td></tr></table></div>\n<p>The biggest gain so far (round 2 gave 57%). It holds with a wrong model of the opponent's strategy: against Big Money 82\u219286%, Smithy-BM 63\u219269%, Witch-BM 59\u219263%, another specialist 50\u219258%. <b>But it needs to know what is in the opponent's deck:</b> with the opponent imagined as a mirror of my own deck, the gain disappears (50.4% vs 49.5%). On Steam that is observable \u2014 the banner at the top shows every card the opponent gains, and their header shows their points \u2014 so the next step is reading that banner, then a search model the autopilot can use.</p>"
+  },
+  {
+   "when": "15 November 2026, 14:10",
+   "title": "Wrap-up: portfolio-v2s (search) published, round 3 stopped",
+   "html": "<p><b>Search from what the autopilot can see.</b> A C entry point builds a game from a player's view (my cards, the opponent's cards, the supply) and runs the rollout search on each buy. Measured over 2,000 games against the same specialist without search:</p>\n<div class=\"tablewrap\"><table class=\"t\"><tr><th>Search setting</th><th class=\"num\">Score</th></tr>\n<tr><td>100 rollouts per option, 5% margin</td><td class=\"num\">57.2%</td></tr>\n<tr><td>300 rollouts, 4 options, 3% margin</td><td class=\"num\"><b>64.0%</b></td></tr>\n<tr><td>\u2026 from the player's view, opponent's strategy modelled as the generalist (800 games)</td><td class=\"num\">60.1%</td></tr>\n<tr><td>\u2026 with a quarter of the opponent's gains missed (800 games)</td><td class=\"num\">57.7%</td></tr></table></div>\n<p>What the search needs is the opponent's cards. On Steam the opponent's bar at the top shows \u201cAdded: \u2026\u201d after each of their gains (checked against recordings: the cards it names were not my buys), so the autopilot now tracks the opponent's deck from that banner and sends it to the model. It is released as <b>portfolio-v2s</b>: portfolio-v2 plus search for buys, about 0.05 s per buy. It is <b>opt-in</b> (<code>--model portfolio-v2s</code>) until it has played real games; the default stays portfolio-v2.</p>\n<p><b>Round 3</b> (league training) was stopped at 22 of 26 specialists: the provisional portfolio tied v2 head to head (50.4%), so it is not released.</p>\n<p><b>Not done yet:</b> a live Steam game with the tracker and portfolio-v2s (it takes over the mouse, so it waits for a go-ahead), and checking the tracker's count against the opponent's card counter.</p>"
   }
  ]
 }
