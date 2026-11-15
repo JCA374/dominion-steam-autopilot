@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 10:54",
+ "generated": "2026-11-15 11:15",
  "runs": [
   {
    "name": "artisan",
@@ -5552,17 +5552,17 @@
     "Workshop"
    ],
    "banned": false,
-   "gen": 150,
+   "gen": 400,
    "gens": 400,
-   "best": 0.7744,
+   "best": 0.7932,
    "bots": {
-    "Big Money": 0.965,
-    "Smithy-BM": 0.9192,
-    "Witch-BM": 0.8354,
-    "hall:v2-generalist": 0.7063,
-    "hall:v2-witch": 0.5742,
-    "hall:v2-gardens": 0.7167,
-    "hall:v2-market": 0.7042
+    "Big Money": 0.9642,
+    "Smithy-BM": 0.9146,
+    "Witch-BM": 0.8387,
+    "hall:v2-generalist": 0.7421,
+    "hall:v2-witch": 0.5883,
+    "hall:v2-gardens": 0.7638,
+    "hall:v2-market": 0.7292
    },
    "curve": [
     [
@@ -5588,11 +5588,51 @@
     [
      150,
      0.7744
+    ],
+    [
+     175,
+     0.7744
+    ],
+    [
+     200,
+     0.7744
+    ],
+    [
+     225,
+     0.7744
+    ],
+    [
+     250,
+     0.7744
+    ],
+    [
+     275,
+     0.7744
+    ],
+    [
+     300,
+     0.7744
+    ],
+    [
+     325,
+     0.7744
+    ],
+    [
+     350,
+     0.7932
+    ],
+    [
+     375,
+     0.7932
+    ],
+    [
+     400,
+     0.7932
     ]
    ],
-   "done": false,
-   "updated": "2026-11-15 10:54",
-   "minutes": 5.3
+   "done": true,
+   "updated": "2026-11-15 11:03",
+   "minutes": 14.3
   },
   {
    "name": "v3-generalist",
@@ -6066,6 +6106,89 @@
    "done": true,
    "updated": "2026-11-15 08:53",
    "minutes": 13.1
+  },
+  {
+   "name": "v3-moneylender",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Moneylender"
+   ],
+   "banned": false,
+   "gen": 325,
+   "gens": 400,
+   "best": 0.6413,
+   "bots": {
+    "Big Money": 0.8325,
+    "Smithy-BM": 0.6775,
+    "Witch-BM": 0.5621,
+    "hall:v2-generalist": 0.4996,
+    "hall:v2-witch": 0.4867,
+    "hall:v2-gardens": 0.9179,
+    "hall:v2-market": 0.5129
+   },
+   "curve": [
+    [
+     25,
+     0.5401
+    ],
+    [
+     50,
+     0.5432
+    ],
+    [
+     75,
+     0.5893
+    ],
+    [
+     100,
+     0.6128
+    ],
+    [
+     125,
+     0.6174
+    ],
+    [
+     150,
+     0.6179
+    ],
+    [
+     175,
+     0.6179
+    ],
+    [
+     200,
+     0.6179
+    ],
+    [
+     225,
+     0.6375
+    ],
+    [
+     250,
+     0.6375
+    ],
+    [
+     275,
+     0.6375
+    ],
+    [
+     300,
+     0.6393
+    ],
+    [
+     325,
+     0.6413
+    ]
+   ],
+   "done": false,
+   "updated": "2026-11-15 11:14",
+   "minutes": 11.2
   },
   {
    "name": "v3-smithy",
