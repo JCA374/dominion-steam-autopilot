@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 11:15",
+ "generated": "2026-11-15 11:35",
  "runs": [
   {
    "name": "artisan",
@@ -5159,6 +5159,53 @@
    "minutes": 172.3
   },
   {
+   "name": "v3-artisan",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Artisan"
+   ],
+   "banned": false,
+   "gen": 100,
+   "gens": 400,
+   "best": 0.6375,
+   "bots": {
+    "Big Money": 0.7712,
+    "Smithy-BM": 0.6129,
+    "Witch-BM": 0.5863,
+    "hall:v2-generalist": 0.5013,
+    "hall:v2-witch": 0.5742,
+    "hall:v2-gardens": 0.9042,
+    "hall:v2-market": 0.5125
+   },
+   "curve": [
+    [
+     25,
+     0.6361
+    ],
+    [
+     50,
+     0.6374
+    ],
+    [
+     75,
+     0.6374
+    ],
+    [
+     100,
+     0.6375
+    ]
+   ],
+   "done": false,
+   "updated": "2026-11-15 11:34",
+   "minutes": 3.7
+  },
+  {
    "name": "v3-bandit",
    "round": "v3",
    "hall": [
@@ -6120,17 +6167,17 @@
     "Moneylender"
    ],
    "banned": false,
-   "gen": 325,
+   "gen": 400,
    "gens": 400,
-   "best": 0.6413,
+   "best": 0.6556,
    "bots": {
-    "Big Money": 0.8325,
-    "Smithy-BM": 0.6775,
-    "Witch-BM": 0.5621,
-    "hall:v2-generalist": 0.4996,
-    "hall:v2-witch": 0.4867,
-    "hall:v2-gardens": 0.9179,
-    "hall:v2-market": 0.5129
+    "Big Money": 0.8354,
+    "Smithy-BM": 0.7179,
+    "Witch-BM": 0.5625,
+    "hall:v2-generalist": 0.5042,
+    "hall:v2-witch": 0.5229,
+    "hall:v2-gardens": 0.93,
+    "hall:v2-market": 0.5162
    },
    "curve": [
     [
@@ -6184,11 +6231,118 @@
     [
      325,
      0.6413
+    ],
+    [
+     350,
+     0.6471
+    ],
+    [
+     375,
+     0.6471
+    ],
+    [
+     400,
+     0.6556
     ]
    ],
-   "done": false,
-   "updated": "2026-11-15 11:14",
-   "minutes": 11.2
+   "done": true,
+   "updated": "2026-11-15 11:17",
+   "minutes": 13.8
+  },
+  {
+   "name": "v3-sentry",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Sentry"
+   ],
+   "banned": false,
+   "gen": 400,
+   "gens": 400,
+   "best": 0.6332,
+   "bots": {
+    "Big Money": 0.815,
+    "Smithy-BM": 0.7071,
+    "Witch-BM": 0.6062,
+    "hall:v2-generalist": 0.4729,
+    "hall:v2-witch": 0.5446,
+    "hall:v2-gardens": 0.815,
+    "hall:v2-market": 0.4667
+   },
+   "curve": [
+    [
+     25,
+     0.6325
+    ],
+    [
+     50,
+     0.6325
+    ],
+    [
+     75,
+     0.6327
+    ],
+    [
+     100,
+     0.633
+    ],
+    [
+     125,
+     0.633
+    ],
+    [
+     150,
+     0.633
+    ],
+    [
+     175,
+     0.6332
+    ],
+    [
+     200,
+     0.6332
+    ],
+    [
+     225,
+     0.6332
+    ],
+    [
+     250,
+     0.6332
+    ],
+    [
+     275,
+     0.6332
+    ],
+    [
+     300,
+     0.6332
+    ],
+    [
+     325,
+     0.6332
+    ],
+    [
+     350,
+     0.6332
+    ],
+    [
+     375,
+     0.6332
+    ],
+    [
+     400,
+     0.6332
+    ]
+   ],
+   "done": true,
+   "updated": "2026-11-15 11:31",
+   "minutes": 13.7
   },
   {
    "name": "v3-smithy",
