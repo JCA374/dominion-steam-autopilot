@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 13:35",
+ "generated": "2026-11-15 13:55",
  "runs": [
   {
    "name": "artisan",
@@ -5456,7 +5456,7 @@
     "Cellar"
    ],
    "banned": false,
-   "gen": 250,
+   "gen": 400,
    "gens": 400,
    "best": 0.669,
    "bots": {
@@ -5508,11 +5508,35 @@
     [
      250,
      0.669
+    ],
+    [
+     275,
+     0.669
+    ],
+    [
+     300,
+     0.669
+    ],
+    [
+     325,
+     0.669
+    ],
+    [
+     350,
+     0.669
+    ],
+    [
+     375,
+     0.669
+    ],
+    [
+     400,
+     0.669
     ]
    ],
-   "done": false,
-   "updated": "2026-11-15 13:34",
-   "minutes": 11.7
+   "done": true,
+   "updated": "2026-11-15 13:43",
+   "minutes": 20.1
   },
   {
    "name": "v3-chapel",
@@ -6557,6 +6581,69 @@
    "done": true,
    "updated": "2026-11-15 11:17",
    "minutes": 13.8
+  },
+  {
+   "name": "v3-poacher",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Poacher"
+   ],
+   "banned": false,
+   "gen": 200,
+   "gens": 400,
+   "best": 0.6607,
+   "bots": {
+    "Big Money": 0.8396,
+    "Smithy-BM": 0.6854,
+    "Witch-BM": 0.5871,
+    "hall:v2-generalist": 0.5142,
+    "hall:v2-witch": 0.59,
+    "hall:v2-gardens": 0.8975,
+    "hall:v2-market": 0.5112
+   },
+   "curve": [
+    [
+     25,
+     0.6593
+    ],
+    [
+     50,
+     0.6593
+    ],
+    [
+     75,
+     0.6607
+    ],
+    [
+     100,
+     0.6607
+    ],
+    [
+     125,
+     0.6607
+    ],
+    [
+     150,
+     0.6607
+    ],
+    [
+     175,
+     0.6607
+    ],
+    [
+     200,
+     0.6607
+    ]
+   ],
+   "done": false,
+   "updated": "2026-11-15 13:55",
+   "minutes": 11.7
   },
   {
    "name": "v3-remodel",
