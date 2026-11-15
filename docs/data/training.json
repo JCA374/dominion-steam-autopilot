@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 10:25",
+ "generated": "2026-11-15 10:34",
  "runs": [
   {
    "name": "artisan",
@@ -5361,17 +5361,17 @@
     "Festival"
    ],
    "banned": false,
-   "gen": 225,
+   "gen": 375,
    "gens": 400,
-   "best": 0.634,
+   "best": 0.647,
    "bots": {
-    "Big Money": 0.845,
+    "Big Money": 0.8492,
     "Smithy-BM": 0.6225,
-    "Witch-BM": 0.6225,
+    "Witch-BM": 0.635,
     "hall:v2-generalist": 0.505,
-    "hall:v2-witch": 0.5008,
-    "hall:v2-gardens": 0.8488,
-    "hall:v2-market": 0.4933
+    "hall:v2-witch": 0.5317,
+    "hall:v2-gardens": 0.8629,
+    "hall:v2-market": 0.5192
    },
    "curve": [
     [
@@ -5409,11 +5409,35 @@
     [
      225,
      0.634
+    ],
+    [
+     250,
+     0.634
+    ],
+    [
+     275,
+     0.6426
+    ],
+    [
+     300,
+     0.6427
+    ],
+    [
+     325,
+     0.6468
+    ],
+    [
+     350,
+     0.647
+    ],
+    [
+     375,
+     0.647
     ]
    ],
    "done": false,
-   "updated": "2026-11-15 10:24",
-   "minutes": 14.1
+   "updated": "2026-11-15 10:34",
+   "minutes": 24.3
   },
   {
    "name": "v3-generalist",
