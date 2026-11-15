@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 08:34",
+ "generated": "2026-11-15 08:54",
  "runs": [
   {
    "name": "artisan",
@@ -5252,6 +5252,101 @@
    "minutes": 11.3
   },
   {
+   "name": "v3-militia",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Militia"
+   ],
+   "banned": false,
+   "gen": 400,
+   "gens": 400,
+   "best": 0.677,
+   "bots": {
+    "Big Money": 0.9083,
+    "Smithy-BM": 0.7562,
+    "Witch-BM": 0.625,
+    "hall:v2-generalist": 0.5288,
+    "hall:v2-witch": 0.5658,
+    "hall:v2-gardens": 0.8504,
+    "hall:v2-market": 0.4983
+   },
+   "curve": [
+    [
+     25,
+     0.6749
+    ],
+    [
+     50,
+     0.6755
+    ],
+    [
+     75,
+     0.6766
+    ],
+    [
+     100,
+     0.6766
+    ],
+    [
+     125,
+     0.6766
+    ],
+    [
+     150,
+     0.6766
+    ],
+    [
+     175,
+     0.6766
+    ],
+    [
+     200,
+     0.6767
+    ],
+    [
+     225,
+     0.6767
+    ],
+    [
+     250,
+     0.6768
+    ],
+    [
+     275,
+     0.6768
+    ],
+    [
+     300,
+     0.6768
+    ],
+    [
+     325,
+     0.677
+    ],
+    [
+     350,
+     0.677
+    ],
+    [
+     375,
+     0.677
+    ],
+    [
+     400,
+     0.677
+    ]
+   ],
+   "done": true,
+   "updated": "2026-11-15 08:53",
+   "minutes": 13.1
+  },
+  {
    "name": "v3-witch",
    "round": "v3",
    "hall": [
@@ -5264,17 +5359,17 @@
     "Witch"
    ],
    "banned": false,
-   "gen": 225,
+   "gen": 400,
    "gens": 400,
-   "best": 0.7255,
+   "best": 0.7258,
    "bots": {
-    "Big Money": 0.9612,
-    "Smithy-BM": 0.9079,
-    "Witch-BM": 0.6546,
-    "hall:v2-generalist": 0.5804,
+    "Big Money": 0.9492,
+    "Smithy-BM": 0.9042,
+    "Witch-BM": 0.6562,
+    "hall:v2-generalist": 0.5729,
     "hall:v2-witch": 0.4913,
-    "hall:v2-gardens": 0.9012,
-    "hall:v2-market": 0.5779
+    "hall:v2-gardens": 0.8996,
+    "hall:v2-market": 0.5763
    },
    "curve": [
     [
@@ -5312,11 +5407,39 @@
     [
      225,
      0.7255
+    ],
+    [
+     250,
+     0.7258
+    ],
+    [
+     275,
+     0.7258
+    ],
+    [
+     300,
+     0.7258
+    ],
+    [
+     325,
+     0.7258
+    ],
+    [
+     350,
+     0.7258
+    ],
+    [
+     375,
+     0.7258
+    ],
+    [
+     400,
+     0.7258
     ]
    ],
-   "done": false,
-   "updated": "2026-11-15 08:34",
-   "minutes": 8.4
+   "done": true,
+   "updated": "2026-11-15 08:40",
+   "minutes": 14.8
   }
  ],
  "headline": [
