@@ -1,0 +1,5 @@
+["All 26 base-set cards are playable on Steam: protocol 2 asks the model for every card's own choice, and the autopilot learned each prompt in 4 games (Sentry needs drag and drop)",
+ "Bugs fixed on the way: Militia '(0 of 2)' counter, an unseen empty Estate pile clicked 58 times, the agent keeping a Province over Gold",
+ "First real game with all cards: portfolio-v1 picked its Gardens + Workshop specialist and won 34-33 vs Easy",
+ "Overnight round 2 (26 specialists vs bots + strong round-1 specialists) -> portfolio-v2: 57.1% head to head vs v1, 81.0% vs bots",
+ "Generalist with 4x the budget plateaued: the genome is its limit"]
