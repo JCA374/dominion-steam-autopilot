@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 13:15",
+ "generated": "2026-11-15 13:35",
  "runs": [
   {
    "name": "artisan",
@@ -5444,6 +5444,77 @@
    "minutes": 18.0
   },
   {
+   "name": "v3-cellar",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Cellar"
+   ],
+   "banned": false,
+   "gen": 250,
+   "gens": 400,
+   "best": 0.669,
+   "bots": {
+    "Big Money": 0.8225,
+    "Smithy-BM": 0.6779,
+    "Witch-BM": 0.6025,
+    "hall:v2-generalist": 0.5325,
+    "hall:v2-witch": 0.6,
+    "hall:v2-gardens": 0.8875,
+    "hall:v2-market": 0.5604
+   },
+   "curve": [
+    [
+     25,
+     0.634
+    ],
+    [
+     50,
+     0.6539
+    ],
+    [
+     75,
+     0.654
+    ],
+    [
+     100,
+     0.6689
+    ],
+    [
+     125,
+     0.6689
+    ],
+    [
+     150,
+     0.6689
+    ],
+    [
+     175,
+     0.6689
+    ],
+    [
+     200,
+     0.6689
+    ],
+    [
+     225,
+     0.6689
+    ],
+    [
+     250,
+     0.669
+    ]
+   ],
+   "done": false,
+   "updated": "2026-11-15 13:34",
+   "minutes": 11.7
+  },
+  {
    "name": "v3-chapel",
    "round": "v3",
    "hall": [
@@ -7071,17 +7142,17 @@
     "Workshop"
    ],
    "banned": false,
-   "gen": 200,
+   "gen": 400,
    "gens": 400,
-   "best": 0.6198,
+   "best": 0.6254,
    "bots": {
-    "Big Money": 0.7875,
-    "Smithy-BM": 0.6683,
-    "Witch-BM": 0.6208,
-    "hall:v2-generalist": 0.4875,
-    "hall:v2-witch": 0.5608,
-    "hall:v2-gardens": 0.7192,
-    "hall:v2-market": 0.4946
+    "Big Money": 0.7817,
+    "Smithy-BM": 0.6721,
+    "Witch-BM": 0.6042,
+    "hall:v2-generalist": 0.495,
+    "hall:v2-witch": 0.56,
+    "hall:v2-gardens": 0.7183,
+    "hall:v2-market": 0.5196
    },
    "curve": [
     [
@@ -7115,11 +7186,43 @@
     [
      200,
      0.6198
+    ],
+    [
+     225,
+     0.6223
+    ],
+    [
+     250,
+     0.6223
+    ],
+    [
+     275,
+     0.6223
+    ],
+    [
+     300,
+     0.6223
+    ],
+    [
+     325,
+     0.6223
+    ],
+    [
+     350,
+     0.6254
+    ],
+    [
+     375,
+     0.6254
+    ],
+    [
+     400,
+     0.6254
     ]
    ],
-   "done": false,
-   "updated": "2026-11-15 13:15",
-   "minutes": 8.0
+   "done": true,
+   "updated": "2026-11-15 13:23",
+   "minutes": 15.8
   }
  ],
  "headline": [
