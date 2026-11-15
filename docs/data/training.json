@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 10:34",
+ "generated": "2026-11-15 10:54",
  "runs": [
   {
    "name": "artisan",
@@ -5159,6 +5159,101 @@
    "minutes": 172.3
   },
   {
+   "name": "v3-bandit",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Bandit"
+   ],
+   "banned": false,
+   "gen": 400,
+   "gens": 400,
+   "best": 0.6686,
+   "bots": {
+    "Big Money": 0.8392,
+    "Smithy-BM": 0.6654,
+    "Witch-BM": 0.6129,
+    "hall:v2-generalist": 0.5212,
+    "hall:v2-witch": 0.6246,
+    "hall:v2-gardens": 0.915,
+    "hall:v2-market": 0.5008
+   },
+   "curve": [
+    [
+     25,
+     0.6582
+    ],
+    [
+     50,
+     0.6582
+    ],
+    [
+     75,
+     0.6582
+    ],
+    [
+     100,
+     0.6582
+    ],
+    [
+     125,
+     0.6582
+    ],
+    [
+     150,
+     0.6582
+    ],
+    [
+     175,
+     0.6582
+    ],
+    [
+     200,
+     0.6582
+    ],
+    [
+     225,
+     0.6582
+    ],
+    [
+     250,
+     0.6582
+    ],
+    [
+     275,
+     0.6608
+    ],
+    [
+     300,
+     0.6608
+    ],
+    [
+     325,
+     0.6686
+    ],
+    [
+     350,
+     0.6686
+    ],
+    [
+     375,
+     0.6686
+    ],
+    [
+     400,
+     0.6686
+    ]
+   ],
+   "done": true,
+   "updated": "2026-11-15 10:49",
+   "minutes": 13.1
+  },
+  {
    "name": "v3-chapel",
    "round": "v3",
    "hall": [
@@ -5361,17 +5456,17 @@
     "Festival"
    ],
    "banned": false,
-   "gen": 375,
+   "gen": 400,
    "gens": 400,
    "best": 0.647,
    "bots": {
     "Big Money": 0.8492,
-    "Smithy-BM": 0.6225,
-    "Witch-BM": 0.635,
-    "hall:v2-generalist": 0.505,
+    "Smithy-BM": 0.6233,
+    "Witch-BM": 0.6358,
+    "hall:v2-generalist": 0.5058,
     "hall:v2-witch": 0.5317,
-    "hall:v2-gardens": 0.8629,
-    "hall:v2-market": 0.5192
+    "hall:v2-gardens": 0.8625,
+    "hall:v2-market": 0.52
    },
    "curve": [
     [
@@ -5433,11 +5528,71 @@
     [
      375,
      0.647
+    ],
+    [
+     400,
+     0.647
+    ]
+   ],
+   "done": true,
+   "updated": "2026-11-15 10:36",
+   "minutes": 25.9
+  },
+  {
+   "name": "v3-gardens",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Gardens",
+    "Workshop"
+   ],
+   "banned": false,
+   "gen": 150,
+   "gens": 400,
+   "best": 0.7744,
+   "bots": {
+    "Big Money": 0.965,
+    "Smithy-BM": 0.9192,
+    "Witch-BM": 0.8354,
+    "hall:v2-generalist": 0.7063,
+    "hall:v2-witch": 0.5742,
+    "hall:v2-gardens": 0.7167,
+    "hall:v2-market": 0.7042
+   },
+   "curve": [
+    [
+     25,
+     0.7743
+    ],
+    [
+     50,
+     0.7743
+    ],
+    [
+     75,
+     0.7744
+    ],
+    [
+     100,
+     0.7744
+    ],
+    [
+     125,
+     0.7744
+    ],
+    [
+     150,
+     0.7744
     ]
    ],
    "done": false,
-   "updated": "2026-11-15 10:34",
-   "minutes": 24.3
+   "updated": "2026-11-15 10:54",
+   "minutes": 5.3
   },
   {
    "name": "v3-generalist",
