@@ -1,14 +1,14 @@
 {
  "headline": [
   {
-   "k": "portfolio-v1",
-   "v": "80%",
-   "s": "random kingdoms, every card playable"
+   "k": "portfolio-v2",
+   "v": "57%",
+   "s": "head to head vs portfolio-v1 (new default)"
   },
   {
-   "k": "Steam cards",
-   "v": "26 / 26",
-   "s": "all base-set cards playable by the autopilot"
+   "k": "vs bots",
+   "v": "81%",
+   "s": "random kingdoms, every card playable"
   }
  ],
  "entries": [
@@ -41,6 +41,11 @@
    "when": "15 November 2026, 03:35",
    "title": "Round 2 overnight: specialists that also beat strong opponents",
    "html": "<p>Round 1 trained every specialist against three simple bots. Steam's computer opponents are stronger than those, so <b>round 2</b> (runs named <code>v2-\u2026</code>) starts from each round-1 specialist and trains it against the bots <i>and</i> a <b>hall</b> of three strong round-1 specialists (generalist, Remodel, Witch). There are six new archetypes too (Workshop, Cellar, Poacher, Vassal, Harbinger, Merchant), and all runs use the fixed agent (Province no longer kept over Gold).</p>\n<p>Two measurements, the same for every version: <b>vs bots</b> = the old score on 120 random kingdoms; <b>head to head</b> = the new portfolio and portfolio-v1 each pick their own specialist for a random kingdom and play each other (120 kingdoms \u00d7 40 games).</p>\n<div class=\"tablewrap\"><table class=\"t\"><tr><th>Provisional v2</th><th class=\"num\">vs bots</th><th class=\"num\">head to head vs v1</th></tr>\n<tr><td>v1 itself (reference)</td><td class=\"num\">79.2%</td><td class=\"num\">50.0%</td></tr>\n<tr><td>v1 + new pick rule (trial vs bots and the hall)</td><td class=\"num\">79.1%</td><td class=\"num\">52.4%</td></tr>\n<tr><td>4 of 26 round-2 specialists</td><td class=\"num\">79.3%</td><td class=\"num\">53.6%</td></tr>\n<tr><td>9 of 26 round-2 specialists</td><td class=\"num\">79.4%</td><td class=\"num\">54.6%</td></tr></table></div>\n<p>Against the bots nothing changes (they are beaten about as well as possible); against strong evolved play the new specialists win more. Example: the round-2 Witch specialist beats the round-1 Witch specialist 66% of the time on Witch kingdoms. A side experiment trains the generalist with four times the budget, to see whether its 71% plateau is the genome's limit.</p>"
+  },
+  {
+   "when": "15 November 2026, 07:45",
+   "title": "portfolio-v2 released: wins 57% head to head against v1",
+   "html": "<p>Round 2 finished overnight: 26 specialists (the 20 archetypes plus Workshop, Cellar, Poacher, Vassal, Harbinger and Merchant), each about 15 minutes, trained against the three bots and the hall of strong round-1 specialists. They form <b>portfolio-v2</b>, the new default, with the pick rule that also tries each specialist against the hall.</p>\n<div class=\"tablewrap\"><table class=\"t\"><tr><th>200 random Steam kingdoms</th><th class=\"num\">portfolio-v1</th><th class=\"num\">portfolio-v2</th></tr>\n<tr><td>Head to head (each picks its own specialist)</td><td class=\"num\">42.9%</td><td class=\"num\"><b>57.1%</b></td></tr>\n<tr><td>Against the bots</td><td class=\"num\">80.3%</td><td class=\"num\"><b>81.0%</b></td></tr>\n<tr><td>Stored benchmark (<code>policy.bench</code>)</td><td class=\"num\">75.3%</td><td class=\"num\"><b>76.2%</b></td></tr>\n<tr><td>\u2026 against Witch\u2013Big Money</td><td class=\"num\">63.6%</td><td class=\"num\"><b>65.7%</b></td></tr></table></div>\n<p><b>What it says:</b> against the simple bots both are near the ceiling, but against strong evolved play the round-2 specialists win clearly more often \u2014 the reason to train against the hall. <b>What didn't work:</b> giving the generalist four times the budget (population 128, 1,000 generations) left it at the same score from generation 475 on; its limit is the genome (fixed buy lists per phase), not training time.</p>\n<p><b>Next ideas:</b> a round 3 with round-2 specialists as the hall (a league), and a richer genome for the generalist. Real Steam games with v2 haven't been played yet.</p>"
   }
  ]
 }
