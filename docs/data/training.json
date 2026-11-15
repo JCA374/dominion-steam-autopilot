@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 10:14",
+ "generated": "2026-11-15 10:25",
  "runs": [
   {
    "name": "artisan",
@@ -5361,17 +5361,17 @@
     "Festival"
    ],
    "banned": false,
-   "gen": 50,
+   "gen": 225,
    "gens": 400,
-   "best": 0.6324,
+   "best": 0.634,
    "bots": {
-    "Big Money": 0.8417,
-    "Smithy-BM": 0.6192,
-    "Witch-BM": 0.61,
-    "hall:v2-generalist": 0.5025,
-    "hall:v2-witch": 0.5058,
-    "hall:v2-gardens": 0.8554,
-    "hall:v2-market": 0.4925
+    "Big Money": 0.845,
+    "Smithy-BM": 0.6225,
+    "Witch-BM": 0.6225,
+    "hall:v2-generalist": 0.505,
+    "hall:v2-witch": 0.5008,
+    "hall:v2-gardens": 0.8488,
+    "hall:v2-market": 0.4933
    },
    "curve": [
     [
@@ -5381,11 +5381,39 @@
     [
      50,
      0.6324
+    ],
+    [
+     75,
+     0.6324
+    ],
+    [
+     100,
+     0.6326
+    ],
+    [
+     125,
+     0.6327
+    ],
+    [
+     150,
+     0.6336
+    ],
+    [
+     175,
+     0.6336
+    ],
+    [
+     200,
+     0.634
+    ],
+    [
+     225,
+     0.634
     ]
    ],
    "done": false,
-   "updated": "2026-11-15 10:13",
-   "minutes": 3.2
+   "updated": "2026-11-15 10:24",
+   "minutes": 14.1
   },
   {
    "name": "v3-generalist",
@@ -6103,6 +6131,11 @@
    "when": "15 November 2026, 10:20",
    "title": "Round 3 (a league against round-2 specialists): no further gain so far",
    "html": "<p>Round 3 (<code>v3-\u2026</code>) starts every specialist from its round-2 version and trains it against the bots plus four strong round-2 specialists (generalist, Witch, Gardens, Market). With 8 of 26 done, a provisional portfolio-v3 plays portfolio-v2 <b>50.4%</b> head to head (120 kingdoms) \u2014 a tie \u2014 and scores 80.2% against the bots, the same as v2. Round 2 gained 7 points head to head; round 3 gains nothing measurable.</p>\n<p><b>Reading:</b> the specialists have reached what their strategy shape can express, the same plateau the generalist hit overnight. portfolio-v2 stays the default; round 3 keeps running and is only released if the full set beats v2.</p>\n<p><b>The next real gain needs a richer genome, not more training.</b> The clearest gap: the agent never looks at the score. It will buy the last Province even when that ends the game in a loss, and it never takes a cheap Duchy or Estate that would end the game while ahead. An endgame rule using both scores (in the Python and C agents together) is the most promising next step; the autopilot would then also need the opponent's score from the screen.</p>"
+  },
+  {
+   "when": "15 November 2026, 10:30",
+   "title": "Tested and dropped: an endgame rule that looks at the score",
+   "html": "<p>The idea from the last entry, built into both agents (Python and C) as a switch so it could be measured cleanly: <b>win now</b> = if a buy ends the game with me ahead, take it; <b>don't end losing</b> = never buy the last Province (or a third empty pile) when that leaves me level or behind.</p>\n<p>Each portfolio-v2 specialist played itself with the rule on against the rule off, 6,000 games on random kingdoms: <b>49.8%</b>. Each half alone: win-now 50.1%, don't-end-losing 49.6%. Against these strategies the score check almost never changes the outcome (they already take Provinces whenever they can), and holding back the last Province mostly hands it to the opponent. So it was reverted: no strength, more complexity, and the autopilot would have needed to read the opponent's score from the screen.</p>"
   }
  ]
 }
