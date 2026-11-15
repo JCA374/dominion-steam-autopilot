@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 06:06",
+ "generated": "2026-11-15 06:26",
  "runs": [
   {
    "name": "artisan",
@@ -2469,6 +2469,115 @@
    "minutes": 12.4
   },
   {
+   "name": "v2-cellar",
+   "round": "v2",
+   "hall": [
+    "generalist",
+    "remodel",
+    "witch"
+   ],
+   "must": [
+    "Cellar"
+   ],
+   "banned": false,
+   "gen": 500,
+   "gens": 500,
+   "best": 0.6068,
+   "bots": {
+    "Big Money": 0.7817,
+    "Smithy-BM": 0.63,
+    "Witch-BM": 0.605,
+    "hall:generalist": 0.4821,
+    "hall:remodel": 0.5212,
+    "hall:witch": 0.6208
+   },
+   "curve": [
+    [
+     25,
+     0.5261
+    ],
+    [
+     50,
+     0.5261
+    ],
+    [
+     75,
+     0.5261
+    ],
+    [
+     100,
+     0.5267
+    ],
+    [
+     125,
+     0.5496
+    ],
+    [
+     150,
+     0.5496
+    ],
+    [
+     175,
+     0.5503
+    ],
+    [
+     200,
+     0.5506
+    ],
+    [
+     225,
+     0.5507
+    ],
+    [
+     250,
+     0.5856
+    ],
+    [
+     275,
+     0.6058
+    ],
+    [
+     300,
+     0.6062
+    ],
+    [
+     325,
+     0.6062
+    ],
+    [
+     350,
+     0.6062
+    ],
+    [
+     375,
+     0.6062
+    ],
+    [
+     400,
+     0.6066
+    ],
+    [
+     425,
+     0.6067
+    ],
+    [
+     450,
+     0.6068
+    ],
+    [
+     475,
+     0.6068
+    ],
+    [
+     500,
+     0.6068
+    ]
+   ],
+   "done": true,
+   "updated": "2026-11-15 06:24",
+   "minutes": 12.7
+  },
+  {
    "name": "v2-chapel",
    "round": "v2",
    "hall": [
@@ -3667,6 +3776,51 @@
    "minutes": 14.9
   },
   {
+   "name": "v2-poacher",
+   "round": "v2",
+   "hall": [
+    "generalist",
+    "remodel",
+    "witch"
+   ],
+   "must": [
+    "Poacher"
+   ],
+   "banned": false,
+   "gen": 100,
+   "gens": 500,
+   "best": 0.5596,
+   "bots": {
+    "Big Money": 0.7979,
+    "Smithy-BM": 0.6421,
+    "Witch-BM": 0.5267,
+    "hall:generalist": 0.4037,
+    "hall:remodel": 0.4254,
+    "hall:witch": 0.5617
+   },
+   "curve": [
+    [
+     25,
+     0.5042
+    ],
+    [
+     50,
+     0.5585
+    ],
+    [
+     75,
+     0.5594
+    ],
+    [
+     100,
+     0.5596
+    ]
+   ],
+   "done": false,
+   "updated": "2026-11-15 06:26",
+   "minutes": 2.6
+  },
+  {
    "name": "v2-remodel",
    "round": "v2",
    "hall": [
@@ -4333,16 +4487,16 @@
     "Workshop"
    ],
    "banned": false,
-   "gen": 300,
+   "gen": 500,
    "gens": 500,
-   "best": 0.5763,
+   "best": 0.6149,
    "bots": {
-    "Big Money": 0.7712,
-    "Smithy-BM": 0.6587,
-    "Witch-BM": 0.5608,
-    "hall:generalist": 0.4479,
-    "hall:remodel": 0.4254,
-    "hall:witch": 0.5938
+    "Big Money": 0.7875,
+    "Smithy-BM": 0.6654,
+    "Witch-BM": 0.6208,
+    "hall:generalist": 0.495,
+    "hall:remodel": 0.4825,
+    "hall:witch": 0.6379
    },
    "curve": [
     [
@@ -4392,11 +4546,43 @@
     [
      300,
      0.5763
+    ],
+    [
+     325,
+     0.5763
+    ],
+    [
+     350,
+     0.5763
+    ],
+    [
+     375,
+     0.5763
+    ],
+    [
+     400,
+     0.5763
+    ],
+    [
+     425,
+     0.5763
+    ],
+    [
+     450,
+     0.5765
+    ],
+    [
+     475,
+     0.5941
+    ],
+    [
+     500,
+     0.6149
     ]
    ],
-   "done": false,
-   "updated": "2026-11-15 06:06",
-   "minutes": 7.3
+   "done": true,
+   "updated": "2026-11-15 06:11",
+   "minutes": 12.2
   },
   {
    "name": "v2big-generalist",
