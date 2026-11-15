@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 03:26",
+ "generated": "2026-11-15 03:35",
  "runs": [
   {
    "name": "artisan",
@@ -2371,16 +2371,16 @@
     "Festival"
    ],
    "banned": false,
-   "gen": 225,
+   "gen": 500,
    "gens": 500,
-   "best": 0.6199,
+   "best": 0.6262,
    "bots": {
-    "Big Money": 0.8237,
-    "Smithy-BM": 0.6067,
-    "Witch-BM": 0.6242,
-    "hall:generalist": 0.4954,
+    "Big Money": 0.8379,
+    "Smithy-BM": 0.6038,
+    "Witch-BM": 0.6167,
+    "hall:generalist": 0.5054,
     "hall:remodel": 0.5012,
-    "hall:witch": 0.6679
+    "hall:witch": 0.6633
    },
    "curve": [
     [
@@ -2418,11 +2418,55 @@
     [
      225,
      0.6199
+    ],
+    [
+     250,
+     0.6249
+    ],
+    [
+     275,
+     0.6249
+    ],
+    [
+     300,
+     0.6258
+    ],
+    [
+     325,
+     0.6258
+    ],
+    [
+     350,
+     0.6259
+    ],
+    [
+     375,
+     0.6262
+    ],
+    [
+     400,
+     0.6262
+    ],
+    [
+     425,
+     0.6262
+    ],
+    [
+     450,
+     0.6262
+    ],
+    [
+     475,
+     0.6262
+    ],
+    [
+     500,
+     0.6262
     ]
    ],
-   "done": false,
-   "updated": "2026-11-15 03:26",
-   "minutes": 6.8
+   "done": true,
+   "updated": "2026-11-15 03:34",
+   "minutes": 15.8
   },
   {
    "name": "v2-generalist",
@@ -3195,7 +3239,7 @@
    ],
    "must": [],
    "banned": false,
-   "gen": 375,
+   "gen": 400,
    "gens": 1500,
    "best": 0.6378,
    "bots": {
@@ -3266,11 +3310,15 @@
     [
      375,
      0.6378
+    ],
+    [
+     400,
+     0.6378
     ]
    ],
    "done": false,
-   "updated": "2026-11-15 03:25",
-   "minutes": 67.1
+   "updated": "2026-11-15 03:30",
+   "minutes": 71.8
   }
  ],
  "headline": [
@@ -3310,6 +3358,11 @@
    "when": "15 November 2026, 01:45",
    "title": "Every card is playable on Steam now",
    "html": "<p>The nine blocked cards are open. Two halves:</p>\n<p><b>Protocol 2</b> (the model side): every card's own choices have a request (Cellar, Poacher, Remodel, Workshop, Artisan, Mine, Moneylender, Harbinger, Vassal, Library, Sentry, and Bandit / Bureaucrat when attacked). Each answer is the engine's own decision for that card, asked of the same GA agent that played in training. A test plays 300 engine games and checks, at every card choice, that the answer a player gets equals what the genome did: identical.</p>\n<p><b>The autopilot</b> learned each prompt on the real game, in four games against Very Easy on kingdoms made of the new cards, with a test model that buys them: gains are clicks on the glowing supply pile (Workshop, Remodel, Artisan, Mine), Cellar and Poacher are a hand selection plus OK or <i>Decline</i>, Harbinger and Vassal pick from a pop-up, Library has a <i>Set Aside</i> button, and <b>Sentry needs drag and drop</b> into Trash / Discard / Deck zones. Throne Room had no handler at all before; it does now (Throne Room \u2192 Artisan twice works).</p>\n<p>Bugs found on the way, all fixed: the \u201cMilitia (0 of 2)\u201d counter was read as \u201cdiscard 0\u201d; a hover tooltip was taken for a discard prompt; the coin count ignored Moneylender, Vassal and Poacher; an unreadable coin counter made a successful Province buy look failed; an empty Estate pile wasn't seen, so Workshop clicked it 58 times; and the GA agent itself kept a Province over a Gold when attacked by Militia (fixed in the Python and C agents).</p>\n<p><b>First real game with all cards:</b> portfolio-v1 against Easy on Gardens, Workshop, Cellar, Remodel, Library, Sentry, Artisan, Harbinger, Vassal, Poacher. The portfolio picked its <b>Gardens + Workshop</b> specialist (98% in its trial on that kingdom, unusable before) and won <b>34\u201333</b>. With every card allowed portfolio-v1 scores <b>80.3%</b> on random kingdoms (79.3% before).</p>\n<p>Not yet seen on Steam: the Moat reveal and the Bandit victim's choice (handlers exist). Overnight: round 2 of training, each specialist against the bots <i>and</i> three strong round-1 specialists.</p>"
+  },
+  {
+   "when": "15 November 2026, 03:35",
+   "title": "Round 2 overnight: specialists that also beat strong opponents",
+   "html": "<p>Round 1 trained every specialist against three simple bots. Steam's computer opponents are stronger than those, so <b>round 2</b> (runs named <code>v2-\u2026</code>) starts from each round-1 specialist and trains it against the bots <i>and</i> a <b>hall</b> of three strong round-1 specialists (generalist, Remodel, Witch). There are six new archetypes too (Workshop, Cellar, Poacher, Vassal, Harbinger, Merchant), and all runs use the fixed agent (Province no longer kept over Gold).</p>\n<p>Two measurements, the same for every version: <b>vs bots</b> = the old score on 120 random kingdoms; <b>head to head</b> = the new portfolio and portfolio-v1 each pick their own specialist for a random kingdom and play each other (120 kingdoms \u00d7 40 games).</p>\n<div class=\"tablewrap\"><table class=\"t\"><tr><th>Provisional v2</th><th class=\"num\">vs bots</th><th class=\"num\">head to head vs v1</th></tr>\n<tr><td>v1 itself (reference)</td><td class=\"num\">79.2%</td><td class=\"num\">50.0%</td></tr>\n<tr><td>v1 + new pick rule (trial vs bots and the hall)</td><td class=\"num\">79.1%</td><td class=\"num\">52.4%</td></tr>\n<tr><td>4 of 26 round-2 specialists</td><td class=\"num\">79.3%</td><td class=\"num\">53.6%</td></tr>\n<tr><td>9 of 26 round-2 specialists</td><td class=\"num\">79.4%</td><td class=\"num\">54.6%</td></tr></table></div>\n<p>Against the bots nothing changes (they are beaten about as well as possible); against strong evolved play the new specialists win more. Example: the round-2 Witch specialist beats the round-1 Witch specialist 66% of the time on Witch kingdoms. A side experiment trains the generalist with four times the budget, to see whether its 71% plateau is the genome's limit.</p>"
   }
  ]
 }
