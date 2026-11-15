@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-15 12:15",
+ "generated": "2026-11-15 12:35",
  "runs": [
   {
    "name": "artisan",
@@ -6405,17 +6405,17 @@
     "Remodel"
    ],
    "banned": false,
-   "gen": 300,
+   "gen": 400,
    "gens": 400,
-   "best": 0.6694,
+   "best": 0.6706,
    "bots": {
-    "Big Money": 0.8517,
-    "Smithy-BM": 0.6954,
+    "Big Money": 0.8583,
+    "Smithy-BM": 0.6942,
     "Witch-BM": 0.6125,
-    "hall:v2-generalist": 0.5167,
-    "hall:v2-witch": 0.585,
-    "hall:v2-gardens": 0.8737,
-    "hall:v2-market": 0.5508
+    "hall:v2-generalist": 0.5158,
+    "hall:v2-witch": 0.5842,
+    "hall:v2-gardens": 0.8746,
+    "hall:v2-market": 0.5546
    },
    "curve": [
     [
@@ -6465,11 +6465,27 @@
     [
      300,
      0.6694
+    ],
+    [
+     325,
+     0.6703
+    ],
+    [
+     350,
+     0.6705
+    ],
+    [
+     375,
+     0.6706
+    ],
+    [
+     400,
+     0.6706
     ]
    ],
-   "done": false,
-   "updated": "2026-11-15 12:13",
-   "minutes": 14.0
+   "done": true,
+   "updated": "2026-11-15 12:19",
+   "minutes": 19.1
   },
   {
    "name": "v3-sentry",
@@ -6660,6 +6676,102 @@
    "done": true,
    "updated": "2026-11-15 09:06",
    "minutes": 12.3
+  },
+  {
+   "name": "v3-village-smithy",
+   "round": "v3",
+   "hall": [
+    "v2-gardens",
+    "v2-generalist",
+    "v2-market",
+    "v2-witch"
+   ],
+   "must": [
+    "Village",
+    "Smithy"
+   ],
+   "banned": false,
+   "gen": 400,
+   "gens": 400,
+   "best": 0.6535,
+   "bots": {
+    "Big Money": 0.83,
+    "Smithy-BM": 0.6975,
+    "Witch-BM": 0.5938,
+    "hall:v2-generalist": 0.5017,
+    "hall:v2-witch": 0.5508,
+    "hall:v2-gardens": 0.8967,
+    "hall:v2-market": 0.5042
+   },
+   "curve": [
+    [
+     25,
+     0.6308
+    ],
+    [
+     50,
+     0.6311
+    ],
+    [
+     75,
+     0.6311
+    ],
+    [
+     100,
+     0.6311
+    ],
+    [
+     125,
+     0.6311
+    ],
+    [
+     150,
+     0.6358
+    ],
+    [
+     175,
+     0.6358
+    ],
+    [
+     200,
+     0.6358
+    ],
+    [
+     225,
+     0.6358
+    ],
+    [
+     250,
+     0.6358
+    ],
+    [
+     275,
+     0.6384
+    ],
+    [
+     300,
+     0.6417
+    ],
+    [
+     325,
+     0.6417
+    ],
+    [
+     350,
+     0.6458
+    ],
+    [
+     375,
+     0.6523
+    ],
+    [
+     400,
+     0.6535
+    ]
+   ],
+   "done": true,
+   "updated": "2026-11-15 12:34",
+   "minutes": 15.4
   },
   {
    "name": "v3-witch",
