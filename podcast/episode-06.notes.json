@@ -1,0 +1,5 @@
+["Round 3 (league training) tied portfolio-v2 (50.4%) and was stopped; endgame rule 49.8%, money gate 50.0%, bigger pool 50.1%: the GA genome is saturated",
+ "Longer specialist trial (300 games per opponent): pick vs bots 80.4% -> 81.0%, now on",
+ "Rollout search on top of the specialists (C engine continues a copied game): 64.0% vs the same specialist, 2000 games",
+ "Search needs the opponent's cards: the autopilot now tracks them from the opponent's 'Added:' banner (57.7% even with 25% missed)",
+ "portfolio-v2s published as opt-in; not yet played on Steam"]
