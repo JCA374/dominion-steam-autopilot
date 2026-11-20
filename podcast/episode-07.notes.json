@@ -1,0 +1,5 @@
+["+1000 generations from the released genomes: Witch 49.5%, Mine 50.5% vs their v2 selves (held-out, 8000 games); Gardens flat",
+ "Specialists trained from scratch in round 2 were undertrained: Workshop 52.7%, Vassal 54.9% vs v2 (+2-3 pts vs bots)",
+ "Swapping them into portfolio-v2: 50.1% +-0.9 over 300 fresh kingdoms; the GA base never uses them",
+ "Training against the RL network (rl_r2_200, weight 2): Witch 41.6% vs net, v2 42.4% - no gain",
+ "Conclusion: the main specialists are at the genome's ceiling; training stopped"]
