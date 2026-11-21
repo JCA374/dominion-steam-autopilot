@@ -1,0 +1,5 @@
+["+1000 generations for every portfolio-v2 specialist: 17 of 26 improved held-out (Moneylender 66.4% vs its old self, 62% -> 71% vs the bots); 9 at their ceiling (Witch, Chapel, Bandit, generalist...)",
+ "All 17 improved specialists in the GA base with its old pick rule: +1.5 pts vs the RL network",
+ "New pick rule: every eligible specialist plays every other on the dealt kingdom (100 seeds), best mean plays: +5.3 pts; both together +6.2 pts (1000 fresh kingdoms); 300 seeds add nothing",
+ "portfolio-v2's own trial picker (the Steam autopilot) is already as good; the gain is for the az/rl comparison baseline, not yet swapped in",
+ "Play page: phone layout, win probability and hint from the strongest net, undo, review, game spec file, Learn page with tactics and a quiz"]
