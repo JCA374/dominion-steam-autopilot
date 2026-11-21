@@ -29,6 +29,13 @@ specialist on that exact kingdom against the benchmark bots (about half a second
 
 <div class="cards" id="cards"></div>
 
+<h2>Against the new GA base <span class="small muted">2026-11-21</span></h2>
+<p class="small muted">Round 3: every specialist got 1,000 more generations; the 17 that improved on games no run had seen
+are in <code>models/portfolio-v3/</code>. The GA base that the network projects (az-v1, rl-v1, rl-v2, rl-v3) measure
+against now uses them, and on each kingdom its eligible specialists play each other first and the best one plays.
+Every model was measured again on the same fresh games against the old and the new base. Bold rows are the GA's own.</p>
+<div id="rescore" data-mine="GA base,portfolio"></div>
+
 <h2>How it works</h2>
 <ol class="steps">
 <li><b>A specialist is one evolved genome</b>: buy priority lists for the early, mid and late game, an order for
@@ -92,4 +99,5 @@ fetch("data/training.json", {cache: "no-store"}).then(r => r.json()).then(d => {
       `<td>${spark(r.curve)}</td></tr>`).join("");
 }).catch(() => { document.getElementById("log").innerHTML = '<p class="muted">No training data yet.</p>'; });
 </script>
+<script src="rescore.js"></script>
 </body></html>

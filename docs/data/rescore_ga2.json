@@ -1,0 +1,302 @@
+{
+ "t": "2026-11-21 07:42",
+ "kingdoms": 1000,
+ "games": "1,000 fresh kingdoms, both seats; the same games against both bases",
+ "old_base": "az-v1 base_genome: portfolio-v2, the best-vs-bots eligible member",
+ "new_base": "az-v1 base_genome_v2: portfolio-v3, round robin among the eligible members (100 seeds)",
+ "pick_counts": {
+  "v3-witch": 206,
+  "v3-gardens": 134,
+  "v3-poacher": 61,
+  "v3-merchant": 54,
+  "v3-market": 54,
+  "v3-generalist": 50,
+  "v3-smithy": 49,
+  "v3-vassal": 45,
+  "v3-remodel": 44,
+  "v3-council-room": 36,
+  "v3-artisan": 29,
+  "v3-festival": 22,
+  "v3-laboratory": 21,
+  "v3-sentry": 21,
+  "v3-mine": 18,
+  "v3-moneylender": 18,
+  "v3-militia": 18,
+  "v3-workshop": 18,
+  "v3-library": 17,
+  "v3-throne-room": 17,
+  "v3-harbinger": 16,
+  "v3-bureaucrat": 15,
+  "k4-20260614": 11,
+  "v3-chapel": 10,
+  "v3-cellar": 8,
+  "v3-bandit": 5,
+  "v3-village-smithy": 3
+ },
+ "models": [
+  {
+   "label": "GA base, old rule (portfolio-v2)",
+   "spec": {
+    "kind": "ga"
+   },
+   "secs": 2,
+   "vs_ga": {
+    "score": 0.5,
+    "ci": [
+     0.4781,
+     0.5219
+    ],
+    "n": 2000
+   },
+   "vs_ga2": {
+    "score": 0.4412,
+    "ci": [
+     0.4196,
+     0.4631
+    ],
+    "n": 2000
+   }
+  },
+  {
+   "label": "portfolio-v2 (the Steam autopilot's GA)",
+   "spec": {
+    "kind": "portfolio",
+    "name": "portfolio-v2"
+   },
+   "secs": 1035,
+   "vs_ga": {
+    "score": 0.561,
+    "ci": [
+     0.5392,
+     0.5826
+    ],
+    "n": 2000
+   },
+   "vs_ga2": {
+    "score": 0.5098,
+    "ci": [
+     0.4878,
+     0.5316
+    ],
+    "n": 2000
+   }
+  },
+  {
+   "label": "portfolio-v3 (17 improved specialists)",
+   "spec": {
+    "kind": "portfolio",
+    "name": "portfolio-v3"
+   },
+   "secs": 998,
+   "vs_ga": {
+    "score": 0.5727,
+    "ci": [
+     0.551,
+     0.5943
+    ],
+    "n": 2000
+   },
+   "vs_ga2": {
+    "score": 0.5122,
+    "ci": [
+     0.4903,
+     0.5341
+    ],
+    "n": 2000
+   }
+  },
+  {
+   "label": "az-v1 best (net 357 + 400 simulations)",
+   "spec": {
+    "kind": "az",
+    "path": "opponents/az_r2_357.npy",
+    "sims": 400
+   },
+   "secs": 378,
+   "vs_ga": {
+    "score": 0.6873,
+    "ci": [
+     0.6666,
+     0.7072
+    ],
+    "n": 2000
+   },
+   "vs_ga2": {
+    "score": 0.6255,
+    "ci": [
+     0.6041,
+     0.6465
+    ],
+    "n": 2000
+   }
+  },
+  {
+   "label": "rl-v1 confirmed (r2 iteration 200)",
+   "spec": {
+    "kind": "net",
+    "path": "opponents/rl_r2_200.npy"
+   },
+   "secs": 3,
+   "vs_ga": {
+    "score": 0.7255,
+    "ci": [
+     0.7055,
+     0.7446
+    ],
+    "n": 2000
+   },
+   "vs_ga2": {
+    "score": 0.6683,
+    "ci": [
+     0.6473,
+     0.6885
+    ],
+    "n": 2000
+   }
+  },
+  {
+   "label": "rl-v1 champion (r2 iteration 2200)",
+   "spec": {
+    "kind": "net",
+    "path": "opponents/rl_r2_2200.npy"
+   },
+   "secs": 4,
+   "vs_ga": {
+    "score": 0.8163,
+    "ci": [
+     0.7987,
+     0.8326
+    ],
+    "n": 2000
+   },
+   "vs_ga2": {
+    "score": 0.775,
+    "ci": [
+     0.7562,
+     0.7928
+    ],
+    "n": 2000
+   }
+  },
+  {
+   "label": "rl-v2 from zero (z1h iteration 1100)",
+   "spec": {
+    "kind": "net",
+    "path": "opponents/rl_v2_z1h_1100.npy"
+   },
+   "secs": 3,
+   "vs_ga": {
+    "score": 0.7225,
+    "ci": [
+     0.7025,
+     0.7417
+    ],
+    "n": 2000
+   },
+   "vs_ga2": {
+    "score": 0.676,
+    "ci": [
+     0.6552,
+     0.6962
+    ],
+    "n": 2000
+   }
+  },
+  {
+   "label": "rl-v3 c1 iteration 2300",
+   "spec": {
+    "kind": "net",
+    "path": "runs/c1/net_2300.npy"
+   },
+   "secs": 8,
+   "vs_ga": {
+    "score": 0.889,
+    "ci": [
+     0.8745,
+     0.902
+    ],
+    "n": 2000
+   },
+   "vs_ga2": {
+    "score": 0.8602,
+    "ci": [
+     0.8444,
+     0.8748
+    ],
+    "n": 2000
+   }
+  },
+  {
+   "label": "rl-v3 c2 iteration 2654",
+   "spec": {
+    "kind": "net",
+    "path": "runs/c2/net_2654.npy"
+   },
+   "secs": 9,
+   "vs_ga": {
+    "score": 0.8822,
+    "ci": [
+     0.8674,
+     0.8956
+    ],
+    "n": 2000
+   },
+   "vs_ga2": {
+    "score": 0.862,
+    "ci": [
+     0.8462,
+     0.8764
+    ],
+    "n": 2000
+   }
+  },
+  {
+   "label": "Big Money (bot)",
+   "spec": {
+    "kind": "bot",
+    "name": "Big Money"
+   },
+   "secs": 1,
+   "vs_ga": {
+    "score": 0.1417,
+    "ci": [
+     0.1271,
+     0.1577
+    ],
+    "n": 2000
+   },
+   "vs_ga2": {
+    "score": 0.1217,
+    "ci": [
+     0.1081,
+     0.1368
+    ],
+    "n": 2000
+   }
+  },
+  {
+   "label": "Witch-BM (bot)",
+   "spec": {
+    "kind": "bot",
+    "name": "Witch-BM"
+   },
+   "secs": 2,
+   "vs_ga": {
+    "score": 0.2482,
+    "ci": [
+     0.2298,
+     0.2677
+    ],
+    "n": 2000
+   },
+   "vs_ga2": {
+    "score": 0.2315,
+    "ci": [
+     0.2135,
+     0.2505
+    ],
+    "n": 2000
+   }
+  }
+ ]
+}
