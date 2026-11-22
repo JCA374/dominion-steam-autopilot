@@ -12,3 +12,4 @@ podcast/publish_*.log
 voice/
 autopilot/results/
 video/render.log
+autopilot/advisor_logs/

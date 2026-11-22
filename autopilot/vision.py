@@ -1,7 +1,9 @@
 """Read Steam Dominion's screen: prompt line, hand, coins/actions/buys, buttons, supply piles.
 
 All coordinates are for the reference window size (REF_W x REF_H) and are scaled
-to the live window size, so a resized window still works if the layout scales.
+to the live window size. The game scales its board with the window width and pins
+the top half (supply, prompt line) to the top and the bottom half (hand, counters,
+buttons) to the bottom, so any window shape works, landscape too.
 """
 from __future__ import annotations
 
@@ -65,12 +67,20 @@ class Screen:
 
 class Vision:
     def __init__(self, width: int, height: int):
-        self.sx = width / REF_W
-        self.sy = height / REF_H
+        self.sx = self.sy = width / REF_W      # one scale for distances
+        self.height = height
         self.on_read = None   # optional callback(region_px, texts, ms), used by the recorder
 
     def scale(self, x, y):
-        return int(x * self.sx), int(y * self.sy)
+        """Reference -> window coordinates: the top half hangs from the top, the bottom half stands on the bottom."""
+        return int(x * self.sx), int(y * self.sy if y < REF_H / 2 else self.height - (REF_H - y) * self.sy)
+
+    def unscale(self, x, y):
+        """Window -> reference coordinates."""
+        ry = y / self.sy
+        if ry >= REF_H / 2:
+            ry = REF_H - (self.height - y) / self.sy
+        return x / self.sx, ry
 
     def read(self, img: np.ndarray, region, cls=True) -> list[Text]:
         """OCR one region. cls=False turns off the reader's 180-degree orientation check."""
@@ -91,7 +101,7 @@ class Vision:
     # -- individual readers ------------------------------------------------
 
     def opponent_bar(self, img) -> str:
-        return " ".join(t.text for t in self.read(img, R_OPPONENT, cls=False))
+        return " ".join(t.text for t in sorted(self.read(img, R_OPPONENT, cls=False), key=lambda t: t.x))
 
     def prompt(self, img) -> str:
         text = " ".join(t.text for t in self.read(img, R_PROMPT))
@@ -199,6 +209,25 @@ def match_name(text: str, upper_to_name: dict[str, str]) -> str | None:
         if score > best_score:
             best, best_score = name, score
     return best if best_score >= 0.8 else None
+
+
+def parse_added(text: str, card_names) -> list[str] | None:
+    """The opponent's bar after a gain: 'Added: 2 Cellars' / 'Added: Harbinger and Copper'
+    -> ['Cellar', 'Cellar', 'Harbinger', 'Copper']; None when the bar shows no gain."""
+    m = re.search(r"added\s*:?\s*(.*)", text, re.I)
+    if not m:
+        return None
+    names = {n.upper().replace(" ", ""): n for n in card_names}
+    out = []
+    for item in re.split(r",|\band\b|&", m.group(1)):
+        item = item.strip()
+        k = re.match(r"(\d+)\s*(.*)", item)
+        count, word = (int(k.group(1)), k.group(2)) if k else (1, item)
+        key = re.sub(r"[^A-Za-z]", "", word).upper()
+        name = match_name(key, names) or (match_name(key[:-1], names) if key.endswith("S") else None)
+        if name and count < 10:
+            out += [name] * count
+    return out or None
 
 
 def _similarity(a: str, b: str) -> float:

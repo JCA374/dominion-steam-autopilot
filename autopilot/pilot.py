@@ -34,7 +34,7 @@ from brain import BASE, Brain, cards, print_models  # noqa: E402
 from click import click  # noqa: E402
 from grab import find_window, grab  # noqa: E402
 from recorder import Recorder  # noqa: E402
-from vision import Vision, match_name, ocr_engine  # noqa: E402
+from vision import Vision, match_name, ocr_engine, parse_added  # noqa: E402
 
 # Dominion's local saves inside the Proton prefix (app id 1131620). Snap Steam and the
 # usual Steam installs keep steamapps in different places; use the first that exists.
@@ -955,21 +955,7 @@ class Pilot:
     # -- the opponent's cards (the top bar shows "Added: <cards>" after each of their gains) -------
 
     def parse_added(self, text):
-        """'Added: 2 Cellars' / 'Added: Harbinger and Copper' -> ['Cellar', 'Cellar', 'Harbinger', 'Copper']."""
-        m = re.search(r"added\s*:?\s*(.*)", text, re.I)
-        if not m:
-            return None
-        names = {n.upper().replace(" ", ""): n for n in self.names}
-        out = []
-        for item in re.split(r",|\band\b|&", m.group(1)):
-            item = item.strip()
-            k = re.match(r"(\d+)\s*(.*)", item)
-            count, word = (int(k.group(1)), k.group(2)) if k else (1, item)
-            key = re.sub(r"[^A-Za-z]", "", word).upper()
-            name = match_name(key, names) or (match_name(key[:-1], names) if key.endswith("S") else None)
-            if name and count < 10:
-                out += [name] * count
-        return out or None
+        return parse_added(text, self.names)
 
     def track_opponent(self, img):
         text = self.vision.opponent_bar(img)

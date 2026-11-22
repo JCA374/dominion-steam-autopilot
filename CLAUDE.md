@@ -26,6 +26,9 @@ There is no test suite here; dominion-v1 has its own (`cd dominion-v1 && python 
 .venv/bin/python autopilot/pilot.py --dry            # read + decide, never click (safe for testing vision/brain)
 .venv/bin/python autopilot/pilot.py --once           # handle one prompt and exit
 .venv/bin/python autopilot/pilot.py --games 3 --record recordings/x --model k4-20260614 --list-models --auto
+.venv/bin/python autopilot/advisor.py                # advisor window beside the game while YOU play (never clicks)
+.venv/bin/python autopilot/advisor.py --frames recordings/session2   # the advisor on a recording (testing)
+.venv/bin/python autopilot/advisor.py --install      # "Dominion Advisor" in the app launcher
 .venv/bin/python autopilot/debug_screen.py [shot.png]  # print what vision reads from a screenshot or the live window
 .venv/bin/python autopilot/campaign.py --per 3       # games vs Very Easy..Hard AI; commits+pushes Stats page unless --no-publish
 .venv/bin/python autopilot/campaign.py --games 1 --levels auto --kingdom auto|random|"Smithy,Witch" --model auto --no-publish
@@ -55,6 +58,14 @@ Running the pilot, a campaign or Play in the UI clicks in the real game window: 
   cards all dealt + best `bench.json` score, else most key cards dealt; never Big Money; `"retired"` models skipped.
 - **Models are plug-ins**: folders in `dominion-v1/models/` and `models/` (brain.py adds the latter to
   `DOMINION_MODELS`). Nothing in the autopilot or UI lists models by name; `brain.model_rows()` reads them all.
+- **Advisor** (`advisor.py` + `advisor.html`, port 8643) – for a person playing: reads the screen (vision.py; pile
+  counts, HUD and scores by recognition-only OCR on fixed spots, other regions re-read only when their pixels change),
+  keeps the game (`Tracker`: my cards = start + supply drops not on the opponent's "Added:" bar - trashes; turns from
+  buy → action/treasure prompts; pile counts only from uncovered piles, ≤2 cards per confirmed change; deck check
+  draw+discard+hand vs counted each turn; game log + tracker per save in `autopilot/advisor_logs/`, so a restart
+  carries on; opponent plays are not logged — the prompt line shows my next turn during theirs) and asks the rl-v3 Play page's advisor net (`../trainers/rl-v3/docs/playvs/`: spec.json,
+  models/, py/rlplay.py; override with `DOMINION_ADVISOR_DIR`) for the win chance and top answers. Opens a Chromium
+  app window right of the game (sizes divided by Xft.dpi/96).
 - **Control panel** – `ui.py` (stdlib HTTP server + `ui.html`) runs `campaign.py` / `bench_models.py` as child
   processes and shows their output. Auto kingdom = `policy.best_kingdom()` (best model's training kingdom); auto
   difficulty = easiest level the model hasn't won 2 of its last 3 games at (`campaign.auto_level`).

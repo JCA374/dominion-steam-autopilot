@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dominion Advisor</title>
+<style>
+  /* the rl-v3 site's colours (docs/style.css), so this reads like the online Play page */
+  :root {
+    --bg: #f7f6f2; --panel: #ffffff; --ink: #1d1d1f; --muted: #6b6b70; --line: #e3e1da;
+    --accent: #3b5bdb; --good: #2f9e44; --bad: #c92a2a; --star: #f2b705;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #111215; --panel: #1a1b20; --ink: #ececf1; --muted: #9a9aa3; --line: #2c2d34;
+      --accent: #8ea6ff; --good: #69db7c; --bad: #ff8787; --star: #ffd43b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #111215; --panel: #1a1b20; --ink: #ececf1; --muted: #9a9aa3; --line: #2c2d34;
+    --accent: #8ea6ff; --good: #69db7c; --bad: #ff8787; --star: #ffd43b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 10px 14px 24px; }
+  .muted { color: var(--muted); } .small { font-size: .82rem; }
+  header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: none; }
+  .dot.live { background: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 25%, transparent); }
+  .status { font-weight: 650; }
+  header .judge { margin-left: auto; }
+  .pane { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 10px 0; }
+  .k { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+  /* win bar, as on the Play page */
+  .wbar { position: relative; height: 26px; border-radius: 13px; overflow: hidden; background: color-mix(in srgb, var(--bad) 28%, var(--panel)); }
+  .wbar .f { position: absolute; inset: 0 auto 0 0; background: color-mix(in srgb, var(--good) 70%, var(--panel)); transition: width .4s; }
+  .wbar .l { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 12px;
+    font-weight: 650; font-variant-numeric: tabular-nums; }
+  .spark { display: block; width: 100%; height: 40px; margin-top: 6px; }
+  .spark path { fill: none; stroke: var(--accent); stroke-width: 2; vector-effect: non-scaling-stroke; }
+  .spark line { stroke: var(--line); stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+  /* the suggestion */
+  .q { color: var(--muted); font-size: .88rem; margin-bottom: 4px; }
+  .best { display: flex; align-items: baseline; gap: 10px; font-size: 1.45rem; font-weight: 700; }
+  .best .star { color: var(--star); }
+  .best .p { margin-left: auto; font-size: 1.05rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .alt { display: grid; grid-template-columns: minmax(90px, max-content) 1fr 3.2em; gap: 4px 10px; align-items: center; margin-top: 8px; font-size: .92rem; }
+  .alt .bar { height: 8px; border-radius: 4px; background: var(--accent); opacity: .55; min-width: 2px; }
+  .alt .n { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .plan { margin-top: 8px; font-size: .92rem; }
+  .none { color: var(--muted); }
+  /* the game picture with the suggested cards marked */
+  .shot { position: relative; margin: 0 auto; width: min(100%, calc(46vh * 927 / 1048)); aspect-ratio: 927 / 1048; border-radius: 10px;
+    overflow: hidden; border: 1px solid var(--line); background: #000; }
+  .shot img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .shot .hl { position: absolute; border: 3px solid var(--star); border-radius: 8px;
+    box-shadow: 0 0 0 2px rgba(0,0,0,.45), 0 0 16px var(--star); animation: pulse 1.6s ease-in-out infinite; }
+  .shot .hl span { position: absolute; top: -12px; right: -10px; background: var(--star); color: #000; border-radius: 99px;
+    font-size: .7rem; font-weight: 700; padding: 1px 6px; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 2px rgba(0,0,0,.45), 0 0 4px var(--star); } }
+  @media (prefers-reduced-motion: reduce) { .shot .hl { animation: none; } }
+  /* details */
+  details { margin: 10px 0; } summary { cursor: pointer; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-top: 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip { border: 1px solid var(--line); border-radius: 99px; padding: 1px 8px; font-size: .82rem; background: var(--bg); }
+  .warn { color: var(--bad); }
+  /* the game log */
+  .glog { max-height: 34vh; overflow-y: auto; font-size: .86rem; line-height: 1.35; margin-top: 4px; }
+  .glog div { display: grid; grid-template-columns: 2.6em 5.2em 1fr; gap: 6px; padding: 1px 0; border-bottom: 1px solid var(--line); }
+  .glog .t { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .glog .w { color: var(--muted); }
+  .glog .You .w { color: var(--accent); } .glog .Opponent .w { color: var(--bad); } .glog .Advisor { color: var(--muted); }
+  .glog .Advisor .w { color: var(--star); }
+  .toggles { display: flex; gap: 14px; flex-wrap: wrap; font-size: .88rem; color: var(--muted); margin-top: 12px; }
+  .toggles label { display: flex; gap: 5px; align-items: center; cursor: pointer; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="dot" id="dot"></span><span class="status" id="status">starting…</span>
+    <span class="muted small" id="turn"></span>
+    <span class="muted small judge" id="judge"></span>
+  </header>
+
+  <section class="pane" id="winpane" hidden>
+    <div class="k">Your win chance (start of this turn)</div>
+    <div class="wbar"><div class="f" id="wf"></div><div class="l"><span id="wy"></span><span id="wo"></span></div></div>
+    <div id="spark"></div>
+  </section>
+
+  <section class="pane" id="sugg" hidden></section>
+
+  <div class="shot" id="shot" hidden><img id="img" alt="The game, with the suggested cards marked"></div>
+
+  <details id="logbox" open>
+    <summary>Game log</summary>
+    <div class="glog" id="glog"></div>
+    <p class="small muted" id="logfile"></p>
+  </details>
+
+  <details id="more">
+    <summary>What it sees</summary>
+    <div class="grid" id="decks"></div>
+    <p class="small muted" id="reads"></p>
+  </details>
+
+  <div class="toggles">
+    <label><input type="checkbox" id="t-sugg"> Suggestions</label>
+    <label><input type="checkbox" id="t-shot"> Game picture</label>
+    <label><input type="checkbox" id="t-dark"> Dark</label>
+  </div>
+</main>
+<script>
+(function () {
+  const el = (id) => document.getElementById(id);
+  const h = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const P = (x) => (x > 0 && x < 0.005 ? '<1' : Math.round(100 * x)) + '%';
+  const KEY = 'dominion-advisor';
+  let prefs = { sugg: true, shot: true, dark: null };
+  try { prefs = { ...prefs, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { /* private mode */ }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch (e) { /* private mode */ } };
+  const theme = () => { if (prefs.dark == null) delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = prefs.dark ? 'dark' : 'light'; };
+  theme();
+  el('t-sugg').checked = prefs.sugg; el('t-shot').checked = prefs.shot;
+  el('t-dark').checked = prefs.dark == null ? matchMedia('(prefers-color-scheme: dark)').matches : prefs.dark;
+  el('t-sugg').onchange = (e) => { prefs.sugg = e.target.checked; save(); render(last); };
+  el('t-shot').onchange = (e) => { prefs.shot = e.target.checked; save(); render(last); };
+  el('t-dark').onchange = (e) => { prefs.dark = e.target.checked; save(); theme(); };
+
+  function spark(wp) {
+    if (!wp || wp.length < 2) return '';
+    const W = 300, H = 40, t0 = wp[0][0], t1 = wp[wp.length - 1][0];
+    const X = (t) => (t1 === t0 ? 0 : (t - t0) / (t1 - t0)) * (W - 4) + 2, Y = (w) => H - 3 - w * (H - 6);
+    return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="Your win chance, turn by turn">
+      <line x1="0" x2="${W}" y1="${Y(0.5)}" y2="${Y(0.5)}"/><path d="${wp.map(([t, w], i) => (i ? 'L' : 'M') + X(t).toFixed(1) + ' ' + Y(w).toFixed(1)).join(' ')}"/></svg>`;
+  }
+  const chips = (o) => Object.entries(o || {}).map(([c, n]) => `<span class="chip">${n > 1 ? n + '× ' : ''}${h(c)}</span>`).join('') || '<span class="muted small">—</span>';
+  const total = (o) => Object.values(o || {}).reduce((a, b) => a + b, 0);
+
+  let last = null, frame = -1;
+  function render(s) {
+    if (!s) return;
+    const fresh = s.time && Date.now() / 1000 - s.time < 15;
+    el('dot').className = 'dot' + (fresh && s.advice !== undefined ? ' live' : '');
+    el('status').textContent = s.status ? s.status[0].toUpperCase() + s.status.slice(1) : '';
+    el('turn').textContent = s.turn ? `· turn ${s.turn}${s.provinces != null ? ` · ${s.provinces} Provinces left` : ''}` : '';
+    el('judge').textContent = s.judge ? `advisor: ${s.judge}` : '';
+
+    const win = s.win;
+    el('winpane').hidden = win == null;
+    if (win != null) {
+      el('wf').style.width = (100 * win).toFixed(1) + '%';
+      el('wy').textContent = 'You ' + P(win); el('wo').textContent = P(1 - win);
+      el('spark').innerHTML = spark(s.wp);
+    }
+
+    const a = s.advice;
+    const showSugg = prefs.sugg && a && a.question;
+    el('sugg').hidden = !showSugg;
+    if (showSugg) {
+      const top = a.top || [];
+      const [bl, bp] = top[0] || ['', 0];
+      const isPass = !a.plan.length;
+      el('sugg').innerHTML = `<div class="q">${h(a.question)}</div>
+        <div class="best"><span class="star">★</span><span>${isPass ? h(bl) : h(a.verb + ' ' + bl)}</span><span class="p">${P(bp)}</span></div>
+        ${a.win != null ? `<div class="q">Win chance after this move: ${P(a.win)} (start of turn: ${s.win != null ? P(s.win) : '?'})</div>` : ''}
+        <div class="alt">${top.slice(1).map(([l, p]) => `<span>${h(l)}</span><span class="bar" style="width:${Math.max(1, 100 * p).toFixed(0)}%"></span><span class="n">${P(p)}</span>`).join('')}</div>
+        ${a.then ? `<div class="plan">Then: <b>${h(a.then)}</b></div>` : ''}
+        ${a.plan.length > 1 ? `<div class="plan">Plan: <b>${a.plan.map(h).join(', then ')}</b></div>` : ''}`;
+    }
+
+    el('shot').hidden = !prefs.shot || !s.frame;
+    if (prefs.shot && s.frame) {
+      if (s.frame !== frame) { el('img').src = '/frame.jpg?n=' + s.frame; frame = s.frame; }
+      if (s.aspect) { el('shot').style.aspectRatio = s.aspect; el('shot').style.width = `min(100%, calc(46vh * ${s.aspect}))`; }
+      el('shot').querySelectorAll('.hl').forEach((x) => x.remove());
+      if (prefs.sugg) for (const b of s.boxes || []) {
+        const [x0, y0, x1, y1] = b.box, d = document.createElement('div');
+        d.className = 'hl';
+        Object.assign(d.style, { left: 100 * x0 + '%', top: 100 * y0 + '%', width: 100 * (x1 - x0) + '%', height: 100 * (y1 - y0) + '%' });
+        d.innerHTML = '<span>★</span>';
+        d.title = b.card;
+        el('shot').appendChild(d);
+      }
+    }
+
+    if (s.mine) {
+      const vp = s.vp || [], cv = s.counted_vp || [];
+      const off = vp[0] != null && cv[0] != null && vp[0] !== cv[0];
+      const pile = s.piles || {};
+      el('decks').innerHTML = `
+        <div><div class="k">Your cards (${total(s.mine)})</div><div class="chips">${chips(s.mine)}</div></div>
+        <div><div class="k">Your draw pile (${pile.draw ?? '?'})</div><div class="chips">${chips(s.draw)}</div></div>
+        <div><div class="k">Opponent's cards (${total(s.theirs)})</div><div class="chips">${chips(s.theirs)}</div></div>
+        <div><div class="k">Your hand</div><div class="chips">${chips(s.hand)}</div></div>`;
+      const dc = s.deck_check;
+      el('reads').innerHTML = `${dc && dc[0] !== dc[1] ? `<span class="warn">The screen shows ${dc[0]} cards of yours, counted ${dc[1]}.</span> ` : ''}Score on screen ${vp[0] ?? '?'} – ${vp[1] ?? '?'}${off ? ` <span class="warn">(counted from your cards: ${cv[0]}; a card was missed)</span>` : ''}.
+        Coins ${s.hud?.coins ?? '?'}, actions ${s.hud?.actions ?? '?'}, buys ${s.hud?.buys ?? '?'}.
+        Prompt: “${h(s.prompt || '')}”. ${s.empty && s.empty.length ? 'Empty piles: ' + s.empty.map(h).join(', ') + '. ' : ''}
+        ${Object.keys(s.trashed || {}).length ? 'Trashed: ' + Object.entries(s.trashed).map(([c, n]) => n + '× ' + h(c)).join(', ') + '. ' : ''}
+        You went ${s.first === false ? 'second' : s.first ? 'first' : '?'}. Kingdom: ${(s.kingdom || []).map(h).join(', ')}.`;
+    }
+  }
+
+  let logN = -1, pageV = null;
+  function renderLog(s) {
+    const ev = s.events || [];
+    const key = ev.length + ':' + (ev.length ? ev[ev.length - 1][2] : '');
+    if (key === logN) return;
+    logN = key;
+    const box = el('glog'), atEnd = box.scrollHeight - box.scrollTop - box.clientHeight < 30;
+    box.innerHTML = ev.map(([t, w, x]) => `<div class="${h(w)}"><span class="t">T${t}</span><span class="w">${h(w)}</span><span>${h(x)}</span></div>`).join('');
+    if (atEnd) box.scrollTop = box.scrollHeight;
+    el('logfile').textContent = s.log_file ? 'Whole game: ' + s.log_file : '';
+  }
+
+  async function poll() {
+    try {
+      const s = await (await fetch('/state', { cache: 'no-store' })).json();
+      if (s.page && pageV && s.page !== pageV) { location.reload(); return; }
+      pageV = s.page;
+      last = s; render(s); renderLog(s);
+    } catch (e) {
+      el('status').textContent = 'Advisor not running'; el('dot').className = 'dot';
+    }
+    setTimeout(poll, 700);
+  }
+  poll();
+})();
+</script>
+</body>
+</html>
