@@ -1,6 +1,31 @@
 {
  "episodes": [
   {
+   "n": 9,
+   "title": "Episode 09: How the advisor gives advice",
+   "date": "Sun 22 Nov 2026, 13:49",
+   "minutes": 4.3,
+   "mp3": "../podcast/episode-09.mp3",
+   "notes": [
+    "How the advisor works: screenshots + text recognition -> game tracker -> the rl-v3 network (win chance + a probability per choice).",
+    "Strengths: ~1 ms per network question; advice for every base-set prompt; deck count matched the autopilot's at every turn of two recorded games (one buy a turn late; received Curses only the advisor counts).",
+    "Fixed: a misread Copper pile once gave 116 cards on turn 2; OCR reads went from 9 s to 0.3 s; CPU ~11% of a core idle, ~2/3 while playing.",
+    "Weaknesses: opponent's plays unseen, draw order guessed, fast trashes can be missed, mid-game start credits you with the opponent's early buys.",
+    "Next: decode game memory, match card art instead of names, log the opponent's plays, check that the win chance is calibrated."
+   ],
+   "transcript": [
+    "This episode is about the advisor. That's the window that sits beside your own Steam games, shows your chance of winning, and suggests what to do. You asked how it works, where it is strong, where it is weak, and what comes next.",
+    "Start with how it sees the game. Steam Dominion has no way for a program to ask it anything. So the advisor works like a person looking over your shoulder. About three times a second it takes a screenshot of the game window. When nothing is moving, it reads the screen with text recognition. It reads the prompt line and your hand. It reads your coins, actions and buys, and the score. It reads the number on every supply pile. And it reads the opponent's bar, which says what they added.",
+    "I also looked for a way around reading the screen. The game's memory can be read, and the game's own log is in there. But only the last four or so lines survive, scattered and half overwritten. The save file only records your decisions. The card pictures are packed in an encrypted archive. So screen reading stays, for now.",
+    "From those readings the advisor keeps the game. Your cards are the starting ten, plus every card that left a supply pile and was not the opponent's, minus what you trashed. Then it asks a neural network. It is the network from the reinforcement learning project, the same one behind the play page of that project's website. The network sees all your cards and your draw pile. It sees your hand and what you have in play. And it sees the opponent's cards, the supply and both scores. It answers with a win chance and a probability for every legal choice.",
+    "Now the strengths. The network itself is cheap. One question takes about a millisecond, so the win chance costs nothing. It answers every kind of question the base game asks. Since today that includes Sentry, Vassal and Library. It also covers Harbinger, Bandit, and the gain step of Remodel and Mine. And the counting is now careful. On two recorded games, its count of your deck matched the autopilot's at every turn, apart from one buy noticed a turn late. The only lasting difference was Curses from the opponent's Witch. The autopilot's own record misses those. The advisor counts them.",
+    "It got there by fixing real failures. This morning the advisor believed you owned one hundred and sixteen cards on turn two. A Copper pile of forty six was misread as six, and forty Coppers appeared from nowhere. Now a changed pile count needs a second, independent reading. A pile only counts while nothing covers it. And the screen's own numbers win. Your score corrects missed Estate trashes, and your draw and discard counts check the total every turn.",
+    "Speed improved too. The text reader was blowing small strips of the screen up to a huge size before reading them. One read of the opponent's bar took nine seconds. Now it takes about a third of a second, with the same text. While you think, the advisor uses about eleven percent of one core. While you play, more like two thirds of a core.",
+    "Now the weaknesses. It cannot see the opponent's plays. During their turn the prompt line already shows your next turn, so it can't tell whose turn it is. It only sees their gains on their bar. Your draw pile is a guess at the mix, never the order. If you click through a trash very fast, a Copper trash can be missed, and the log will warn you. If the advisor starts in the middle of a game, it has to catch up, and it can credit you with the opponent's earlier buys. And text recognition still slips. Today it read play action cards as lay act on cards, and took a Duchy label beside the Vassal window for the card on offer. Both are fixed, but there will be more.",
+    "What comes next. The biggest step would be reading the game's memory properly, which would give exact state with no reading at all. A cheaper step is matching card pictures instead of reading names. Reading the cards the opponent plays in the middle of the board would complete the log. And I want to check whether the win chance is honest, by comparing it with how recorded games actually ended."
+   ]
+  },
+  {
    "n": 8,
    "title": "Episode 08: Training all of the GA, and a better way to pick",
    "date": "Sat 21 Nov 2026, 01:41",
