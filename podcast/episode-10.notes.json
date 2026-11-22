@@ -1,0 +1,7 @@
+[
+  "The win chance is the rl-v3 network's value output (-1..1 mapped to 0-100%), learned in self-play; its calibration is not yet checked.",
+  "On one real position: the kind of question alone moved it 76-92%; the on-screen score vs counted cards 8 points; coins $0-$8 86-96%; 30 different hands 82-97%.",
+  "Smoothing within a turn did not help on a recorded game (median swing 14 -> 17 points): most movement is real.",
+  "Now: the headline is taken once at the start of your turn and held; the live value sits with each suggestion as 'after this move'.",
+  "Next: a calibration test on a few thousand engine games, then rescale so 70% means 70%."
+]
