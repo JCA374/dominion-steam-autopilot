@@ -64,7 +64,10 @@ Running the pilot, a campaign or Play in the UI clicks in the real game window: 
   buy → action/treasure prompts; pile counts only from uncovered piles, ≤2 cards per confirmed change; deck check
   draw+discard+hand vs counted each turn; game log + tracker per save in `autopilot/advisor_logs/`, so a restart
   carries on; opponent plays are not logged — the prompt line shows my next turn during theirs) and asks the rl-v3 Play page's advisor net (`../trainers/rl-v3/docs/playvs/`: spec.json,
-  models/, py/rlplay.py; override with `DOMINION_ADVISOR_DIR`) for the win chance and top answers. Opens a Chromium
+  models/, py/rlplay.py; override with `DOMINION_ADVISOR_DIR`) for the win chance and top answers. At buys and action
+  plays the teacher (`teacher.py`: bv-v1's paired rollouts with c2 through `bv_advise` in `../trainers/bv-v1/bv.so`,
+  public sampler, at most 3 s, in its own thread; `DOMINION_TEACHER_DIR`, `--no-teacher`) checks the net's pick and
+  overrides it when another option wins clearly more often (margin 2 points and 2 SE). Opens a Chromium
   app window right of the game (sizes divided by Xft.dpi/96).
 - **Control panel** – `ui.py` (stdlib HTTP server + `ui.html`) runs `campaign.py` / `bench_models.py` as child
   processes and shows their output. Auto kingdom = `policy.best_kingdom()` (best model's training kingdom); auto

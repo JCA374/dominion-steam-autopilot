@@ -21,6 +21,8 @@ advisor_logs/<save>.json, so a restarted advisor carries on with the game. A sti
 not read again, and after 5 still seconds the advisor looks once a second.
 The judge is the advisor network of the rl-v3 site's Play page (docs/playvs/spec.json "advisor"), run with the
 same features (rlplay.py): your win probability, and its favourite answers to the question on screen.
+At buys and action plays the teacher (teacher.py: bv-v1's paired rollouts, at most 3 s) then checks the network's pick
+and replaces it when another option clearly wins more often; the suggestion shows first, the teacher's check follows.
 """
 from __future__ import annotations
 
@@ -780,6 +782,16 @@ class Advisor:
         self.popup = None                         # a card's window on screen (Reader.popup)
         self.keep = None                          # where this game's tracker is kept (a restart carries on)
         self.lock = threading.Lock()
+        self.teacher = None                       # teacher.Teacher (attach_teacher), None = off
+        self._teach = None                        # (advice, job): the teacher's question for the newest advice
+
+    def attach_teacher(self):
+        try:
+            import teacher
+            self.teacher = teacher.Teacher(self.taught)
+            log(f"teacher: {teacher.NET} rollouts, {teacher.K0} draws per option, at most {teacher.SECS:g} s")
+        except Exception as e:                    # bv-v1 not built / not there: the advisor works without it
+            log(f"teacher off: {e!r}")
 
     def new_game(self, kingdom, why="", name=None):
         self.t = Tracker(kingdom)
@@ -874,13 +886,18 @@ class Advisor:
         vp = t.vp if None not in t.vp else None
         p = prompt.lower()
         card = self.card_prompt(prompt)
+        self._teach = None
         if kind == "treasure":                    # the engine buys right after the treasures: say it now
-            coins += sum(TREASURE_COINS.get(c, 0) * k for c, k in hand.items())
-            for c in TREASURE_COINS:
-                hand.pop(c, None)
-            return self.buys(coins, buys, hand, vp, "After your treasures ($%d)" % coins)
+            played = Counter({c: k for c, k in hand.items() if c in TREASURE_COINS})
+            coins += sum(TREASURE_COINS[c] * k for c, k in played.items())
+            hand -= played
+            a = self.buys(coins, buys, hand, vp, "After your treasures ($%d)" % coins)
+            self.teach(a, eg.BUY, coins, buys, actions, hand, played)
+            return a
         if kind == "buy":
-            return self.buys(coins, buys, hand, vp, "Buy ($%d, %d buy%s)" % (coins, buys, "" if buys == 1 else "s"))
+            a = self.buys(coins, buys, hand, vp, "Buy ($%d, %d buy%s)" % (coins, buys, "" if buys == 1 else "s"))
+            self.teach(a, eg.BUY, coins, buys, actions, hand)
+            return a
         if kind == "action":
             opts = sorted({ID[c] for c in hand if CARDS[ID[c]].is_action})
             a = self.single(eg.PLAY_ACTION, opts, True, hand, vp, "Play an action", coins, buys, actions)
@@ -889,6 +906,7 @@ class Advisor:
                 rest = Counter(hand)
                 rest[best] -= 1
                 a["then"] = self.followup(best, +rest, vp)
+            self.teach(a, eg.PLAY_ACTION, coins, buys, actions, hand)
             return a
         gainable = lambda n: sorted(c for c in range(NUM_CARDS) if t.supply[c] > 0 and CARDS[c].cost <= n)  # noqa: E731
         hand_opts = sorted({ID[c] for c in hand})
@@ -966,6 +984,81 @@ class Advisor:
             k = eg.POACHER_DISCARD if card == "Poacher" else eg.MILITIA_DISCARD
             return self.sequence(k, hand, n, False, vp, f"Discard {n}", exact=True)
         return self.single(eg.BUY, [], False, hand, vp, None)     # no question I know: just the win chance
+
+    # -- the teacher's check ----------------------------------------------------------------------
+    def teach(self, advice, kind, coins, buys, actions, hand, played=Counter()):
+        """The teacher's question for this advice (asked in publish, once the suggestion is on the page): the position
+        as the engine has it at this decision (`played`: treasures counted into `coins`, moved into play)."""
+        if self.teacher is None or not advice or not advice.get("question"):
+            return
+        t = self.t
+        g, me = t.position(coins, buys, actions, hand)
+        p, o = g.players[me], g.players[1 - me]
+        discard, play = Counter(p.discard), Counter(p.play)
+        for c, k in played.items():
+            take = min(k, discard[ID[c]])
+            discard[ID[c]] -= take
+            play[ID[c]] += k
+        theirs = sorted(o.all_cards())                  # unseen: dealt again at these sizes by the teacher
+        zones = [sorted(p.deck), sorted(p.hand), sorted((+discard).elements()), sorted((+play).elements()),
+                 theirs[5:], theirs[:5], [], []]
+        merchants = play[ID["Merchant"]] if kind == eg.PLAY_ACTION and "Merchant" in ID else 0
+        top = advice["plan"][0] if advice["plan"] else None
+        inc = ID[top] if top else self.teacher.lib.rl_num_actions() - 1
+        turns = [g.players[0].turns, g.players[1].turns]
+        key = repr((t.turns, kind, coins, buys, actions, zones, list(t.supply), inc))
+        job = {"key": key, "supply": list(t.supply), "me": me, "zones": zones, "turns": turns, "kind": kind,
+               "coins": coins, "buys": buys, "actions": actions, "merchants": merchants, "inc": inc}
+        advice["tkey"] = key
+        self._teach = (advice, job)
+
+    def ask_teacher(self, advice):
+        """In publish: the cached answer at once, or 'checking' until the teacher's thread calls taught()."""
+        if not self._teach or self._teach[0] is not advice:
+            return
+        r = self.teacher.ask(self._teach[1])
+        if r is None:
+            advice["teacher"] = {"status": "checking"}
+        else:
+            self.apply_teacher(advice, r, log_it=False)
+
+    def taught(self, job, r):
+        """The teacher's thread: the result belongs to the advice on the page only if it is still the same question."""
+        with self.lock:
+            advice = self.state.get("advice")
+            if not advice or advice.get("tkey") != job["key"]:
+                return
+            self.apply_teacher(advice, r)
+            self.state["boxes"] = self.boxes(advice)
+            self.state["time"] = time.time()
+
+    def apply_teacher(self, advice, r, log_it=True):
+        kind = advice["where"]
+        if r.get("draws") == -2:                  # one option: nothing to check
+            advice.pop("teacher", None)
+            return
+        if r.get("draws", 0) < 1:
+            why = {0: "no time", -1: "a rollout failed", -2: "only one option"}.get(r.get("draws"), "")
+            advice["teacher"] = {"status": "skipped", "why": r.get("error") or why}
+            return
+        lab = lambda a: self._label(kind, -1 if a == r["pass"] else a)  # noqa: E731
+        info = {"status": "done", "draws": r["draws"], "secs": r["secs"], "override": r["override"],
+                "pick": lab(r["pick"]), "net": lab(r["inc"]), "gain": r["gain"],
+                "q": [[lab(a), v] for a, v in r["q"][:4]],
+                "net_q": next(v for a, v in r["q"] if a == r["inc"])}
+        if r["override"] and not advice.get("teacher", {}).get("override"):
+            advice["net_plan"] = list(advice["plan"])
+            pick = None if r["pick"] == r["pass"] else NAME[r["pick"]]
+            advice["plan"] = ([pick] + advice["plan"][1:]) if pick else []
+            advice["then"] = None                 # the network's follow-up was for its own pick
+        advice["teacher"] = info
+        if log_it and self.t:
+            q = dict((l, v) for l, v in info["q"])
+            text = (f"Teacher ({r['draws']} rollouts each, {r['secs']:.1f} s): {info['pick']} instead of {info['net']}, "
+                    f"wins {round(100 * q[info['pick']])}% vs {round(100 * info['net_q'])}%" if r["override"] else
+                    f"Teacher ({r['draws']} rollouts each, {r['secs']:.1f} s): agrees with {info['net']} "
+                    f"({round(100 * info['net_q'])}%)")
+            self.t.note(text, "Advisor")
 
     def _ask(self, kind, opts, may_pass, hand, vp, coins=0, buys=1, actions=1, subject=-1):
         g, me = self.t.position(coins, buys, actions, hand)
@@ -1158,6 +1251,8 @@ class Advisor:
 
     def publish(self, img, kind, prompt, advice):
         t = self.t
+        if self.teacher is not None and advice:
+            self.ask_teacher(advice)
         steady = self.steady_win() if advice else None
         if steady is None and advice:             # no start-of-turn number yet: the live one
             steady = advice["win"]
@@ -1442,11 +1537,14 @@ def main():
     ap.add_argument("--install", action="store_true", help="add 'Dominion Advisor' to the app launcher and exit")
     ap.add_argument("--frames", help="replay a recording folder (frames/ + events.jsonl) instead of the live game")
     ap.add_argument("--speed", type=float, default=4, help="replay speed (0 = as fast as it reads)")
+    ap.add_argument("--no-teacher", action="store_true", help="only the network: no rollout check of its picks")
     args = ap.parse_args()
     if args.install:
         return install()
     adv = Advisor(Judge())
     log(f"advisor network: {adv.judge.label} ({adv.judge.file})")
+    if not args.no_teacher:
+        adv.attach_teacher()
     try:
         serve(adv, args.port)
     except OSError:

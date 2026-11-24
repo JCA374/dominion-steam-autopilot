@@ -49,6 +49,9 @@
   .alt .n { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
   .plan { margin-top: 8px; font-size: .92rem; }
   .none { color: var(--muted); }
+  .teach { margin-top: 6px; font-size: .88rem; color: var(--muted); }
+  .teach.over { color: inherit; }
+  .best .badge { margin-left: auto; font-size: .75rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: var(--star); color: #000; }
   /* the game picture with the suggested cards marked */
   .shot { position: relative; margin: 0 auto; width: min(100%, calc(46vh * 927 / 1048)); aspect-ratio: 927 / 1048; border-radius: 10px;
     overflow: hidden; border: 1px solid var(--line); background: #000; }
@@ -163,8 +166,16 @@
       const top = a.top || [];
       const [bl, bp] = top[0] || ['', 0];
       const isPass = !a.plan.length;
+      const T = a.teacher, over = T && T.override;
+      const bestText = over ? (isPass ? T.pick : a.verb + ' ' + T.pick) : (isPass ? bl : a.verb + ' ' + bl);
+      const tq = T && T.q ? Object.fromEntries(T.q) : {};
+      const teach = !T ? '' : T.status === 'checking' ? '<div class="teach">Teacher: checking with rollouts…</div>'
+        : T.status === 'skipped' ? `<div class="teach">Teacher: no check (${h(T.why || '')})</div>`
+        : over ? `<div class="teach over">Teacher: <b>${h(T.pick)}</b> instead of the network's ${h(T.net)}: wins ${P(tq[T.pick])} vs ${P(T.net_q)} in ${T.draws} rollouts each (${T.secs.toFixed(1)} s)</div>`
+        : `<div class="teach">Teacher agrees: ${h(T.net)} wins ${P(T.net_q)}${T.q.length > 1 && T.q[0][0] !== T.net ? `; ${h(T.q[0][0])} ${P(T.q[0][1])} is not clearly better` : ''} (${T.draws} rollouts each, ${T.secs.toFixed(1)} s)</div>`;
       el('sugg').innerHTML = `<div class="q">${h(a.question)}</div>
-        <div class="best"><span class="star">★</span><span>${isPass ? h(bl) : h(a.verb + ' ' + bl)}</span><span class="p">${P(bp)}</span></div>
+        <div class="best"><span class="star">★</span><span>${h(bestText)}</span>${over ? '<span class="badge">teacher</span>' : `<span class="p">${P(bp)}</span>`}</div>
+        ${teach}
         ${a.win != null ? `<div class="q">Win chance after this move: ${P(a.win)} (start of turn: ${s.win != null ? P(s.win) : '?'})</div>` : ''}
         <div class="alt">${top.slice(1).map(([l, p]) => `<span>${h(l)}</span><span class="bar" style="width:${Math.max(1, 100 * p).toFixed(0)}%"></span><span class="n">${P(p)}</span>`).join('')}</div>
         ${a.then ? `<div class="plan">Then: <b>${h(a.then)}</b></div>` : ''}
