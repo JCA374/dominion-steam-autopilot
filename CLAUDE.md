@@ -29,6 +29,7 @@ There is no test suite here; dominion-v1 has its own (`cd dominion-v1 && python 
 .venv/bin/python autopilot/advisor.py                # advisor window beside the game while YOU play (never clicks)
 .venv/bin/python autopilot/advisor.py --frames recordings/session2   # the advisor on a recording (testing)
 .venv/bin/python autopilot/advisor.py --install      # "Dominion Advisor" in the app launcher
+.venv/bin/python autopilot/advisor_bench.py recordings/session2 [--resize 60:1100x1100]   # advice latency + readings
 .venv/bin/python autopilot/debug_screen.py [shot.png]  # print what vision reads from a screenshot or the live window
 .venv/bin/python autopilot/campaign.py --per 3       # games vs Very Easy..Hard AI; commits+pushes Stats page unless --no-publish
 .venv/bin/python autopilot/campaign.py --games 1 --levels auto --kingdom auto|random|"Smithy,Witch" --model auto --no-publish
@@ -67,8 +68,12 @@ Running the pilot, a campaign or Play in the UI clicks in the real game window: 
   models/, py/rlplay.py; override with `DOMINION_ADVISOR_DIR`) for the win chance and top answers. At buys and action
   plays the teacher (`teacher.py`: bv-v1's paired rollouts with c2 through `bv_advise` in `../trainers/bv-v1/bv.so`,
   public sampler, at most 3 s, in its own thread; `DOMINION_TEACHER_DIR`, `--no-teacher`) checks the net's pick and
-  overrides it when another option wins clearly more often (margin 2 points and 2 SE). Opens a Chromium
-  app window right of the game (sizes divided by Xft.dpi/96).
+  overrides it when another option wins clearly more often (margin 2 points and 2 SE). Buy suggestions are held
+  while the coins lack a second agreeing read or a relevant pile change is unconfirmed (piles are counted before
+  buy advice); a resize of the game window triggers `calibrate` (kingdom piles and pile pictures found again, tracker
+  kept). `step()` is the one loop body for `watch` and `replay` (speed 1 = live timing, frames missed while reading);
+  `advisor_bench.py` measures advice latency and coin readings on a recording. Opens a Chromium
+  app window right of the game (sizes divided by Xft.dpi/96), moved beside it again if a resized game covers it.
 - **Control panel** – `ui.py` (stdlib HTTP server + `ui.html`) runs `campaign.py` / `bench_models.py` as child
   processes and shows their output. Auto kingdom = `policy.best_kingdom()` (best model's training kingdom); auto
   difficulty = easiest level the model hasn't won 2 of its last 3 games at (`campaign.auto_level`).

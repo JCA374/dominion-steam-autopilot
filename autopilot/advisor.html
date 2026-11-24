@@ -161,7 +161,12 @@
 
     const a = s.advice;
     const showSugg = prefs.sugg && a && a.question;
-    el('sugg').hidden = !showSugg;
+    const held = prefs.sugg && !showSugg && s.hold;
+    el('sugg').hidden = !showSugg && !held;
+    if (held) {
+      el('sugg').innerHTML = `${s.hold.question ? `<div class="q">${h(s.hold.question)}</div>` : ''}
+        <div class="teach">Suggestion on hold: checking ${h(s.hold.why)}…</div>`;
+    }
     if (showSugg) {
       const top = a.top || [];
       const [bl, bp] = top[0] || ['', 0];

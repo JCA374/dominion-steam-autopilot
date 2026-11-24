@@ -4,6 +4,7 @@
     .venv/bin/python autopilot/advisor.py --no-window   # only the page: http://127.0.0.1:8643
     .venv/bin/python autopilot/advisor.py --install     # add "Dominion Advisor" to the app launcher
     .venv/bin/python autopilot/advisor.py --frames recordings/session2 --speed 4   # replay a recording (testing)
+    .venv/bin/python autopilot/advisor_bench.py recordings/session2    # how fast and right the suggestions are
 
 About once a second it takes a screenshot of the game window; when the screen has settled it reads it with
 vision.py: the supply pile counts, the prompt line, coins/actions/buys, your hand, both scores, your draw and
@@ -15,6 +16,13 @@ discard piles and the opponent's "Added: ..." bar. `Tracker` keeps the game from
 Pile counts are only taken from piles that look like themselves (nothing covering them); a changed count must be
 confirmed by a second, independent read, and a jump of more than two cards by 3 readings. At the start of each of my turns the
 cards on screen (draw + discard + hand) are checked against my counted cards.
+A buy suggestion waits for its inputs: the coins must be agreed by a second read of their crop (else the suggestion
+is held, never a guessed $0), and the piles are counted before it, a pending change to a pile that matters (a drop of
+1-2 cards on the Provinces or a pile down to 2 cards or fewer) holding it for up to 3 s. In the opponent's turn (the
+counters' panel is red) their prompt line and buttons are not taken for mine. A big pile drop only counts from
+readings where the pile looked like its own picture. When the game window changes size the advisor waits for it to
+settle, finds the board again (kingdom piles, every pile's picture) and holds suggestions until the base piles read as
+counted; the game and its tracker carry on. If the game window then covers the advisor's window, that moves beside it.
 The game log (page + advisor_logs/<save>.log): my hand, plays, draws, discards, buys/gains (logged once the opponent's
 bar has had time to claim the card), trashes, the opponent's gains and every suggestion. The tracker is kept in
 advisor_logs/<save>.json, so a restarted advisor carries on with the game. A still screen that was already read is
@@ -27,6 +35,7 @@ and replaces it when another option clearly wins more often; the suggestion show
 from __future__ import annotations
 
 import argparse
+import bisect
 import glob
 import json
 import os
@@ -77,11 +86,15 @@ COUNT_AT = {"Province": (113, 95), "Gold": (181, 94), "Duchy": (114, 157), "Silv
 SLOT_X0, SLOT_W, SLOT_DX = 197, 128, 134.75        # kingdom piles: 5 per row, 2 rows
 SLOT_Y0 = (45, 171)
 HUD_AT = ((28, 758), (77, 758), (128, 757))          # actions, coins, buys
+R_TURN = (0, 735, 200, 785)                         # the counters' panel: blue in my turn, red in the opponent's
 MY_VP_AT, OPP_VP_AT = (70, 805), (292, 18)
 DRAW_AT, DISCARD_AT = (30, 927), (821, 922)
 R_PROMPT_LINE = (150, 294, 780, 324)
 R_POPUP = (40, 40, 887, 118)                        # a card's window: Sentry's zone labels and the card titles
 PILE_SAME = 0.8                                     # a pile still looks like its picture (ncc) above this
+SETTLE = 1.0                                        # a resized window counts as settled after this many seconds
+CALIB_WAIT = 15.0                                   # after a resize, at most this long finding the board again
+HOLD_MAX = 3.0                                      # a buy suggestion waits at most this long for a pile's count
 READ_W = 1100                                       # screenshots are shrunk to this width before reading
 OCR_THREADS = 2                                     # the reader's threads: leave the cores to Dominion itself
 
@@ -314,12 +327,13 @@ class Tracker:
         return spread(cands, n)
 
     # -- readings --------------------------------------------------------------------------------
-    def read_counts(self, counts: dict[str, int], empty=()):
+    def read_counts(self, counts: dict[str, int], empty=(), visible=None):
         """Pile counts from one reading (Reader.counts only passes a changed count that a second, independent read
         confirms, on a pile that still looks like itself). A drop of one or two cards counts after 2 equal readings
         in a row. Anything else - a bigger drop (the advisor started mid-game, or missed a turn) or a pile that
         GREW (an earlier misread: a "7" read as "0" while the bought card flew off it) - only after 3 readings and
-        10 seconds of the same number."""
+        10 seconds of the same number, each reading from a pile that looked like its own picture (`visible`: not one
+        whose picture was only just taken, so a covered pile's number is never a big drop)."""
         moved = {ID[n]: k for n, k in counts.items()
                  if k is not None and self.start[ID[n]] >= 0 and k != self.supply[ID[n]]}
         for c in list(self._maybe):
@@ -336,6 +350,8 @@ class Tracker:
                 k, turn, verb, since = 1, self.turns + 1, "buy" if self.last_kind == "buy" else "gain", now
             small = 0 < self.supply[c] - n <= 2
             crossed = n == 0 and NAME[c] in empty     # the X is certain: no 10 s wait for a big drop
+            if not small and not crossed and visible is not None and NAME[c] not in visible:
+                continue                          # not seen clearly: this reading does not count
             if k >= 2 and (small or crossed) or k >= 3 and now - since >= 10:
                 del self._maybe[c]
                 if n > self.supply[c]:            # a correction: an earlier count was a misread
@@ -573,6 +589,9 @@ class Reader:
         self._pile_ref, self._pile_runs = {}, {}
         self.deferred = False                     # a changed region was left for the next reading
         self.empty = set()                        # piles showing the empty X in the last reading
+        self.visible = set()                      # piles that looked like their own picture in the last reading
+        self._sure = {}                           # (x, y) -> (crop, number or None, any read): sure()'s last verdict
+        self.sure_any = None                      # sure(): an in-range read when the reads did not agree
         self.slots_at = 0.0                       # when the kingdom piles were last looked for
         read = self.v.read
 
@@ -634,6 +653,36 @@ class Reader:
         crop = img[max(0, y0):y1, max(0, x0):x1]
         return bool(crop.size) and _read_number(crop, 2) == n
 
+    def sure(self, img, x, y, n, top):
+        """A number the advice depends on (my coins, my buys), n from number(): the last verdict while the crop is
+        unchanged, else it must be agreed by a second read (wider crop 4x, tight crop 2x); with no first
+        reading, the two others must agree. Reads above `top` are dropped first (the tight crops can catch the edge of
+        the next icon: the buys' "1" read as "12"). Last try: the counters' row with text detection. None = unsure;
+        self.sure_any is then an in-range read, if any."""
+        x0, y0 = self.v.scale(x - 15, y - 12)
+        x1, y1 = self.v.scale(x + 13, y + 12)
+        crop = img[max(0, y0):y1, max(0, x0):x1].astype(np.int16)
+        hit = self._sure.get((x, y))
+        if hit is not None and hit[0].shape == crop.shape and np.abs(hit[0] - crop).mean() < 4:
+            self.sure_any = hit[2]                # the same pixels read the same: no new reads (nor a new verdict)
+            return hit[1]
+        ok = lambda v: v if v is not None and v <= top else None   # noqa: E731
+        n, wide = ok(n), ok(self.number_again(img, x, y))
+        self.sure_any = wide if wide is not None else n
+        if n is None or wide != n:
+            tight = ok(_read_number(img[max(0, y0):y1, max(0, x0):x1], 2)) if crop.size else None
+            votes = Counter(v for v in (n, wide, tight) if v is not None)
+            n = next((v for v, k in votes.items() if k >= 2), None)
+            if n is None:                         # the slow reader, as the tie-breaker
+                hud = self.v.hud(img)
+                col = [i for i, (hx, hy) in enumerate(HUD_AT) if (hx, hy) == (x, y)]
+                n = hud[col[0]] if col and hud[col[0]] in votes else None
+            self.sure_any = n if n is not None else self.sure_any if self.sure_any is not None else tight
+        if n is not None:
+            self.sure_any = n
+        self._sure[(x, y)] = (crop, n, self.sure_any)
+        return n
+
     def prompt(self, img):
         """The prompt line, recognition only; the full reader when that finds nothing sure."""
         x0, y0 = self.v.scale(*R_PROMPT_LINE[:2])
@@ -664,6 +713,20 @@ class Reader:
     def hud(self, img):
         return tuple(self.number(img, x, y) for x, y in HUD_AT)
 
+    def theirs(self, img) -> bool:
+        """Is it the opponent's turn? The panel behind the counters is blue in my turn and red in theirs (then the
+        prompt line shows their prompts, "Play Treasure cards.", the counters count their coins and the Play Treasures
+        / End Buys buttons stay on screen). Measured on the three
+        recordings: blue on all 250 frames the pilot clicked in, red through the opponent's turns."""
+        (x0, y0), (x1, y1) = self.v.scale(*R_TURN[:2]), self.v.scale(*R_TURN[2:])
+        hsv = cv2.cvtColor(img[max(0, y0):y1, max(0, x0):x1], cv2.COLOR_BGR2HSV)
+        if hsv.size == 0:
+            return False
+        h, s_, v = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+        blue = float(((h > 95) & (h < 125) & (s_ > 90) & (v > 80)).mean())
+        red = float((((h < 12) | (h > 165)) & (s_ > 120) & (v > 90)).mean())
+        return red > 0.04 and red > blue + 0.02
+
     def counts(self, img, slots, supply):
         """Pile counts, only for piles that are on screen: a pile's picture is taken the first time its number
         reads as expected (or the same number 5 times running), and later a pile counts only while it still looks
@@ -673,7 +736,7 @@ class Reader:
         at = dict(COUNT_AT)
         at.update({n: (x1 - 8, y1 - 11) for n, (x0, y0, x1, y1) in slots.items()})
         out = {}
-        self.empty = set()
+        self.empty, self.visible = set(), set()
         for name, box in boxes.items():
             if self.crossed(img, box):            # an empty pile: its picture becomes a dark card with an orange X
                 self.empty.add(name)
@@ -683,6 +746,8 @@ class Reader:
             ref = self._pile_ref.get(name)
             if ref is not None and ncc(ref, look) < PILE_SAME:
                 continue
+            if ref is not None:
+                self.visible.add(name)
             n = self.number(img, *at[name])
             if ref is None:
                 runs = self._pile_runs.get(name, (None, 0))
@@ -784,6 +849,12 @@ class Advisor:
         self.lock = threading.Lock()
         self.teacher = None                       # teacher.Teacher (attach_teacher), None = off
         self._teach = None                        # (advice, job): the teacher's question for the newest advice
+        # step(): the last screenshot, the last one read, seconds the screen has been still, extra readings of an
+        # unchanged screen asked for by the reader, when it last read, the pause before the next look
+        self.loop = {"prev": None, "done": None, "quiet": 0.0, "extra": 0, "last_read": 0.0, "pause": 0.3,
+                     "shape": None, "shape_at": 0.0}
+        self.calib = None                         # after a window resize: finding the board again (calibrate)
+        self._held = None                         # (turn, kind) of a held buy suggestion, since when
 
     def attach_teacher(self):
         try:
@@ -816,6 +887,8 @@ class Advisor:
             self.reader = Reader(img.shape)
         r, t = self.reader, self.t
         r.deferred = False
+        if self.calib is not None and not self.calibrate(img):
+            return
         if len(t.slots) < len(t.kingdom) and time.time() - r.slots_at > 5:   # hidden piles: look again in 5 s
             r.slots_at = time.time()
             t.slots.update(r.slots(img, t.kingdom))
@@ -825,6 +898,8 @@ class Advisor:
         if kind is None and (not prompt or len(prompt) > 60):   # the line is hidden: ask the buttons
             kind, sure = prompt_kind(prompt, " | ".join(b.text.lower() for b in r.v.buttons(img)))
         t.prompt = prompt
+        if kind and r.theirs(img):                # the opponent's phase: their prompt line, their buttons
+            kind = None
         if kind and sure:
             t.phase(kind)
         card = self.card_prompt(prompt)
@@ -837,6 +912,12 @@ class Advisor:
             t.read_piles(r.pile_size(img, *DRAW_AT), r.pile_size(img, *DISCARD_AT))
             t.read_hand(r.v.hand(img, t.names), "discard" if "discard" in prompt.lower() else "")
             a, c, b = r.hud(img)
+            if kind in ("buy", "treasure"):       # the buy suggestion's numbers: confirmed by a second read
+                c = r.sure(img, *HUD_AT[1], c, 40)
+                b = r.sure(img, *HUD_AT[2], b, 6)
+                b = r.sure_any if b is None else b   # buys: rarely more than 1, never worth a hold
+                if b == 0:                        # no buys left: my turn is ending, nothing to ask
+                    kind = None
             t.actions = a if a is not None and a <= 9 else None
             t.coins = c if c is not None and c <= 40 else None
             t.buys = b if b is not None and 1 <= b <= 6 else None
@@ -850,18 +931,82 @@ class Advisor:
             t.vp[1] = vp_opp
         dealing = kind in ("action", "treasure") and not t.hand   # cards still flying in
         asked = t.started or self.popup is not None or card is not None   # a card's question needs no phase seen
-        advice = self.advise(kind, prompt) if asked and not dealing else None
-        self.publish(img, kind, prompt, advice)   # the suggestion first: the pile counts take up to 2 s more
+        buying = kind in ("buy", "treasure") and asked and not dealing
+        if buying:                                # a buy suggestion sees the supply as it is now (only piles whose
+            self.count_piles(img)                 # number changed are read)
+        hold = self.unsure(kind) if buying else None
+        advice = self.advise(kind, prompt) if asked and not dealing and not hold else None
+        self.publish(img, kind, prompt, advice, hold)   # other suggestions first: the pile counts take up to 2 s more
+        if not buying and self.count_piles(img):  # a gain changed the deck: ask again
+            advice = self.advise(kind, prompt) if asked and not dealing else None
+            self.publish(img, kind, prompt, advice)
+        if self.keep:
+            t.dump(self.keep)
+
+    def count_piles(self, img) -> bool:
+        """The supply's counts from this screenshot. True when my cards or the opponent's changed."""
+        r, t = self.reader, self.t
         before = (tuple(t.supply), sum(t.opp_gained.values()))
-        t.read_counts(r.counts(img, t.slots, t.supply), r.empty)
+        t.read_counts(r.counts(img, t.slots, t.supply), r.empty, r.visible)
         t.settle_gains()
         if t._maybe or t.pending or any(k == 1 for _, k in r._pile_runs.values() if _ is not None):
             r.deferred = True                     # a count waits for a second reading: read this screen again
-        if self.keep:
-            t.dump(self.keep)
-        if (tuple(t.supply), sum(t.opp_gained.values())) != before:   # a gain changed the deck: ask again
-            advice = self.advise(kind, prompt) if asked and not dealing else None
-            self.publish(img, kind, prompt, advice)
+        return (tuple(t.supply), sum(t.opp_gained.values())) != before
+
+    def unsure(self, kind):
+        """Why a buy suggestion must wait: (question, what is unsure) or None. Unsure coins hold it until two reads
+        agree (unsure buys count as 1, as before). A pile drop of one or two cards that waits for its second reading
+        and matters to the game's end (the Provinces, a pile about to run out: 2 cards or fewer) holds it for at most
+        HOLD_MAX seconds, then the suggestion uses the count as kept."""
+        t = self.t
+        why = "your coins" if t.coins is None else None
+        piles = [NAME[c] for c, m in t._maybe.items()     # a drop of 1-2 confirms on the next reading; a bigger
+                 if 0 < t.supply[c] - m[0] <= 2 and (m[0] <= 2 or NAME[c] == "Province")]   # change takes 10 s
+        key = (t.turns, kind)
+        if why is None and piles:
+            if self._held is None or self._held[0] != key:
+                self._held = (key, time.time())
+            if time.time() - self._held[1] < HOLD_MAX:
+                why = f"the {' and '.join(piles)} pile{'s' if len(piles) > 1 else ''}"
+        if why is None:
+            self._held = None
+            return None
+        self.reader.deferred = True               # read the screen again
+        return ("Buy" if kind == "buy" else "After your treasures", why)
+
+    def resized(self, shape):
+        """The game window changed size: once it has settled, find the board again (calibrate)."""
+        log(f"window resized to {shape[1]}x{shape[0]}")
+        n = len(self.t.slots) if self.t else 0
+        self.calib = {"since": None, "slots": max(n, self.calib["slots"]) if self.calib else n,
+                      "size": (shape[1], shape[0])}
+
+    def calibrate(self, img) -> bool:
+        """After a resize: the kingdom piles are looked for again and each pile's picture is taken anew (when its
+        number reads as the count kept). The game, its tracker and log carry on; suggestions resume once 5 of the 7
+        base piles read as counted and the kingdom piles known before are found again (or after CALIB_WAIT seconds).
+        True = done: read the screen as usual."""
+        c, r, t = self.calib, self.reader, self.t
+        now = time.time()
+        if c["since"] is None:
+            c["since"] = now
+            t.slots = {}
+            r.slots_at = 0.0
+        if len(t.slots) < c["slots"] and now - r.slots_at > 1:
+            r.slots_at = now
+            t.slots.update(r.slots(img, t.kingdom))
+        r.counts(img, t.slots, t.supply)          # nothing is counted from it, only pictures taken
+        base = [n for n in BASE_PILES if n in r._pile_ref or n in r.empty and t.supply[ID[n]] == 0]
+        lined = len(base) >= 5 and len(t.slots) >= c["slots"]
+        if lined or now - c["since"] > CALIB_WAIT:
+            self.calib = None
+            w, h = c["size"]
+            t.note(f"(window resized to {w}x{h}: " + ("board found again" if lined else
+                   f"{len(base)} of 7 base piles and {len(t.slots)} of {c['slots']} kingdom piles found again") + ")")
+            return True
+        r.deferred = True
+        self.publish(img, None, "", None, ("", "the board after the window resize"))
+        return False
 
     def card_prompt(self, prompt):
         """The card a prompt line belongs to ("Remodel: Gain a card ..."), also when OCR drops the colon or the
@@ -1052,7 +1197,9 @@ class Advisor:
             advice["plan"] = ([pick] + advice["plan"][1:]) if pick else []
             advice["then"] = None                 # the network's follow-up was for its own pick
         advice["teacher"] = info
-        if log_it and self.t:
+        said = (self.t.turns, advice["question"], info["pick"], info["override"]) if self.t else None
+        if log_it and self.t and said != getattr(self, "_taught_said", None):   # a re-read asks again: logged once
+            self._taught_said = said
             q = dict((l, v) for l, v in info["q"])
             text = (f"Teacher ({r['draws']} rollouts each, {r['secs']:.1f} s): {info['pick']} instead of {info['net']}, "
                     f"wins {round(100 * q[info['pick']])}% vs {round(100 * info['net_q'])}%" if r["override"] else
@@ -1249,7 +1396,8 @@ class Advisor:
             out.append({"card": name, "box": [a / W, b / H, c / W, d / H]})
         return out
 
-    def publish(self, img, kind, prompt, advice):
+    def publish(self, img, kind, prompt, advice, hold=None):
+        """The page's state. hold: (question, what is unsure) while a suggestion waits for a reading."""
         t = self.t
         if self.teacher is not None and advice:
             self.ask_teacher(advice)
@@ -1277,7 +1425,9 @@ class Advisor:
         mine, theirs = t.mine(), t.theirs()
         empty = [NAME[c] for c, n in enumerate(t.supply) if n == 0]
         state = {
-            "status": "your turn" if kind else ("your choice" if advice and advice["question"] else "watching"),
+            "status": f"checking {hold[1]}…" if hold else
+                      "your turn" if kind else ("your choice" if advice and advice["question"] else "watching"),
+            "hold": {"question": hold[0], "why": hold[1]} if hold else None,
             "judge": self.judge.label, "turn": t.turns + 1, "first": t.first, "prompt": prompt,
             "win": t.win, "win_raw": getattr(t, "win_raw", None), "wp": t.wp, "advice": advice, "boxes": self.boxes(advice),
             "provinces": t.supply[ID["Province"]], "empty": empty,
@@ -1298,9 +1448,12 @@ class Advisor:
                 self.frame, self.frame_n = jpg.tobytes(), self.frame_n + 1
                 self.state["frame"] = self.frame_n
 
-    def idle(self, status):
+    def idle(self, status, hold=None):
+        """A new status on the page; hold: (question, why) also takes the suggestion off it."""
         with self.lock:
             self.state = {**self.state, "status": status, "time": time.time()}
+            if hold:
+                self.state.update(advice=None, boxes=[], hold={"question": hold[0], "why": hold[1]})
 
     def spots(self, shape):
         """The places the advisor reads, in pixels of a full-size screenshot (for nothing_new)."""
@@ -1320,15 +1473,49 @@ class Advisor:
         return self._spots[1]
 
     # -- the loops ------------------------------------------------------------------------------
+    def step(self, img):
+        """One look at the screen (watch: a screenshot; replay: the recording's frame of that moment): read it when it
+        has settled and something the advisor reads changed. Returns the pause before the next look."""
+        L = self.loop
+        if img.shape != L["shape"]:
+            if L["shape"] is not None and self.t is not None:
+                self.resized(img.shape)
+            L["shape"], L["shape_at"] = img.shape, time.time()
+        if self.calib is not None and time.time() - L["shape_at"] < SETTLE:
+            self.idle("window resized: waiting for it to settle", ("", "the board after the window resize"))
+        elif self.t is None:
+            self.idle("no game found (start a game in Dominion)")
+        elif L["prev"] is not None and moving(img, L["prev"]) < 0.02:   # no cards flying: read it
+            # a count to confirm or a held suggestion: look again every 3 s (every second while finding the board)
+            waiting = (self.t._maybe or self._held or self.state.get("hold")) and time.time() - L["last_read"] > 3 \
+                or self.calib is not None and time.time() - L["last_read"] > 1
+            if L["done"] is not None and not waiting and nothing_new(img, L["done"], self.spots(img.shape)):
+                L["quiet"] += L["pause"]
+                with self.lock:
+                    self.state["time"] = time.time()
+            else:
+                L["quiet"] = 0.0
+                L["last_read"] = time.time()
+                try:
+                    self.process(img)
+                except Exception as e:
+                    log(f"reading failed: {e!r}")
+                again = self.reader is not None and self.reader.deferred and L["extra"] < 4
+                L["extra"] = L["extra"] + 1 if again else 0
+                L["done"] = None if again else img   # read the same screen again (at most 4 times)
+        else:
+            L["quiet"] = 0.0
+        L["prev"] = img
+        L["pause"] = 0.3 if L["quiet"] < 5 else 0.5   # a still screen (the player thinking): look less often
+        return L["pause"]
+
     def watch(self):
-        """The live game: a screenshot every half second, read when it has settled."""
+        """The live game: a screenshot every 0.3 s (0.5 s once the screen has been still for 5 s)."""
         from Xlib import display
         from grab import find_window, grab
         d = display.Display()
-        win, prev = None, None
-        done, quiet, pause = None, 0.0, 0.3       # the last screenshot read; how long the screen has been still
-        extra = 0                                 # readings of an unchanged screen asked for by the reader
-        last_read = 0.0
+        win = None
+        geo, geo_at, placed = None, 0.0, True     # the game window's place; when it last changed; followed since
         while True:
             try:
                 save = newest_save()
@@ -1343,52 +1530,52 @@ class Advisor:
                         time.sleep(2)
                         continue
                 img = grab(d, win)
+                now_geo = rect(d, win)
+                if now_geo != geo:
+                    geo, geo_at, placed = now_geo, time.time(), geo is None
+                elif not placed and time.time() - geo_at > SETTLE:
+                    placed = True
+                    try:
+                        follow(d, win)
+                    except Exception as e:    # never take the reading down for the window's place
+                        log(f"could not move the advisor window: {e!r}")
             except Exception as e:                # the window closed or moved: look again
-                win, prev = None, None
+                win, self.loop["prev"] = None, None
                 self.idle(f"waiting for Dominion ({type(e).__name__})")
                 time.sleep(2)
                 continue
-            if self.t is None:
-                self.idle("no game found (start a game in Dominion)")
-            elif prev is not None and moving(img, prev) < 0.02:   # no cards flying: read it
-                waiting = self.t._maybe and time.time() - last_read > 3   # a count to confirm: look every 3 s
-                if done is not None and not waiting and nothing_new(img, done, self.spots(img.shape)):
-                    quiet += pause
-                    with self.lock:
-                        self.state["time"] = time.time()
-                else:
-                    quiet = 0.0
-                    last_read = time.time()
-                    try:
-                        self.process(img)
-                    except Exception as e:
-                        log(f"reading failed: {e!r}")
-                    again = self.reader is not None and self.reader.deferred and extra < 4
-                    extra = extra + 1 if again else 0
-                    done = None if again else img   # read the same screen again (at most 4 times)
-            else:
-                quiet = 0.0
-            prev = img
-            pause = 0.3 if quiet < 5 else 0.5     # a still screen (the player thinking): look less often
-            time.sleep(pause)
+            time.sleep(self.step(img))
 
-    def replay(self, folder, speed):
-        """A recording (recorder.py: frames/<ms>.jpg + events.jsonl), as if it were the live game."""
+    def replay(self, folder, speed, frame_hook=None):
+        """A recording (recorder.py: frames/<ms>.jpg + events.jsonl), as if it were the live game: the recording's
+        clock runs `speed` times as fast as the wall clock and each look takes the newest frame of that moment, so
+        at speed 1 a slow reading misses frames as it would live. speed 0: every changed frame, as fast as it reads.
+        frame_hook(ms, img) -> img: change a frame before it is read (advisor_bench.py's resize test)."""
         starts = [json.loads(l) for l in open(os.path.join(folder, "events.jsonl")) if '"game_start"' in l]
         frames = sorted(glob.glob(os.path.join(folder, "frames", "*.jpg")))
-        last_t, k, prev = None, 0, None
-        for f in frames:
-            ms = int(os.path.basename(f)[:-4])
+        times = [int(os.path.basename(f)[:-4]) for f in frames]
+        self.clock = lambda: (time.time() - t0) * 1000 * speed + times[0]   # the recording's ms now
+        t0, i, k, prev = time.time(), 0, 0, None
+        while i < len(frames):
+            if speed:
+                i = max(i, bisect.bisect_right(times, self.clock()) - 1)
+            ms, f = times[i], frames[i]
             while k < len(starts) and starts[k]["t"] * 1000 <= ms:
                 self.new_game(starts[k]["kingdom"], f" (recording, seed {starts[k]['seed']})")
                 k += 1
-            if self.t is None:
-                continue
-            if last_t is not None and speed:
-                time.sleep(max(0, (ms - last_t) / 1000 / speed))
-            last_t = ms
             img = cv2.imread(f)
-            if prev is not None and np.abs(img.astype(int) - prev).mean() < 0.5:
+            if frame_hook:
+                img = frame_hook(ms, img)
+            self.frame_ms = ms
+            if speed:
+                pause = self.step(img)
+                time.sleep(pause / speed)
+                if i == len(frames) - 1:
+                    break
+                continue
+            i += 1
+            if self.t is None or prev is not None and prev.shape == img.shape and \
+                    np.abs(img.astype(int) - prev).mean() < 0.5:
                 continue
             prev = img
             try:
@@ -1473,6 +1660,45 @@ def x11_scale(d) -> float:
     return float(m.group(1)) / 96 if m else 1.0
 
 
+def rect(d, win):
+    """A window's (x, y, width, height) on the screen."""
+    g = win.get_geometry()
+    pos = win.translate_coords(d.screen().root, 0, 0)
+    return -pos.x, -pos.y, g.width, g.height
+
+
+def beside(d, win):
+    """Where the advisor's window goes (x, y, width, height in screen pixels): beside the game window, on its wider
+    free side, never on top of it; with no room, the half of the screen the game's middle is not on."""
+    root = d.screen()
+    sw, sh = root.width_in_pixels, root.height_in_pixels
+    if win is None:
+        return sw // 2, 0, sw // 2, sh
+    gx, gy, gw, gh = rect(d, win)
+    right, left = sw - (gx + gw), gx
+    if right >= 360 and right >= left:
+        return gx + gw, gy, right, gh
+    if left >= 360:
+        return 0, gy, left - 220, gh              # room for the dock and the window frame
+    return (0 if gx + gw // 2 > sw // 2 else sw // 2), 0, sw // 2, sh
+
+
+def follow(d, win):
+    """The game window moved or changed size: if it now covers the advisor's window, that goes beside it again."""
+    from grab import find_window
+    me = find_window(d, "Dominion Advisor")
+    if me is None or win is None:
+        return
+    gx, gy, gw, gh = rect(d, win)
+    ax, ay, aw, ah = rect(d, me)
+    if min(gx + gw, ax + aw) - max(gx, ax) < 40 or min(gy + gh, ay + ah) - max(gy, ay) < 40:
+        return                                    # not covered: where the player put it
+    x, y, w, h = beside(d, win)
+    log(f"advisor window moved beside the game: {w}x{h} at {x},{y}")
+    me.configure(x=x, y=y, width=w, height=h)
+    d.flush()
+
+
 def open_window(url: str):
     """A browser app window (no tabs or address bar) beside the game window, or on the right half of the screen."""
     x = y = 0
@@ -1481,23 +1707,7 @@ def open_window(url: str):
         from Xlib import display
         from grab import find_window
         d = display.Display()
-        root = d.screen()
-        sw, sh = root.width_in_pixels, root.height_in_pixels
-        win = find_window(d)
-        if win is not None:
-            g = win.get_geometry()
-            pos = win.translate_coords(root.root, 0, 0)
-            gx, gy = -pos.x, -pos.y
-            right, left = sw - (gx + g.width), gx
-            if right >= 360 and right >= left:    # beside the game, on its wider free side: never on top of it
-                x, y, w, h = gx + g.width, gy, right, g.height
-            elif left >= 360:
-                x, y, w, h = 0, gy, left - 220, g.height   # room for the dock and the window frame
-            else:                                 # no room: the half the game's middle is not on
-                x = 0 if gx + g.width // 2 > sw // 2 else sw // 2
-                y, w, h = 0, sw // 2, sh
-        else:
-            x, y, w, h = sw // 2, 0, sw // 2, sh
+        x, y, w, h = beside(d, find_window(d))
         scale = x11_scale(d)                      # the browser takes sizes in scaled pixels
         x, y, w, h = (int(round(v / scale)) for v in (x, y, w, h))
     except Exception:
