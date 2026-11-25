@@ -37,6 +37,9 @@ def _ints(xs):
 
 
 WORKERS = int(os.environ.get("DOMINION_TEACHER_WORKERS", "3"))   # processes grading each question together (pooled draws)
+SO = os.environ.get("DOMINION_TEACHER_SO", "bv.so")   # in TEACHER_DIR; ts-v1's ts.so adds the two settings below
+LEAF = int(os.environ.get("DOMINION_TEACHER_LEAF", "0"))    # ts.so: rollouts stop after LEAF turns, c2's value (0 = end)
+ALLOC = int(os.environ.get("DOMINION_TEACHER_ALLOC", "0"))  # ts.so: 1 = successive halving of the same budget
 
 
 def _load(so, net):
@@ -48,6 +51,11 @@ def _load(so, net):
     lib.bv_set_cfg.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_float, ctypes.c_int, ctypes.c_float]
     lib.rl_num_params.argtypes = [ctypes.c_int, ctypes.c_int]
     lib.bv_set_cfg(K0, K1, 1.5, TOPN, MARGIN)
+    if hasattr(lib, "ts_set_leaf"):
+        lib.ts_set_leaf(LEAF)
+        lib.ts_set_alloc(ALLOC)
+    elif LEAF or ALLOC:
+        raise RuntimeError(f"{so} has no leaf / halving settings (ts-v1's ts.so has)")
     prm = np.ascontiguousarray(np.load(net).astype(np.float32))
     na = lib.rl_num_actions()
     for nf in (lib.rl_num_features(), lib.rl_num_features_base()):
@@ -102,7 +110,7 @@ def pool_draws(parts):
 class Teacher:
     def __init__(self, on_result):
         """on_result(job, result): called from the teacher's thread when a question is graded."""
-        so, net = os.path.join(TEACHER_DIR, "bv.so"), os.path.join(TEACHER_DIR, "models", NET)
+        so, net = os.path.join(TEACHER_DIR, SO), os.path.join(TEACHER_DIR, "models", NET)
         self.lib, self.prm, self.nh, self.nf, self.na = _load(so, net)
         self.pool = None
         if WORKERS > 1:                          # each process deals its own draws; the answers are pooled exactly
