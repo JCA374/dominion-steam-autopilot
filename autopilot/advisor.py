@@ -137,10 +137,21 @@ def log(*a):
 
 # ── the network ─────────────────────────────────────────────────────────────────────────────────────
 
+# The judge's net: DOMINION_ADVISOR_NET (a .npy path; "" = the Play page's advisor from spec.json). Default: RL-v3 c2
+# 2654 (71.6% vs the champion, c1 2300 69.5%), the net of the teacher's rollouts.
+JUDGE_NET = os.environ.get("DOMINION_ADVISOR_NET", os.path.join(HERE, "..", "..", "trainers", "bv-v1", "models",
+                                                                "rl3_c2_2654.npy"))
+JUDGE_LABEL = "RL-v3 c2 (iteration 2654)"
+
+
 class Judge:
     """The Play page's advisor network: win probability and answer probabilities for a position."""
 
     def __init__(self):
+        if JUDGE_NET:                           # c2 by default: the net the teacher's rollouts play (one judge)
+            self.file, self.label = os.path.basename(JUDGE_NET), JUDGE_LABEL
+            self.net = rlplay.Net(np.load(JUDGE_NET).astype(np.float32))
+            return
         spec = json.load(open(os.path.join(ADVISOR_DIR, "spec.json")))
         self.file = spec["advisor"]
         self.net = rlplay.Net(np.load(os.path.join(ADVISOR_DIR, "models", self.file)).astype(np.float32))
@@ -860,7 +871,7 @@ class Advisor:
         try:
             import teacher
             self.teacher = teacher.Teacher(self.taught)
-            log(f"teacher: {teacher.NET} rollouts, {teacher.K0} draws per option, at most {teacher.SECS:g} s")
+            log(f"teacher: {teacher.NET} rollouts, {teacher.K0} draws per option x {teacher.WORKERS} processes, at most {teacher.SECS:g} s")
         except Exception as e:                    # bv-v1 not built / not there: the advisor works without it
             log(f"teacher off: {e!r}")
 
