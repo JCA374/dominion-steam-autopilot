@@ -1071,38 +1071,54 @@ class Advisor:
         if card == "Cellar":
             return self.sequence(eg.CELLAR_DISCARD, hand, 99, True, vp, "Cellar: discard, then draw as many")
         if card == "Workshop":
-            return self.single(eg.WORKSHOP_GAIN, gainable(4), False, hand, vp, "Workshop: gain up to $4")
+            a = self.single(eg.WORKSHOP_GAIN, gainable(4), False, hand, vp, "Workshop: gain up to $4")
+            self.teach_sub(a, eg.WORKSHOP_GAIN, card, gainable(4), False, hand, coins, buys, actions)
+            return a
         if card == "Artisan":
             if "gain" in p:
-                return self.single(eg.ARTISAN_GAIN, gainable(5), False, hand, vp, "Artisan: gain up to $5")
+                a = self.single(eg.ARTISAN_GAIN, gainable(5), False, hand, vp, "Artisan: gain up to $5")
+                self.teach_sub(a, eg.ARTISAN_GAIN, card, gainable(5), False, hand, coins, buys, actions)
+                return a
             return self.single(eg.ARTISAN_TOPDECK, hand_opts, False, hand, vp, "Artisan: put a card on your deck")
         if card in ("Remodel", "Mine") and "gain" in p:
             m = re.search(r"up\s*to\s*\$?\s*(\d+)", p)
             up = int(m.group(1)) if m else (CARDS[ID[t.last_trashed]].cost + (2 if card == "Remodel" else 3)
                                              if t.last_trashed else None)
             if up is not None:
+                hist = [(eg.MINE_TRASH if card == "Mine" else eg.REMODEL_TRASH, t.last_trashed)] if t.last_trashed else None
                 if card == "Mine":
                     opts = [c for c in gainable(up) if CARDS[c].is_treasure]
-                    return self.single(eg.MINE_GAIN, opts, False, hand, vp, f"Mine: gain a treasure up to ${up}",
-                                       subject=ID[t.last_trashed] if t.last_trashed else -1)
-                return self.single(eg.REMODEL_GAIN, gainable(up), False, hand, vp, f"Remodel: gain a card up to ${up}",
-                                   subject=ID[t.last_trashed] if t.last_trashed else -1)
+                    a = self.single(eg.MINE_GAIN, opts, False, hand, vp, f"Mine: gain a treasure up to ${up}",
+                                    subject=ID[t.last_trashed] if t.last_trashed else -1)
+                    if hist:
+                        self.teach_sub(a, eg.MINE_GAIN, card, opts, False, hand, coins, buys, actions, hist)
+                    return a
+                a = self.single(eg.REMODEL_GAIN, gainable(up), False, hand, vp, f"Remodel: gain a card up to ${up}",
+                                subject=ID[t.last_trashed] if t.last_trashed else -1)
+                if hist:
+                    self.teach_sub(a, eg.REMODEL_GAIN, card, gainable(up), False, hand, coins, buys, actions, hist)
+                return a
         if card == "Remodel" and "trash" in p:
             a = self.single(eg.REMODEL_TRASH, hand_opts, False, hand, vp, "Remodel: trash a card")
+            self.teach_sub(a, eg.REMODEL_TRASH, card, hand_opts, False, hand, coins, buys, actions)
             if a["plan"]:
                 a["then"] = self.upgrade("Remodel", hand, vp, trash=a["plan"][0])
             return a
         if card == "Mine" and "trash" in p:
             opts = sorted({ID[c] for c in hand if CARDS[ID[c]].is_treasure})
             a = self.single(eg.MINE_TRASH, opts, True, hand, vp, "Mine: upgrade a treasure")
+            self.teach_sub(a, eg.MINE_TRASH, card, opts, True, hand, coins, buys, actions)
             if a["plan"]:
                 a["then"] = self.upgrade("Mine", hand, vp, trash=a["plan"][0])
             return a
         if card == "Moneylender" and "Copper" in hand:
-            return self.single(eg.MONEYLENDER_TRASH, [ID["Copper"]], True, hand, vp, "Moneylender: trash a Copper?")
+            a = self.single(eg.MONEYLENDER_TRASH, [ID["Copper"]], True, hand, vp, "Moneylender: trash a Copper?")
+            self.teach_sub(a, eg.MONEYLENDER_TRASH, card, [ID["Copper"]], True, hand, coins, buys, actions)
+            return a
         if card == "Throne Room":
             opts = sorted({ID[c] for c in hand if CARDS[ID[c]].is_action})
             a = self.single(eg.THRONE, opts, True, hand, vp, "Throne Room: play which twice?")
+            self.teach_sub(a, eg.THRONE, card, opts, True, hand, coins, buys, actions)
             if a["plan"]:
                 rest = Counter(hand)
                 rest[a["plan"][0]] -= 1
@@ -1165,6 +1181,41 @@ class Advisor:
         key = repr((t.turns, kind, coins, buys, actions, zones, list(t.supply), inc))
         job = {"key": key, "supply": list(t.supply), "me": me, "zones": zones, "turns": turns, "kind": kind,
                "coins": coins, "buys": buys, "actions": actions, "merchants": merchants, "inc": inc}
+        advice["tkey"] = key
+        self._teach = (advice, job)
+
+    def teach_sub(self, *a, **kw):
+        """_teach_sub, never taking the advice down: on any error the network's suggestion stands (logged)."""
+        try:
+            self._teach_sub(*a, **kw)
+        except Exception as e:
+            log(f"teacher (card choice) skipped: {e!r}")
+
+    def _teach_sub(self, advice, kind, card, opts, may_pass, hand, coins, buys, actions, hist=()):
+        """The teacher's question for a card choice inside `card` (Workshop / Artisan gain, Remodel / Mine trash and
+        gain, Moneylender, Throne Room): the position just before `card` was played -- the card back from play to
+        hand, its action not spent, `hist` ([(kind, card name)], my choices since: a trashed card goes back to hand)
+        -- and the options now. ts-v1's ts_advise_sub replays the action from there with every option."""
+        if self.teacher is None or not self.teacher.subs or not advice or not advice.get("question") or not opts:
+            return
+        t = self.t
+        before = Counter(hand) + Counter([card] + [c for k, c in hist if k in (eg.REMODEL_TRASH, eg.MINE_TRASH)])
+        g, me = t.position(coins, buys, actions + 1, before)
+        p, o = g.players[me], g.players[1 - me]
+        play = Counter(p.play)
+        if play[ID[card]]:
+            play[ID[card]] -= 1
+        theirs = sorted(o.all_cards())
+        zones = [sorted(p.deck), sorted(p.hand), sorted(p.discard), sorted((+play).elements()), theirs[5:], theirs[:5],
+                 [], []]
+        top = advice["plan"][0] if advice["plan"] else None
+        inc = ID[top] if top else self.teacher.lib.rl_num_actions() - 1
+        turns = [g.players[0].turns, g.players[1].turns]
+        sub = {"card": ID[card], "hk": [k for k, _ in hist], "ho": [ID[c] for _, c in hist], "kind": kind,
+               "opts": sorted(opts), "may_pass": bool(may_pass)}
+        key = repr((t.turns, "sub", kind, coins, actions, zones, list(t.supply), inc, sub))
+        job = {"key": key, "supply": list(t.supply), "me": me, "zones": zones, "turns": turns, "kind": kind,
+               "coins": coins, "buys": buys, "actions": actions + 1, "merchants": 0, "inc": inc, "sub": sub}
         advice["tkey"] = key
         self._teach = (advice, job)
 

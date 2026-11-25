@@ -65,3 +65,29 @@ def test_pooled_answer_has_more_draws():
     assert r3["draws"] > r1["draws"]             # ~3x on an idle machine; less when every core is busy
     assert time.time() - t < teacher.SECS + 1.0
     assert r1["inc"] == r3["inc"]
+
+
+def test_card_choice_pooled():
+    """A Workshop gain graded through Teacher with ts-v1's ts.so and 3 processes: every gainable card is an option and
+    the answer is pooled from all three."""
+    ts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "trainers", "ts-v1")
+    if not os.path.exists(os.path.join(ts_dir, "ts.so")):
+        return
+    from dominion_engine.cards import ID
+    teacher.TEACHER_DIR, teacher.SO, teacher.SECS = ts_dir, "ts.so", 1.0
+    job = _job()
+    hand = [ID["Workshop"], ID["Copper"], ID["Copper"], ID["Estate"], ID["Copper"]]
+    opts = sorted(c for c, n in enumerate(job["supply"]) if n > 0 and c in
+                  [ID[x] for x in ("Copper", "Silver", "Estate", "Curse", "Village", "Smithy", "Militia", "Moat", "Cellar", "Chapel")])
+    job.update(kind=0, coins=0, actions=1, inc=ID["Silver"], zones=[job["zones"][0], hand, [], [], *job["zones"][4:]],
+               sub={"card": ID["Workshop"], "hk": [], "ho": [], "kind": 9, "opts": opts, "may_pass": False}, key="w")
+    import multiprocessing as mp
+    t = teacher.Teacher.__new__(teacher.Teacher)
+    net = os.path.join(ts_dir, "bv-v1", "models", teacher.NET)
+    t.lib, t.prm, t.nh, t.nf, t.na = teacher._load(os.path.join(ts_dir, "ts.so"), net)
+    t.pool = mp.get_context("spawn").Pool(3, teacher._winit, (os.path.join(ts_dir, "ts.so"), net))
+    r = t.grade(job)
+    t.pool.terminate()
+    print(r)
+    assert r["draws"] > 0 and r["inc"] == ID["Silver"]
+    assert {a for a, _ in r["q"]} == set(opts)

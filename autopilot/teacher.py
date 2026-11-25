@@ -56,6 +56,12 @@ def _load(so, net):
         lib.ts_set_alloc(ALLOC)
     elif LEAF or ALLOC:
         raise RuntimeError(f"{so} has no leaf / halving settings (ts-v1's ts.so has)")
+    if hasattr(lib, "ts_advise_sub"):
+        lib.ts_advise_sub.restype = ctypes.c_int
+        lib.ts_advise_sub.argtypes = [_F, ctypes.c_int, ctypes.c_int, _I, ctypes.c_int, _I, _I, _I, ctypes.c_int,
+                                      ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, _I, _I, ctypes.c_int,
+                                      ctypes.c_int, _I, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_float,
+                                      ctypes.c_uint64, _F, _F, _U8, _F]
     prm = np.ascontiguousarray(np.load(net).astype(np.float32))
     na = lib.rl_num_actions()
     for nf in (lib.rl_num_features(), lib.rl_num_features_base()):
@@ -78,6 +84,26 @@ def _advise(lib, prm, nh, nf, na, job, secs, seed):
     return int(k), q, se, cand, out
 
 
+def _advise_sub(lib, prm, nh, nf, na, job, secs, seed):
+    """A card choice inside an action (ts.so ts_advise_sub): job["zones"] etc. are the position just BEFORE the action
+    job["sub"]["card"] was played; sub: {"card", "hk", "ho" (my choices since), "kind", "opts", "may_pass"}."""
+    sb = job["sub"]
+    q, se = np.full(na, np.nan, np.float32), np.full(na, np.nan, np.float32)
+    cand, out = np.zeros(na, np.uint8), np.zeros(5, np.float32)
+    flat = [c for z in job["zones"] for c in z]
+    k = lib.ts_advise_sub(prm.ctypes.data_as(_F), nh, nf, _ints(job["supply"]), job["me"], _ints(flat or [0]),
+                          _ints([len(z) for z in job["zones"]]), _ints(job["turns"]), job["coins"], job["buys"],
+                          job["actions"], job["merchants"], sb["card"], _ints(sb["hk"] or [0]), _ints(sb["ho"] or [0]),
+                          len(sb["hk"]), sb["kind"], _ints(sb["opts"] or [0]), len(sb["opts"]), int(sb["may_pass"]),
+                          job["inc"], secs, seed & (2**64 - 1), q.ctypes.data_as(_F), se.ctypes.data_as(_F),
+                          cand.ctypes.data_as(_U8), out.ctypes.data_as(_F))
+    return int(k), q, se, cand, out
+
+
+def _grade_one(m, job, secs, seed):
+    return (_advise_sub if job.get("sub") else _advise)(*m, job, secs, seed)
+
+
 _W: dict = {}
 
 
@@ -88,7 +114,7 @@ def _winit(so, net):
 
 def _wjob(args):
     job, secs, seed = args
-    k, q, se, cand, out = _advise(*_W["m"], job, secs, seed)
+    k, q, se, cand, out = _grade_one(_W["m"], job, secs, seed)
     return k, q.tolist(), se.tolist(), cand.tolist(), out.tolist()
 
 
@@ -111,6 +137,8 @@ class Teacher:
     def __init__(self, on_result):
         """on_result(job, result): called from the teacher's thread when a question is graded."""
         so, net = os.path.join(TEACHER_DIR, SO), os.path.join(TEACHER_DIR, "models", NET)
+        if not os.path.exists(net):              # ts-v1 keeps the nets in its bv-v1 submodule
+            net = os.path.join(TEACHER_DIR, "bv-v1", "models", NET)
         self.lib, self.prm, self.nh, self.nf, self.na = _load(so, net)
         self.pool = None
         if WORKERS > 1:                          # each process deals its own draws; the answers are pooled exactly
@@ -121,6 +149,11 @@ class Teacher:
         self.job = None
         self.cv = threading.Condition()
         threading.Thread(target=self._run, daemon=True, name="teacher").start()
+
+    @property
+    def subs(self):
+        """Card choices can be graded (the library has ts_advise_sub: ts-v1's ts.so)."""
+        return hasattr(self.lib, "ts_advise_sub")
 
     def ask(self, job):
         """job: {"key", "supply", "me", "zones" (8 lists), "turns", "kind", "coins", "buys", "actions", "merchants",
@@ -155,7 +188,7 @@ class Teacher:
         t = time.time()
         seed = int(t * 1e6)
         if self.pool is None:
-            k, q, se, cand, out = _advise(self.lib, self.prm, self.nh, self.nf, na, job, SECS, seed)
+            k, q, se, cand, out = _grade_one((self.lib, self.prm, self.nh, self.nf, na), job, SECS, seed)
         else:                                    # WORKERS processes, different deals, the same deadline
             parts = self.pool.map(_wjob, [(job, SECS, seed + 7919 * i) for i in range(WORKERS)])
             out = np.asarray(parts[0][4], np.float32)
