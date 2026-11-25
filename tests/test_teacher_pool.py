@@ -11,23 +11,44 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import teacher  # noqa: E402
 
 
+def _part(rows, inc, cand=None):
+    q = rows.mean(0)
+    d = rows - rows[:, [inc]]
+    se = np.sqrt(np.maximum((d ** 2).mean(0) - d.mean(0) ** 2, 0) / len(rows))
+    return len(rows), q, se, np.ones(rows.shape[1], bool) if cand is None else cand
+
+
+def _direct(rows, inc, a):
+    d = rows[:, a] - rows[:, inc]
+    return d.mean(), np.sqrt(max((d ** 2).mean() - d.mean() ** 2, 0) / len(d))
+
+
 def test_pool_math_is_exact():
     rng = np.random.default_rng(1)
     na, inc = 6, 2
-    V = rng.random((300, na)) < rng.random(na)          # per draw, per option: win 1 / loss 0
-    V = V.astype(np.float64)
+    V = (rng.random((300, na)) < rng.random(na)).astype(np.float64)     # per draw, per option: win 1 / loss 0
+    K, cand, D, se = teacher.pool_draws([_part(V[:50], inc), _part(V[50:170], inc), _part(V[170:], inc)], inc)
+    assert K == 300 and cand.all()
+    for a in range(na):
+        m, s = _direct(V, inc, a)
+        assert abs(D[a] - m) < 1e-9 and abs(se[a] - s) < 1e-9
+    assert teacher.pool_draws([(0, None, None, None)], inc)[0] == 0
 
-    def part(rows):
-        q = rows.mean(0)
-        d = rows - rows[:, [inc]]
-        se = np.sqrt(np.maximum((d ** 2).mean(0) - d.mean(0) ** 2, 0) / len(rows))
-        return len(rows), q, se, inc
 
-    K, q, se = teacher.pool_draws([part(V[:50]), part(V[50:170]), part(V[170:])])
-    _, q1, se1, _ = part(V)
-    assert K == 300
-    assert np.allclose(q, q1, atol=1e-6) and np.allclose(se, se1, atol=1e-6)
-    assert teacher.pool_draws([(0, None, None, inc)]) == (0, None, None)
+def test_pool_option_eliminated_in_one_process():
+    """Successive halving: option 4 reached the final in the first two processes only -- it is pooled over their
+    draws alone, against the incumbent on those same draws."""
+    rng = np.random.default_rng(2)
+    na, inc = 6, 0
+    V = (rng.random((300, na)) < rng.random(na)).astype(np.float64)
+    c3 = np.ones(na, bool)
+    c3[4] = False
+    K, cand, D, se = teacher.pool_draws([_part(V[:100], inc), _part(V[100:200], inc), _part(V[200:], inc, c3)], inc)
+    assert K == 300 and cand[4]
+    m, s = _direct(V[:200], inc, 4)
+    assert abs(D[4] - m) < 1e-9 and abs(se[4] - s) < 1e-9
+    m, s = _direct(V, inc, 3)
+    assert abs(D[3] - m) < 1e-9
 
 
 def _job():

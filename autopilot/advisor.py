@@ -1434,6 +1434,8 @@ class Advisor:
         """Where the suggested cards are on the game screen, as fractions of the window (for the page's picture)."""
         if not advice or not advice["plan"]:
             return []
+        if self.reader is None or self.t is None:   # recalibrating (resize, new game): no boxes until it is back
+            return []
         t, v = self.t, self.reader.v
         out = []
         supply_kinds = (eg.BUY, eg.WORKSHOP_GAIN, eg.ARTISAN_GAIN, eg.REMODEL_GAIN, eg.MINE_GAIN)

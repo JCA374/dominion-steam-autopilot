@@ -1,12 +1,14 @@
-"""The teacher: bv-v1's paired-rollout search (trainers/bv-v1, C bv_advise in bv.so) checks the advisor's pick at buys
-and action plays. Every candidate (the advisor's pick, PASS and the five next best of RL-v3 c2) is played to the end of
-the game on the same hidden-state draws, c2 continuing both players; the opponent's unseen cards are pooled and dealt
-again (only what a player can know). It overrides the pick when the best candidate wins more often by more than
-MARGIN and by more than Z standard errors (the paired difference): the settings of sg-v1's ablation, where c2 with
-this teacher scored 58.8% against plain c2 (600 games). Each question gets at most SECS seconds.
+"""The teacher: ts-v1's paired-rollout search (trainers/ts-v1, C bv_advise / ts_advise_sub in ts.so; it began as
+bv-v1's) checks the advisor's pick at buys, action plays and card choices inside an action (Workshop / Artisan gain,
+Remodel / Mine trash and gain, Moneylender, Throne Room). Every candidate (the advisor's pick, PASS and c2's five next
+best buys; every option for actions and card choices) is played to the end of the game on the same hidden-state
+draws, c2 continuing both players; the opponent's unseen cards are pooled and dealt again (only what a player can
+know). Successive halving spends the draws on the leaders; WORKERS processes deal different draws for the same
+question and their answers are pooled exactly. It overrides the pick when the best candidate wins more often by more
+than MARGIN and by more than Z standard errors of the paired difference (ts-v1's decision bank chose margin 0.01,
+z 1). Each question gets at most SECS seconds.
 
-Runs in a thread of its own (the C code is single-threaded: one question at a time); the newest question replaces a
-waiting one.
+Runs in a thread of its own (the C code is single-threaded per process); the newest question replaces a waiting one.
 """
 from __future__ import annotations
 
@@ -19,10 +21,10 @@ import time
 import numpy as np
 
 TEACHER_DIR = os.environ.get("DOMINION_TEACHER_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
-                                                                   "..", "trainers", "bv-v1"))
+                                                                   "..", "trainers", "ts-v1"))
 NET = "rl3_c2_2654.npy"
 SECS = 3.0                       # the time cap per question
-K0 = K1 = 128                    # hidden-state draws per candidate PER WORKER, as many as fit in SECS (sg-v1's ablation used
+K0 = K1 = 256                    # draws per candidate PER WORKER (the halving budget), as many as fit in SECS (sg-v1's ablation used
                                  # 32: +-9 points per option; 128 halves that, ~3 s for a buy with 11 options)
 TOPN, MARGIN, Z = 5, 0.01, 1.0   # candidates beyond the pick and PASS; the override gate (ts-v1 bank: z 1 beats z 2 at 128 and 320 draws)
 MIN_DRAWS = 32                   # fewer draws in the time (a busy machine): no override
@@ -37,9 +39,9 @@ def _ints(xs):
 
 
 WORKERS = int(os.environ.get("DOMINION_TEACHER_WORKERS", "3"))   # processes grading each question together (pooled draws)
-SO = os.environ.get("DOMINION_TEACHER_SO", "bv.so")   # in TEACHER_DIR; ts-v1's ts.so adds the two settings below
+SO = os.environ.get("DOMINION_TEACHER_SO", "ts.so")   # in TEACHER_DIR; ts-v1's ts.so adds the two settings below
 LEAF = int(os.environ.get("DOMINION_TEACHER_LEAF", "0"))    # ts.so: rollouts stop after LEAF turns, c2's value (0 = end)
-ALLOC = int(os.environ.get("DOMINION_TEACHER_ALLOC", "0"))  # ts.so: 1 = successive halving of the same budget
+ALLOC = int(os.environ.get("DOMINION_TEACHER_ALLOC", "1"))  # ts.so: 1 = successive halving of the same budget
 
 
 def _load(so, net):
@@ -118,19 +120,30 @@ def _wjob(args):
     return k, q.tolist(), se.tolist(), cand.tolist(), out.tolist()
 
 
-def pool_draws(parts):
-    """Merge the processes' answers to one question into one, exactly: parts = [(K_i draws, q_i per-option means,
-    se_i SEs of the paired difference with the incumbent, inc)], each over its own K_i draws. A part with K_i < 1 (no
-    time, an error) is left out. -> (K, q, se) over all draws (K = 0, None, None if no part has a draw)."""
+def pool_draws(parts, inc):
+    """Merge the processes' answers to one question, exactly. parts = [(K_i draws, q_i per-option means, se_i SEs of
+    the paired difference with the incumbent, cand_i the options graded to the end)], each over its own K_i draws
+    (with successive halving an option that reached the final has all K_i draws, like the incumbent). An option is
+    pooled over the processes where it reached the final, and compared with the incumbent on exactly those draws.
+    -> (K, cand, D, se): K = all draws, cand = options final anywhere, D[a] = mean paired difference a - inc,
+    se[a] its SE (NaN where not a candidate). A part with K_i < 1 is left out."""
     parts = [p for p in parts if p[0] > 0]
     if not parts:
-        return 0, None, None
+        return 0, None, None, None
+    na = len(parts[0][1])
     K = sum(p[0] for p in parts)
-    q = sum(k * np.asarray(qi, np.float64) for k, qi, _, _ in parts) / K
-    d = [np.asarray(qi, np.float64) - np.asarray(qi, np.float64)[inc] for _, qi, _, inc in parts]   # mean differences
-    e2 = sum(k * (np.asarray(si, np.float64) ** 2 * k + di ** 2) for (k, _, si, _), di in zip(parts, d)) / K
-    D = sum(k * di for (k, _, _, _), di in zip(parts, d)) / K       # E[x^2]_i = population variance + mean^2
-    return K, q.astype(np.float32), np.sqrt(np.maximum(e2 - D ** 2, 0) / K).astype(np.float32)
+    cand = np.zeros(na, bool)
+    D, se = np.full(na, np.nan), np.full(na, np.nan)
+    for a in range(na):
+        use = [(k, np.float64(q[a]) - np.float64(q[inc]), np.float64(s[a])) for k, q, s, c in parts if c[a]]
+        if not use:
+            continue
+        cand[a] = True
+        n = sum(k for k, _, _ in use)
+        m = sum(k * d for k, d, _ in use) / n
+        e2 = sum(k * (si ** 2 * k + d ** 2) for k, d, si in use) / n     # E[x^2]_i = population variance + mean^2
+        D[a], se[a] = m, np.sqrt(max(e2 - m ** 2, 0) / n)
+    return K, cand, D, se
 
 
 class Teacher:
@@ -181,7 +194,10 @@ class Teacher:
             if DUMP:
                 with open(DUMP, "a") as f:
                     f.write(json.dumps({"job": {k: v for k, v in job.items() if k != "key"}, "result": r}) + "\n")
-            self.on_result(job, r)
+            try:
+                self.on_result(job, r)
+            except Exception as e:               # the thread must outlive any error in the page update
+                print(time.strftime("%H:%M:%S"), f"teacher: result not shown: {e!r}", flush=True)
 
     def grade(self, job):
         na = self.na
@@ -192,12 +208,14 @@ class Teacher:
         else:                                    # WORKERS processes, different deals, the same deadline
             parts = self.pool.map(_wjob, [(job, SECS, seed + 7919 * i) for i in range(WORKERS)])
             out = np.asarray(parts[0][4], np.float32)
-            inc = int(out[0])
-            cand = np.asarray(parts[0][3], np.uint8)
             if min(p[0] for p in parts) < 0:     # an engine error or a one-option position in any part
                 k = min(p[0] for p in parts)
             else:
-                k, q, se = pool_draws([(p[0], p[1], p[2], inc) for p in parts])
+                inc = int(out[0])
+                k, cand, D, se = pool_draws([(p[0], np.asarray(p[1]), np.asarray(p[2]), np.asarray(p[3], bool))
+                                             for p in parts], inc)
+                qi = sum(p[0] * p[1][inc] for p in parts if p[0] > 0) / max(k, 1)
+                q = (qi + D).astype(np.float32)  # win chance per option, anchored on the incumbent's pooled one
         inc, pas = int(out[0]), na - 1
         r = {"draws": int(k), "secs": round(time.time() - t, 2), "inc": inc, "workers": WORKERS}
         if k < 1:
