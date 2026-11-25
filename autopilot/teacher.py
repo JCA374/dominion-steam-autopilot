@@ -24,7 +24,7 @@ NET = "rl3_c2_2654.npy"
 SECS = 3.0                       # the time cap per question
 K0 = K1 = 128                    # hidden-state draws per candidate PER WORKER, as many as fit in SECS (sg-v1's ablation used
                                  # 32: +-9 points per option; 128 halves that, ~3 s for a buy with 11 options)
-TOPN, MARGIN, Z = 5, 0.02, 2.0   # candidates beyond the pick and PASS; the override gate
+TOPN, MARGIN, Z = 5, 0.01, 1.0   # candidates beyond the pick and PASS; the override gate (ts-v1 bank: z 1 beats z 2 at 128 and 320 draws)
 MIN_DRAWS = 32                   # fewer draws in the time (a busy machine): no override
 DUMP = os.environ.get("DOMINION_TEACHER_DUMP")    # a file: every question and answer as a JSON line (testing)
 BUY, ACTION = 1, 0               # engine decision kinds (DE_BUY, DE_PLAY_ACTION)
